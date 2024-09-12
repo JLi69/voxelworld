@@ -42,8 +42,7 @@ pub fn set_default_gl_state() {
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
         gl::DepthFunc(gl::LEQUAL);
-        //TODO: uncomment line below and fix the orientation of block faces
-        //gl::Enable(gl::CULL_FACE);
+        gl::Enable(gl::CULL_FACE);
     }
 }
 
