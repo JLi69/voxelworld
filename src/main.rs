@@ -46,10 +46,10 @@ fn main() {
         chunkshader.uniform_matrix4f("persp", &persp);
         chunkshader.uniform_matrix4f("view", &view);
         let (x, y, z) = voxel::raycast(
-            gamestate.cam.position(), 
+            gamestate.cam.position(),
             gamestate.cam.forward(),
-            BLOCK_REACH, 
-            &world
+            BLOCK_REACH,
+            &world,
         );
         let (ix, iy, iz) = (x.floor(), y.floor(), z.floor());
         chunkshader.uniform_vec3f("selected", ix, iy, iz);
