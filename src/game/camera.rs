@@ -1,7 +1,7 @@
 use super::KeyState;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
-pub const DEFAULT_CAMERA_SPEED: f32 = 8.0;
+pub const DEFAULT_CAMERA_SPEED: f32 = 4.0;
 
 pub struct Camera {
     pub speed: f32,
@@ -95,5 +95,16 @@ impl Camera {
         Matrix4::from_angle_x(Deg(self.pitch))
             * Matrix4::from_angle_y(Deg(self.yaw))
             * Matrix4::from_translation(-self.position)
+    }
+
+    pub fn forward(&self) -> Vector3<f32> {
+        let dir = Matrix4::from_angle_y(Deg(-self.yaw))
+            * Matrix4::from_angle_x(Deg(-self.pitch))
+            * Vector4::new(0.0, 0.0, -1.0, 1.0);
+        Vector3::new(dir.x, dir.y, dir.z)
+    }
+
+    pub fn position(&self) -> Vector3<f32> {
+        self.position
     }
 }

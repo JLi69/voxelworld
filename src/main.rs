@@ -3,9 +3,9 @@ mod game;
 mod gfx;
 mod voxel;
 
-use game::Game;
+use game::{destroy_block, place_block, Game, KeyState};
 use gfx::ChunkVaoTable;
-use glfw::{Context, Key};
+use glfw::{Context, CursorMode, Key, MouseButtonLeft, MouseButtonRight};
 use voxel::{World, CHUNK_SIZE_F32};
 
 fn main() {
@@ -69,8 +69,28 @@ fn main() {
         glfw.poll_events();
 
         //Handle input
-        let (dmousex, dmousey) = gamestate.get_mouse_diff();
-        gamestate.cam.rotate(dmousex, dmousey, 0.04);
+        if window.get_cursor_mode() == CursorMode::Disabled {
+            let (dmousex, dmousey) = gamestate.get_mouse_diff();
+            gamestate.cam.rotate(dmousex, dmousey, 0.04);
+        }
+        //Destroy blocks
+        if gamestate.get_mouse_state(MouseButtonLeft) == KeyState::JustPressed {
+            destroy_block(
+                gamestate.cam.position(),
+                gamestate.cam.forward(),
+                &mut world,
+                &mut chunkvaos,
+            );
+        }
+        //Place blocks
+        if gamestate.get_mouse_state(MouseButtonRight) == KeyState::JustPressed {
+            place_block(
+                gamestate.cam.position(),
+                gamestate.cam.forward(),
+                &mut world,
+                &mut chunkvaos,
+            );
+        }
         //Move camera
         let w = gamestate.get_key_state(Key::W);
         let s = gamestate.get_key_state(Key::S);

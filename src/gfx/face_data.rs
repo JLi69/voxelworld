@@ -1,8 +1,7 @@
-#[rustfmt::skip]
-
 pub type Face = [u8; 18];
 
-pub const TOP_FACE: Face = [
+#[rustfmt::skip]
+pub const TOP_FACE: Face = [ 
     //Triangle 1
     1, 1, 1, 
     1, 1, 0,
@@ -14,6 +13,7 @@ pub const TOP_FACE: Face = [
     0, 1, 0,
 ];
 
+#[rustfmt::skip]
 pub const BOTTOM_FACE: Face = [
     //Triangle 1
     0, 0, 0,
@@ -26,6 +26,7 @@ pub const BOTTOM_FACE: Face = [
     0, 0, 0, 
 ];
 
+#[rustfmt::skip]
 pub const LEFT_FACE: Face = [
     //Triangle 1 
     0, 1, 1, 
@@ -38,6 +39,7 @@ pub const LEFT_FACE: Face = [
     0, 0, 0,
 ];
 
+#[rustfmt::skip]
 pub const RIGHT_FACE: Face = [
     //Triangle 1
     1, 0, 0,
@@ -50,6 +52,7 @@ pub const RIGHT_FACE: Face = [
     1, 0, 1,
 ];
 
+#[rustfmt::skip]
 pub const FRONT_FACE: Face = [
     //Triangle 1 
     1, 1, 0, 
@@ -62,6 +65,7 @@ pub const FRONT_FACE: Face = [
     0, 0, 0,
 ];
 
+#[rustfmt::skip]
 pub const BACK_FACE: Face = [
     //Triangle 1
     0, 0, 1,

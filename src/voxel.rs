@@ -1,3 +1,5 @@
+use cgmath::{InnerSpace, Vector3};
+
 pub const CHUNK_SIZE: usize = 32;
 pub const CHUNK_SIZE_I32: i32 = CHUNK_SIZE as i32;
 pub const CHUNK_SIZE_F32: f32 = CHUNK_SIZE as f32;
@@ -253,6 +255,15 @@ impl World {
         }
     }
 
+    pub fn get_block(&self, x: i32, y: i32, z: i32) -> Block {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let chunk = self.get_chunk(chunkx, chunky, chunkz);
+        if let Some(chunk) = chunk {
+            return chunk.get_block(x, y, z);
+        }
+        Block::new()
+    }
+
     pub fn gen_flat(&mut self) {
         //TODO: replace this code
         let range = self.get_block_range() as i32;
@@ -265,17 +276,6 @@ impl World {
                 }
             }
         }
-
-        self.set_block(0, 3, 0, Block::new_id(1));
-    }
-
-    //Returns the number of nonempty blocks
-    pub fn get_block_count(&self) -> u32 {
-        let mut count = 0;
-        for chunk in &self.chunks {
-            count += chunk.get_block_count();
-        }
-        count
     }
 }
 
@@ -296,4 +296,24 @@ pub fn wrap_coord(x: i32) -> i32 {
     }
 
     value % CHUNK_SIZE_I32
+}
+
+pub fn raycast(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> (f32, f32, f32) {
+    //TODO: replace with better code that is more accurate
+    let mut x = pos.x.floor() as i32;
+    let mut y = pos.y.floor() as i32;
+    let mut z = pos.z.floor() as i32;
+
+    let start_pos = pos;
+    let mut current_pos = start_pos;
+    while world.get_block(x, y, z).id == EMPTY_BLOCK
+        && (current_pos - start_pos).magnitude() < range
+    {
+        current_pos += dir * 0.2;
+        x = current_pos.x.floor() as i32;
+        y = current_pos.y.floor() as i32;
+        z = current_pos.z.floor() as i32;
+    }
+
+    (current_pos.x, current_pos.y, current_pos.z)
 }

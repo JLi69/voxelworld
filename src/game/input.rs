@@ -1,6 +1,7 @@
 use crate::gfx;
 use crate::Game;
 use glfw::CursorMode;
+use glfw::MouseButton;
 use glfw::{Action, GlfwReceiver, Key, PWindow, WindowEvent};
 
 pub type EventHandler = GlfwReceiver<(f64, glfw::WindowEvent)>;
@@ -31,6 +32,18 @@ impl Game {
         }
     }
 
+    fn set_mouse_state(&mut self, button: MouseButton, action: Action) {
+        match action {
+            Action::Press => {
+                self.mouse_states.insert(button, KeyState::JustPressed);
+            }
+            Action::Release => {
+                self.mouse_states.insert(button, KeyState::Released);
+            }
+            _ => {}
+        }
+    }
+
     fn handle_mouse_pos(&mut self, x: f64, y: f64) {
         self.dmousex = x as f32 - self.mousex;
         self.dmousey = y as f32 - self.mousey;
@@ -51,6 +64,9 @@ impl Game {
                 WindowEvent::CursorPos(x, y) => {
                     self.handle_mouse_pos(x, y);
                 }
+                WindowEvent::MouseButton(button, action, _mods) => {
+                    self.set_mouse_state(button, action);
+                }
                 _ => {}
             }
         }
@@ -58,6 +74,12 @@ impl Game {
 
     pub fn update_input_states(&mut self) {
         for state in self.key_states.values_mut() {
+            if *state == KeyState::JustPressed {
+                *state = KeyState::Held;
+            }
+        }
+
+        for state in self.mouse_states.values_mut() {
             if *state == KeyState::JustPressed {
                 *state = KeyState::Held;
             }
@@ -79,6 +101,13 @@ impl Game {
 
     pub fn get_key_state(&self, key: Key) -> KeyState {
         match self.key_states.get(&key) {
+            Some(state) => *state,
+            _ => KeyState::Released,
+        }
+    }
+
+    pub fn get_mouse_state(&self, button: MouseButton) -> KeyState {
+        match self.mouse_states.get(&button) {
             Some(state) => *state,
             _ => KeyState::Released,
         }
