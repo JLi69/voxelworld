@@ -3,7 +3,7 @@ pub mod input;
 
 use crate::{
     gfx::ChunkVaoTable,
-    voxel::{raycast, world_to_chunk_position, Block, World, EMPTY_BLOCK},
+    voxel::{raycast, Block, World, EMPTY_BLOCK},
 };
 pub use camera::Camera;
 use cgmath::Vector3;
@@ -12,7 +12,7 @@ pub use glfw::{Context, CursorMode, Key, PWindow};
 pub use input::{release_cursor, EventHandler, KeyState};
 pub use std::collections::HashMap;
 
-const BLOCK_REACH: f32 = 4.0;
+pub const BLOCK_REACH: f32 = 5.0;
 
 pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
     let (mut window, events) = glfw

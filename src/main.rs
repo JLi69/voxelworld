@@ -3,10 +3,10 @@ mod game;
 mod gfx;
 mod voxel;
 
-use game::{destroy_block, place_block, Game, KeyState};
+use game::{destroy_block, place_block, Game, KeyState, BLOCK_REACH};
 use gfx::ChunkVaoTable;
 use glfw::{Context, CursorMode, Key, MouseButtonLeft, MouseButtonRight};
-use voxel::{World, CHUNK_SIZE_F32};
+use voxel::{World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
     //Attempt to initialize glfw
@@ -45,6 +45,18 @@ fn main() {
         //Display chunks
         chunkshader.uniform_matrix4f("persp", &persp);
         chunkshader.uniform_matrix4f("view", &view);
+        let (x, y, z) = voxel::raycast(
+            gamestate.cam.position(), 
+            gamestate.cam.forward(),
+            BLOCK_REACH, 
+            &world
+        );
+        let (ix, iy, iz) = (x.floor(), y.floor(), z.floor());
+        chunkshader.uniform_vec3f("selected", ix, iy, iz);
+        chunkshader.uniform_bool(
+            "selectedEmpty",
+            world.get_block(ix as i32, iy as i32, iz as i32).id == EMPTY_BLOCK,
+        );
         unsafe {
             for (i, vao) in chunkvaos.vaos.iter().enumerate() {
                 if chunkvaos.vertex_count[i] == 0 {

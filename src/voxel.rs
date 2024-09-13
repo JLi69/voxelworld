@@ -143,25 +143,6 @@ impl Chunk {
             z: self.iz,
         }
     }
-
-    pub fn get_world_pos(&self) -> ChunkPos {
-        ChunkPos {
-            x: self.ix * CHUNK_SIZE_I32,
-            y: self.iy * CHUNK_SIZE_I32,
-            z: self.iz * CHUNK_SIZE_I32,
-        }
-    }
-
-    //Returns the number of nonempty blocks
-    pub fn get_block_count(&self) -> u32 {
-        let mut count = 0;
-        for b in &self.blocks {
-            if b.id != EMPTY_BLOCK {
-                count += 1;
-            }
-        }
-        count
-    }
 }
 
 pub struct World {
@@ -309,7 +290,7 @@ pub fn raycast(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) 
     while world.get_block(x, y, z).id == EMPTY_BLOCK
         && (current_pos - start_pos).magnitude() < range
     {
-        current_pos += dir * 0.2;
+        current_pos += dir * 0.1;
         x = current_pos.x.floor() as i32;
         y = current_pos.y.floor() as i32;
         z = current_pos.z.floor() as i32;
