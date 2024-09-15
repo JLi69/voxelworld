@@ -4,7 +4,8 @@ use crate::game::Game;
 use crate::voxel;
 use crate::voxel::BLOCK_REACH;
 use crate::voxel::{
-    world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32, EMPTY_BLOCK,
+    build::get_raycast_voxel, world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World,
+    CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use crate::CHUNK_SIZE_F32;
 use std::collections::HashMap;
@@ -177,10 +178,10 @@ impl ChunkVaoTable {
         let selected = voxel::raycast(pos, dir, BLOCK_REACH, &gamestate.world);
 
         let view = gamestate.cam.get_view();
-        let (x, y, z) = selected;
-        let (x, y, z) = (x.floor(), y.floor(), z.floor());
+        let (x, y, z, axis) = selected;
+        let (x, y, z) = get_raycast_voxel(x, y, z, dir, axis);
         let selectedid = gamestate.world.get_block(x as i32, y as i32, z as i32).id;
-        chunkshader.uniform_vec3f("selected", x, y, z);
+        chunkshader.uniform_vec3f("selected", x as f32, y as f32, z as f32);
         chunkshader.uniform_bool("selectedEmpty", selectedid == EMPTY_BLOCK);
         chunkshader.uniform_matrix4f("view", &view);
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);

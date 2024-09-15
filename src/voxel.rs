@@ -13,6 +13,13 @@ pub const CHUNK_SIZE_I32: i32 = CHUNK_SIZE as i32;
 pub const CHUNK_SIZE_F32: f32 = CHUNK_SIZE as f32;
 pub const EMPTY_BLOCK: u8 = 0;
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Axis {
+    X,
+    Y,
+    Z,
+}
+
 #[derive(Clone, Copy)]
 pub struct Block {
     //Block id
