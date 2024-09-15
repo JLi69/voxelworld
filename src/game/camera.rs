@@ -23,6 +23,7 @@ impl Camera {
         }
     }
 
+    //Set direction for strafe camera left and right (x direction)
     pub fn strafe(&mut self, left: KeyState, right: KeyState) {
         self.direction.x = 0.0;
 
@@ -35,6 +36,7 @@ impl Camera {
         }
     }
 
+    //Set direction for flying up and down (y direction)
     pub fn fly(&mut self, down: KeyState, up: KeyState) {
         self.direction.y = 0.0;
 
@@ -47,6 +49,7 @@ impl Camera {
         }
     }
 
+    //Set direction for moving forward and backward (z direction)
     pub fn move_forward(&mut self, forward: KeyState, backward: KeyState) {
         self.direction.z = 0.0;
 
@@ -59,19 +62,23 @@ impl Camera {
         }
     }
 
+    //Calculate velocity vector
     pub fn calculate_velocity(&self) -> Vector3<f32> {
         let mut vel = Vector3::new(0.0, 0.0, 0.0);
 
+        //Direction for xz plane
         let dirxz = Vector3::new(self.direction.x, 0.0, self.direction.z);
         if dirxz.magnitude() > 0.0 {
             vel += dirxz.normalize() * self.speed;
         }
 
+        //Direction for y axis
         let diry = Vector3::new(0.0, self.direction.y, 0.0);
         if diry.magnitude() > 0.0 {
             vel += diry * self.speed;
         }
 
+        //Transform the velocity based on the yaw of the camera
         let vel_transformed =
             Matrix4::from_angle_y(Deg(-self.yaw)) * Vector4::new(vel.x, vel.y, vel.z, 1.0);
 
@@ -79,11 +86,12 @@ impl Camera {
     }
 
     pub fn update(&mut self, dt: f32) {
+        //Move camera on position
         self.position += self.calculate_velocity() * dt;
     }
 
+    //Rotate the camera based on mouse movement
     pub fn rotate(&mut self, dmousex: f32, dmousey: f32, sensitivity: f32) {
-        //Rotate the camera based on mouse movement
         self.yaw += dmousex * sensitivity;
         self.pitch += dmousey * sensitivity;
         //Clamp the pitch
@@ -97,6 +105,7 @@ impl Camera {
             * Matrix4::from_translation(-self.position)
     }
 
+    //Forward vector for camera
     pub fn forward(&self) -> Vector3<f32> {
         let dir = Matrix4::from_angle_y(Deg(-self.yaw))
             * Matrix4::from_angle_x(Deg(-self.pitch))
@@ -104,6 +113,7 @@ impl Camera {
         Vector3::new(dir.x, dir.y, dir.z)
     }
 
+    //Returns position of camera
     pub fn position(&self) -> Vector3<f32> {
         self.position
     }
