@@ -1,4 +1,5 @@
-use super::{world_to_chunk_position, Block, Chunk, CHUNK_SIZE, CHUNK_SIZE_I32};
+mod flat_world;
+use super::{world_to_chunk_position, Block, Chunk, CHUNK_SIZE};
 
 //World struct
 pub struct World {
@@ -127,20 +128,5 @@ impl World {
             return chunk.get_block(x, y, z);
         }
         Block::new()
-    }
-
-    //TODO: replace this code
-    //Generates a flat world
-    pub fn gen_flat(&mut self) {
-        let range = self.get_block_range() as i32;
-        let lower = -range + CHUNK_SIZE_I32 / 2;
-        let upper = range + CHUNK_SIZE_I32 / 2;
-        for y in lower..0 {
-            for z in lower..upper {
-                for x in lower..upper {
-                    self.set_block(x, y, z, Block::new_id(1));
-                }
-            }
-        }
-    }
+    } 
 }

@@ -41,5 +41,6 @@ pub fn set_default_gl_state() {
         gl::Enable(gl::DEPTH_TEST);
         gl::DepthFunc(gl::LEQUAL);
         gl::Enable(gl::CULL_FACE);
+        gl::ClearColor(0.4, 0.8, 1.0, 1.0);
     }
 }

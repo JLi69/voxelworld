@@ -193,7 +193,7 @@ pub fn place_block(
     }
     let blockid2 = world.get_block(ix, iy, iz).id;
     if blockid2 == EMPTY_BLOCK && blockid1 != EMPTY_BLOCK {
-        world.set_block(ix, iy, iz, Block::new_id(1));
+        world.set_block(ix, iy, iz, Block::new_id(2));
         let collision = player.check_collision(world);
         if collision.is_some() { 
             world.set_block(ix, iy, iz, Block::new_id(0));

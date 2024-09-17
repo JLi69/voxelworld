@@ -12,6 +12,7 @@ fn add_face(
     offset: Int3,
     vert_data: &mut ChunkData,
     face: &Face,
+    face_id: u8,
 ) {
     let (x, y, z) = xyz;
     let (offx, offy, offz) = offset;
@@ -47,6 +48,7 @@ fn add_face(
         vert_data.push(y);
         vert_data.push(z);
         vert_data.push(block.id);
+        vert_data.push(face_id)
     }
 }
 
@@ -64,7 +66,7 @@ fn add_block_vertices(
         return;
     }
 
-    add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE);
+    add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, 1);
     add_face(
         chunk,
         adj_chunks[1],
@@ -72,9 +74,10 @@ fn add_block_vertices(
         (0, -1, 0),
         vert_data,
         &BOTTOM_FACE,
+        1
     );
-    add_face(chunk, adj_chunks[2], xyz, (-1, 0, 0), vert_data, &LEFT_FACE);
-    add_face(chunk, adj_chunks[3], xyz, (1, 0, 0), vert_data, &RIGHT_FACE);
+    add_face(chunk, adj_chunks[2], xyz, (-1, 0, 0), vert_data, &LEFT_FACE, 0);
+    add_face(chunk, adj_chunks[3], xyz, (1, 0, 0), vert_data, &RIGHT_FACE, 0);
     add_face(
         chunk,
         adj_chunks[4],
@@ -82,8 +85,9 @@ fn add_block_vertices(
         (0, 0, -1),
         vert_data,
         &FRONT_FACE,
+        2
     );
-    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE);
+    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, 2);
 }
 
 /*
@@ -92,8 +96,9 @@ fn add_block_vertices(
  * [y position relative to chunk],
  * [z position relative to chunk],
  * [texture id]
+ * [other data]
  *
- * This should mean that each vertex is only 32 bits or 4 bytes
+ * This should mean that each vertex is only 40 bits or 4.25 bytes
  *
  * for adj_chunks (adjacent chunks),
  * 0 is the chunk on top,

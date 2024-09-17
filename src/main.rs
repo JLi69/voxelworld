@@ -3,6 +3,7 @@ mod game;
 mod gfx;
 mod voxel;
 
+use assets::Texture;
 use game::Game;
 use glfw::Context;
 use voxel::{World, CHUNK_SIZE_F32};
@@ -29,6 +30,15 @@ fn main() {
     let chunkshader = assets::program_from_vert_and_frag(vert, frag);
     chunkshader.use_program();
 
+    //Load textures
+    let blocktexture = match Texture::load_from_file("assets/textures/blocktextures.png") {
+        Ok(tex) => tex,
+        Err(msg) => {
+            eprintln!("{msg}");
+            Texture::new()
+        }
+    };
+
     gfx::set_default_gl_state();
     //Main loop
     let mut dt = 0.0f32;
@@ -40,6 +50,7 @@ fn main() {
         //Update perspective matrix
         let persp = gfx::calculate_perspective(&window);
         gamestate.persp = persp;
+        blocktexture.bind();
         //Display chunks
         chunkvaos.display_chunks(&chunkshader, &gamestate);
 

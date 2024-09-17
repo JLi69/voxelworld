@@ -13,14 +13,19 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 
 //Send chunk vertex data to a buffer and vao
-fn send_chunk_data_to_vao(vao: u32, block_buffer: u32, chunkdata: &ChunkData) {
+fn send_chunk_data_to_vao(
+    vao: u32,
+    block_buffer1: u32,
+    block_buffer2: u32,
+    chunkdata: &ChunkData
+) {
     if chunkdata.is_empty() {
         return;
     }
 
     unsafe {
         gl::BindVertexArray(vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, block_buffer);
+        gl::BindBuffer(gl::ARRAY_BUFFER, block_buffer1);
         gl::BufferData(
             gl::ARRAY_BUFFER,
             (chunkdata.len() * size_of::<u8>()) as isize,
@@ -31,10 +36,25 @@ fn send_chunk_data_to_vao(vao: u32, block_buffer: u32, chunkdata: &ChunkData) {
             0,
             4,
             gl::UNSIGNED_BYTE,
-            size_of::<u8>() as i32 * 4,
+            size_of::<u8>() as i32 * 5,
             std::ptr::null::<u8>() as *const c_void,
         );
         gl::EnableVertexAttribArray(0);
+        gl::BindBuffer(gl::ARRAY_BUFFER, block_buffer2);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            (chunkdata.len() * size_of::<u8>()) as isize,
+            &chunkdata[0] as *const u8 as *const c_void,
+            gl::STATIC_DRAW,
+        );
+        gl::VertexAttribIPointer(
+            1,
+            1,
+            gl::UNSIGNED_BYTE,
+            size_of::<u8>() as i32 * 5,
+            (size_of::<u8>() * 4) as *const c_void,
+        );
+        gl::EnableVertexAttribArray(1);
     }
 }
 
@@ -51,7 +71,7 @@ impl ChunkVaoTable {
     pub fn new(count: usize) -> Self {
         Self {
             vaos: vec![0; count],
-            buffers: vec![0; count],
+            buffers: vec![0; 2 * count],
             vertex_count: vec![0; count],
             chunk_positions: vec![ChunkPos::origin(); count],
             pos_to_idx: HashMap::new(),
@@ -80,7 +100,12 @@ impl ChunkVaoTable {
             let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
             self.chunk_positions[i] = chunkpos;
             self.vertex_count[i] = chunkdata.len() as i32 / 4;
-            send_chunk_data_to_vao(self.vaos[i], self.buffers[i], &chunkdata);
+            send_chunk_data_to_vao(
+                self.vaos[i],
+                self.buffers[2 * i],
+                self.buffers[2 * i + 1],
+                &chunkdata,
+            );
             let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
             self.pos_to_idx.insert(pos, i);
         }
@@ -113,7 +138,12 @@ impl ChunkVaoTable {
             let idx = self.convert_pos_to_idx(&chunkpos);
             self.chunk_positions[idx] = chunkpos;
             self.vertex_count[idx] = chunkdata.len() as i32 / 4;
-            send_chunk_data_to_vao(self.vaos[idx], self.buffers[idx], &chunkdata);
+            send_chunk_data_to_vao(
+                self.vaos[idx],
+                self.buffers[idx * 2],
+                self.buffers[idx * 2 + 1],
+                &chunkdata
+            );
         }
     }
 
