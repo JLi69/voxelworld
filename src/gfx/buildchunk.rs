@@ -66,7 +66,15 @@ fn add_block_vertices(
         return;
     }
 
-    add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, 1);
+    add_face(
+        chunk,
+        adj_chunks[0],
+        xyz,
+        (0, 1, 0),
+        vert_data,
+        &TOP_FACE,
+        1,
+    );
     add_face(
         chunk,
         adj_chunks[1],
@@ -74,10 +82,26 @@ fn add_block_vertices(
         (0, -1, 0),
         vert_data,
         &BOTTOM_FACE,
-        1
+        1,
     );
-    add_face(chunk, adj_chunks[2], xyz, (-1, 0, 0), vert_data, &LEFT_FACE, 0);
-    add_face(chunk, adj_chunks[3], xyz, (1, 0, 0), vert_data, &RIGHT_FACE, 0);
+    add_face(
+        chunk,
+        adj_chunks[2],
+        xyz,
+        (-1, 0, 0),
+        vert_data,
+        &LEFT_FACE,
+        0,
+    );
+    add_face(
+        chunk,
+        adj_chunks[3],
+        xyz,
+        (1, 0, 0),
+        vert_data,
+        &RIGHT_FACE,
+        0,
+    );
     add_face(
         chunk,
         adj_chunks[4],
@@ -85,9 +109,17 @@ fn add_block_vertices(
         (0, 0, -1),
         vert_data,
         &FRONT_FACE,
-        2
+        2,
     );
-    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, 2);
+    add_face(
+        chunk,
+        adj_chunks[5],
+        xyz,
+        (0, 0, 1),
+        vert_data,
+        &BACK_FACE,
+        2,
+    );
 }
 
 /*

@@ -20,7 +20,7 @@ impl Camera {
             yaw: 0.0,
             pitch: 0.0,
         }
-    } 
+    }
 
     //Rotate the camera based on mouse movement
     pub fn rotate(&mut self, dmousex: f32, dmousey: f32, sensitivity: f32) {

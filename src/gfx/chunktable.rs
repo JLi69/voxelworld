@@ -13,12 +13,7 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 
 //Send chunk vertex data to a buffer and vao
-fn send_chunk_data_to_vao(
-    vao: u32,
-    block_buffer1: u32,
-    block_buffer2: u32,
-    chunkdata: &ChunkData
-) {
+fn send_chunk_data_to_vao(vao: u32, block_buffer1: u32, block_buffer2: u32, chunkdata: &ChunkData) {
     if chunkdata.is_empty() {
         return;
     }
@@ -142,7 +137,7 @@ impl ChunkVaoTable {
                 self.vaos[idx],
                 self.buffers[idx * 2],
                 self.buffers[idx * 2 + 1],
-                &chunkdata
+                &chunkdata,
             );
         }
     }

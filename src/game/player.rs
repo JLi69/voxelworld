@@ -1,7 +1,7 @@
-use cgmath::{Vector3, InnerSpace, Matrix4, Vector4, Deg};
-use crate::voxel::EMPTY_BLOCK;
-use crate::voxel::World;
 use super::Hitbox;
+use crate::voxel::World;
+use crate::voxel::EMPTY_BLOCK;
+use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
 use super::KeyState;
 
@@ -46,7 +46,7 @@ impl Player {
             self.falling = true;
         }
     }
-    
+
     //Set direction for strafe camera left and right (x direction)
     pub fn strafe(&mut self, left: KeyState, right: KeyState) {
         self.direction.x = 0.0;
@@ -81,7 +81,7 @@ impl Player {
         let dirxz = Vector3::new(self.direction.x, 0.0, self.direction.z);
         if dirxz.magnitude() > 0.0 {
             vel += dirxz.normalize() * self.speed;
-        } 
+        }
 
         //Transform the velocity based on the yaw of the camera
         let vel_transformed =
@@ -105,7 +105,7 @@ impl Player {
         if let Some(block_hitbox) = block_hitbox {
             self.uncollide_x(&block_hitbox);
         }
-   
+
         //Move in the z direction
         self.position.z += velocity.z * dt;
         let block_hitbox = self.check_collision(world);

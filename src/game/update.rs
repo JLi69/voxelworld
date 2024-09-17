@@ -1,7 +1,7 @@
+use super::player::CAMERA_OFFSET;
 use super::{Game, KeyState};
 use crate::gfx::{self, ChunkVaoTable};
 use crate::voxel::{destroy_block, place_block};
-use super::player::CAMERA_OFFSET;
 use cgmath::Vector3;
 use glfw::{CursorMode, Key};
 use glfw::{MouseButtonLeft, MouseButtonRight};

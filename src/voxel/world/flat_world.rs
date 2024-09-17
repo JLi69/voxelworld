@@ -1,5 +1,5 @@
 use super::World;
-use crate::voxel::{CHUNK_SIZE_I32, Block, Chunk};
+use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32};
 
 fn gen_flat_chunk(chunk: &mut Chunk) {
     let chunkpos = chunk.get_chunk_pos();
@@ -24,7 +24,7 @@ fn gen_flat_chunk(chunk: &mut Chunk) {
     }
 }
 
-impl World { 
+impl World {
     //Generates a flat world
     pub fn gen_flat(&mut self) {
         for chunk in &mut self.chunks {

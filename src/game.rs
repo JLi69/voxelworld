@@ -1,17 +1,17 @@
 pub mod camera;
 pub mod input;
-pub mod update;
-pub mod player;
 pub mod physics;
+pub mod player;
+pub mod update;
 
-use physics::Hitbox;
-use player::Player;
 use crate::World;
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
 use glfw::MouseButton;
 pub use glfw::{Context, CursorMode, Key, PWindow};
 pub use input::{release_cursor, EventHandler, KeyState};
+use physics::Hitbox;
+use player::Player;
 pub use std::collections::HashMap;
 
 //Initialize window, call this at the beginning of the game
@@ -62,7 +62,7 @@ impl Game {
     //Initialize game state
     pub fn init(&mut self) {
         self.cam = Camera::new(0.0, 1.7, 0.0);
-        self.player = Player::new(0.0, 0.9, 0.0); 
+        self.player = Player::new(0.0, 0.9, 0.0);
         self.mousex = 0.0;
         self.mousey = 0.0;
     }

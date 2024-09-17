@@ -25,7 +25,7 @@ impl Hitbox {
         let fz = z as f32 + 0.5;
         Hitbox::new(fx, fy, fz, 1.0, 1.0, 1.0)
     }
-    
+
     //Create a hitbox from Vector3, we assume that size has positive dimensions
     pub fn from_vecs(pos: Vector3<f32>, size: Vector3<f32>) -> Self {
         assert!(size.x > 0.0);
@@ -39,8 +39,10 @@ impl Hitbox {
 
     //Check for intersection between this hitbox and another hitbox
     pub fn intersects(&self, other: &Self) -> bool {
-        (self.position.x - other.position.x).abs() < (self.dimensions.x + other.dimensions.x) / 2.0 &&
-            (self.position.y - other.position.y).abs() < (self.dimensions.y + other.dimensions.y) / 2.0 &&
-            (self.position.z - other.position.z).abs() < (self.dimensions.z + other.dimensions.z) / 2.0
+        (self.position.x - other.position.x).abs() < (self.dimensions.x + other.dimensions.x) / 2.0
+            && (self.position.y - other.position.y).abs()
+                < (self.dimensions.y + other.dimensions.y) / 2.0
+            && (self.position.z - other.position.z).abs()
+                < (self.dimensions.z + other.dimensions.z) / 2.0
     }
 }

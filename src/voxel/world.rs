@@ -128,5 +128,5 @@ impl World {
             return chunk.get_block(x, y, z);
         }
         Block::new()
-    } 
+    }
 }
