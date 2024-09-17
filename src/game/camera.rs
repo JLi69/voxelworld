@@ -1,14 +1,13 @@
-use super::KeyState;
-use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
+use cgmath::{Deg, Matrix4, Vector3, Vector4};
 
 pub const DEFAULT_CAMERA_SPEED: f32 = 4.0;
 
 pub struct Camera {
     pub speed: f32,
-    position: Vector3<f32>,
-    direction: Vector3<f32>,
-    yaw: f32,   //In degrees
-    pitch: f32, //In degrees
+    pub position: Vector3<f32>,
+    pub direction: Vector3<f32>,
+    pub yaw: f32,   //In degrees
+    pub pitch: f32, //In degrees
 }
 
 impl Camera {
@@ -21,74 +20,7 @@ impl Camera {
             yaw: 0.0,
             pitch: 0.0,
         }
-    }
-
-    //Set direction for strafe camera left and right (x direction)
-    pub fn strafe(&mut self, left: KeyState, right: KeyState) {
-        self.direction.x = 0.0;
-
-        if left.is_held() {
-            self.direction.x += -1.0;
-        }
-
-        if right.is_held() {
-            self.direction.x += 1.0;
-        }
-    }
-
-    //Set direction for flying up and down (y direction)
-    pub fn fly(&mut self, down: KeyState, up: KeyState) {
-        self.direction.y = 0.0;
-
-        if down.is_held() {
-            self.direction.y += -1.0;
-        }
-
-        if up.is_held() {
-            self.direction.y += 1.0;
-        }
-    }
-
-    //Set direction for moving forward and backward (z direction)
-    pub fn move_forward(&mut self, forward: KeyState, backward: KeyState) {
-        self.direction.z = 0.0;
-
-        if forward.is_held() {
-            self.direction.z += -1.0;
-        }
-
-        if backward.is_held() {
-            self.direction.z += 1.0;
-        }
-    }
-
-    //Calculate velocity vector
-    pub fn calculate_velocity(&self) -> Vector3<f32> {
-        let mut vel = Vector3::new(0.0, 0.0, 0.0);
-
-        //Direction for xz plane
-        let dirxz = Vector3::new(self.direction.x, 0.0, self.direction.z);
-        if dirxz.magnitude() > 0.0 {
-            vel += dirxz.normalize() * self.speed;
-        }
-
-        //Direction for y axis
-        let diry = Vector3::new(0.0, self.direction.y, 0.0);
-        if diry.magnitude() > 0.0 {
-            vel += diry * self.speed;
-        }
-
-        //Transform the velocity based on the yaw of the camera
-        let vel_transformed =
-            Matrix4::from_angle_y(Deg(-self.yaw)) * Vector4::new(vel.x, vel.y, vel.z, 1.0);
-
-        Vector3::new(vel_transformed.x, vel_transformed.y, vel_transformed.z)
-    }
-
-    pub fn update(&mut self, dt: f32) {
-        //Move camera on position
-        self.position += self.calculate_velocity() * dt;
-    }
+    } 
 
     //Rotate the camera based on mouse movement
     pub fn rotate(&mut self, dmousex: f32, dmousey: f32, sensitivity: f32) {

@@ -44,7 +44,7 @@ fn main() {
         chunkvaos.display_chunks(&chunkshader, &gamestate);
 
         //Update gameobjects
-        gamestate.update_camera(dt, window.get_cursor_mode());
+        gamestate.update_player(dt, window.get_cursor_mode());
         //Destroy and place blocks
         gamestate.build(&mut chunkvaos);
 

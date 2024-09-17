@@ -1,7 +1,11 @@
 pub mod camera;
 pub mod input;
 pub mod update;
+pub mod player;
+pub mod physics;
 
+use physics::Hitbox;
+use player::Player;
 use crate::World;
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
@@ -27,6 +31,7 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
 //Game state struct
 pub struct Game {
     pub cam: Camera,
+    pub player: Player,
     key_states: HashMap<Key, KeyState>,
     mouse_states: HashMap<MouseButton, KeyState>,
     mousex: f32, //Mouse cursor position
@@ -42,6 +47,7 @@ impl Game {
     pub fn new() -> Self {
         Self {
             cam: Camera::new(0.0, 0.0, 0.0),
+            player: Player::new(0.0, 0.0, 0.0),
             key_states: HashMap::new(),
             mouse_states: HashMap::new(),
             mousex: 0.0,
@@ -56,6 +62,7 @@ impl Game {
     //Initialize game state
     pub fn init(&mut self) {
         self.cam = Camera::new(0.0, 1.7, 0.0);
+        self.player = Player::new(0.0, 0.9, 0.0); 
         self.mousex = 0.0;
         self.mousey = 0.0;
     }

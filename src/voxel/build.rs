@@ -1,5 +1,6 @@
 use super::Axis;
 use super::{Block, World, EMPTY_BLOCK};
+use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
 
 pub const BLOCK_REACH: f32 = 5.0;
@@ -171,9 +172,8 @@ pub fn place_block(
     pos: Vector3<f32>,
     dir: Vector3<f32>,
     world: &mut World,
+    player: &Player,
 ) -> Option<(i32, i32, i32)> {
-    //TODO: add code to check for collision with player to make sure we
-    //don't place blocks on top of the player
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
     let blockid1 = {
         let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
@@ -194,6 +194,11 @@ pub fn place_block(
     let blockid2 = world.get_block(ix, iy, iz).id;
     if blockid2 == EMPTY_BLOCK && blockid1 != EMPTY_BLOCK {
         world.set_block(ix, iy, iz, Block::new_id(1));
+        let collision = player.check_collision(world);
+        if collision.is_some() { 
+            world.set_block(ix, iy, iz, Block::new_id(0));
+            return None;
+        }
         return Some((ix, iy, iz));
     }
 
