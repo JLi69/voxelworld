@@ -29,9 +29,10 @@ bool fragIsSelected() {
 vec2 transformTc(vec2 tc) {
 	float x = float(int(blockid) % 16) * TEX_FRAC;
 	float y = float(int(blockid) / 16) * TEX_FRAC;
-	float tcx = tc.x * TEX_FRAC;
-	float tcy = tc.y * TEX_FRAC;
-	return vec2(tcx + x, tcy + y);
+	float tcx = tc.x * TEX_FRAC * 0.98;
+	float tcy = tc.y * TEX_FRAC * 0.98;
+	float offset = TEX_FRAC * 0.01;
+	return vec2(tcx + x + offset, tcy + y + offset);
 }
 
 void main() {
