@@ -28,6 +28,14 @@ impl Game {
         let d = self.get_key_state(Key::D);
         self.player.strafe(a, d);
         self.player.move_forward(w, s);
+        //Select blocks
+        self.player.select_block(self.get_key_state(Key::Num1), 1);
+        self.player.select_block(self.get_key_state(Key::Num2), 2);
+        self.player.select_block(self.get_key_state(Key::Num3), 4);
+        self.player.select_block(self.get_key_state(Key::Num4), 5);
+        self.player.select_block(self.get_key_state(Key::Num5), 6);
+        self.player.select_block(self.get_key_state(Key::Num6), 7);
+        self.player.select_block(self.get_key_state(Key::Num7), 8);
         //Jump
         let space = self.get_key_state(Key::Space);
         self.player.jump(space);

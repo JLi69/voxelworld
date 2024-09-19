@@ -1,56 +1,11 @@
-use super::face_data::{Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE};
-use crate::voxel::{out_of_bounds, wrap_coord, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
+mod addvertices;
+
+use crate::voxel::{Chunk, CHUNK_SIZE_I32};
+use addvertices::{add_block_vertices_default, add_block_vertices_grass, add_block_vertices_log};
 
 type Int3 = (i32, i32, i32);
 
 pub type ChunkData = Vec<u8>;
-
-fn add_face(
-    chunk: &Chunk,
-    adj_chunk: Option<&Chunk>,
-    xyz: Int3,
-    offset: Int3,
-    vert_data: &mut ChunkData,
-    face: &Face,
-    face_id: u8,
-) {
-    let (x, y, z) = xyz;
-    let (offx, offy, offz) = offset;
-
-    let adj_x = wrap_coord(x + offx) as usize;
-    let adj_y = wrap_coord(y + offy) as usize;
-    let adj_z = wrap_coord(z + offz) as usize;
-    if let Some(adj_chunk) = adj_chunk {
-        if out_of_bounds(x, y, z, offx, offy, offz)
-            && adj_chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK
-        {
-            return;
-        }
-    }
-
-    if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
-        return;
-    }
-
-    let adj_x = (x + offx) as usize;
-    let adj_y = (y + offy) as usize;
-    let adj_z = (z + offz) as usize;
-    if chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK {
-        return;
-    }
-
-    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
-    for i in 0..6 {
-        let x = face[i * 3] + x as u8;
-        let y = face[i * 3 + 1] + y as u8;
-        let z = face[i * 3 + 2] + z as u8;
-        vert_data.push(x);
-        vert_data.push(y);
-        vert_data.push(z);
-        vert_data.push(block.id);
-        vert_data.push(face_id)
-    }
-}
 
 fn add_block_vertices(
     chunk: &Chunk,
@@ -62,64 +17,23 @@ fn add_block_vertices(
     let blockid = chunk
         .get_block_relative(x as usize, y as usize, z as usize)
         .id;
-    if blockid == EMPTY_BLOCK {
-        return;
+    //TODO: add a better way of specifying how the faces of the blocks are textured
+    //(probably as some kind of resource file) additionally, the unlabelled constants
+    //should probably be deleted at some point
+    match blockid {
+        1 => {
+            //Grass
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 17, 4);
+        }
+        8 => {
+            //Log
+            add_block_vertices_log(chunk, adj_chunks, xyz, vert_data, 24);
+        }
+        _ => {
+            //Everything else
+            add_block_vertices_default(chunk, adj_chunks, xyz, vert_data);
+        }
     }
-
-    add_face(
-        chunk,
-        adj_chunks[0],
-        xyz,
-        (0, 1, 0),
-        vert_data,
-        &TOP_FACE,
-        1,
-    );
-    add_face(
-        chunk,
-        adj_chunks[1],
-        xyz,
-        (0, -1, 0),
-        vert_data,
-        &BOTTOM_FACE,
-        1,
-    );
-    add_face(
-        chunk,
-        adj_chunks[2],
-        xyz,
-        (-1, 0, 0),
-        vert_data,
-        &LEFT_FACE,
-        0,
-    );
-    add_face(
-        chunk,
-        adj_chunks[3],
-        xyz,
-        (1, 0, 0),
-        vert_data,
-        &RIGHT_FACE,
-        0,
-    );
-    add_face(
-        chunk,
-        adj_chunks[4],
-        xyz,
-        (0, 0, -1),
-        vert_data,
-        &FRONT_FACE,
-        2,
-    );
-    add_face(
-        chunk,
-        adj_chunks[5],
-        xyz,
-        (0, 0, 1),
-        vert_data,
-        &BACK_FACE,
-        2,
-    );
 }
 
 /*

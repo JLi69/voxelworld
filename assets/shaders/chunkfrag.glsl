@@ -42,5 +42,5 @@ void main() {
 	vec4 highlightColor = 
 		color * (1.0 - float(fragIsSelected())) +
 		vec4(1.0, 1.0, 1.0, 1.0) * float(fragIsSelected());
-	color = mix(color, highlightColor, 0.4);
+	color = mix(color, highlightColor, 0.2);
 }

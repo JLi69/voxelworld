@@ -1,4 +1,4 @@
-use super::Axis;
+use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
@@ -158,6 +158,9 @@ pub fn destroy_block(
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
     let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
     let blockid = world.get_block(ix, iy, iz).id;
+    if blockid == INDESTRUCTIBLE {
+        return None;
+    }
     world.set_block(ix, iy, iz, Block::new_id(0));
     if blockid != EMPTY_BLOCK {
         return Some((ix, iy, iz));
@@ -193,7 +196,7 @@ pub fn place_block(
     }
     let blockid2 = world.get_block(ix, iy, iz).id;
     if blockid2 == EMPTY_BLOCK && blockid1 != EMPTY_BLOCK {
-        world.set_block(ix, iy, iz, Block::new_id(2));
+        world.set_block(ix, iy, iz, player.selected_block);
         let collision = player.check_collision(world);
         if collision.is_some() {
             world.set_block(ix, iy, iz, Block::new_id(0));

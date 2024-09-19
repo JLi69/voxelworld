@@ -1,4 +1,5 @@
 use super::Hitbox;
+use crate::voxel::Block;
 use crate::voxel::World;
 use crate::voxel::EMPTY_BLOCK;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
@@ -19,6 +20,9 @@ pub struct Player {
     velocity_y: f32,
     pub speed: f32,
     pub rotation: f32,
+    //TODO: This should probably be replaced with some sort of inventory,
+    //for now this can just function as the player's "selected" block id
+    pub selected_block: Block,
 }
 
 impl Player {
@@ -32,6 +36,13 @@ impl Player {
             velocity_y: 0.0,
             speed: DEFAULT_PLAYER_SPEED,
             rotation: 0.0,
+            selected_block: Block::new_id(1),
+        }
+    }
+
+    pub fn select_block(&mut self, keystate: KeyState, block_id: u8) {
+        if keystate.is_held() {
+            self.selected_block = Block::new_id(block_id);
         }
     }
 
@@ -97,7 +108,7 @@ impl Player {
 
         //NOTE: the collision detection here might not be accurate if the player
         //is travelling too fast or the framerate is too slow
-        //This should probably be fixed/improved later
+        //TODO: This should probably be fixed/improved later
 
         //Move in the x direction
         self.position.x += velocity.x * dt;

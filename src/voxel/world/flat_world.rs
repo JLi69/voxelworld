@@ -1,5 +1,5 @@
 use super::World;
-use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32};
+use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, INDESTRUCTIBLE};
 
 fn gen_flat_chunk(chunk: &mut Chunk) {
     let chunkpos = chunk.get_chunk_pos();
@@ -15,9 +15,16 @@ fn gen_flat_chunk(chunk: &mut Chunk) {
         for y in posy..(posy + CHUNK_SIZE_I32) {
             for z in posz..(posz + CHUNK_SIZE_I32) {
                 if y == -1 {
+                    //Grass
                     chunk.set_block(x, y, z, Block::new_id(1));
-                } else if y < -1 {
+                } else if (-4..-1).contains(&y) {
+                    chunk.set_block(x, y, z, Block::new_id(4));
+                } else if (-62..-4).contains(&y) {
+                    //Stone
                     chunk.set_block(x, y, z, Block::new_id(2));
+                } else if y == -63 {
+                    //Bottom of the world
+                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
                 }
             }
         }
