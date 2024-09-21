@@ -139,7 +139,7 @@ impl Player {
         let block_hitbox = self.check_collision(world);
         if let Some(block_hitbox) = block_hitbox {
             self.uncollide_z(&block_hitbox);
-        } 
+        }
     }
 
     //Calculates the hitbox for the object
