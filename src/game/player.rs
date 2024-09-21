@@ -110,6 +110,23 @@ impl Player {
         //is travelling too fast or the framerate is too slow
         //TODO: This should probably be fixed/improved later
 
+        //Move in y direction
+        self.position.y += self.velocity_y * 0.5 * dt;
+        if self.falling {
+            self.velocity_y -= dt * GRAVITY;
+        }
+        self.position.y += self.velocity_y * 0.5 * dt;
+        //We lower the player's y position to check if we intersect with any blocks
+        self.position.y -= 0.02;
+        let block_hitbox = self.check_collision(world);
+        if let Some(block_hitbox) = block_hitbox {
+            self.uncollide_y(&block_hitbox);
+        } else {
+            self.falling = true;
+            //If we don't intersect with anything, reset the y position
+            self.position.y += 0.02;
+        }
+
         //Move in the x direction
         self.position.x += velocity.x * dt;
         let block_hitbox = self.check_collision(world);
@@ -122,20 +139,7 @@ impl Player {
         let block_hitbox = self.check_collision(world);
         if let Some(block_hitbox) = block_hitbox {
             self.uncollide_z(&block_hitbox);
-        }
-
-        //Move in y direction
-        self.position.y += self.velocity_y * 0.5 * dt;
-        if self.falling {
-            self.velocity_y -= dt * GRAVITY;
-        }
-        self.position.y += self.velocity_y * 0.5 * dt;
-        let block_hitbox = self.check_collision(world);
-        if let Some(block_hitbox) = block_hitbox {
-            self.uncollide_y(&block_hitbox);
-        } else {
-            self.falling = true;
-        }
+        } 
     }
 
     //Calculates the hitbox for the object
@@ -183,12 +187,15 @@ impl Player {
         }
 
         let sy = player_hitbox.dimensions.y + hitbox.dimensions.y;
-        if self.position.y < hitbox.position.y - hitbox.dimensions.y / 2.0 {
+        if self.position.y < hitbox.position.y {
             self.position.y = hitbox.position.y - sy / 2.0;
             self.falling = true;
             self.velocity_y = 0.0;
-        } else if self.position.y > hitbox.position.y + hitbox.dimensions.y / 2.0 {
+        } else if self.position.y > hitbox.position.y {
             self.position.y = hitbox.position.y + sy / 2.0;
+            //Increase the y position so that we are slightly hovering over
+            //the block - this is to prevent some issues with collision
+            self.position.y += 0.01;
             self.falling = false;
             self.velocity_y = 0.0;
         }

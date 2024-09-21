@@ -1,11 +1,7 @@
 use cgmath::{Deg, Matrix4, Vector3, Vector4};
 
-pub const DEFAULT_CAMERA_SPEED: f32 = 4.0;
-
 pub struct Camera {
-    pub speed: f32,
     pub position: Vector3<f32>,
-    pub direction: Vector3<f32>,
     pub yaw: f32,   //In degrees
     pub pitch: f32, //In degrees
 }
@@ -14,9 +10,7 @@ impl Camera {
     //Creates a new camera at (x, y, z)
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self {
-            speed: DEFAULT_CAMERA_SPEED,
             position: Vector3::new(x, y, z),
-            direction: Vector3::new(0.0, 0.0, 0.0),
             yaw: 0.0,
             pitch: 0.0,
         }
