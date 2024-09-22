@@ -36,6 +36,8 @@ impl Game {
         self.player.select_block(self.get_key_state(Key::Num5), 6);
         self.player.select_block(self.get_key_state(Key::Num6), 7);
         self.player.select_block(self.get_key_state(Key::Num7), 8);
+        self.player.select_block(self.get_key_state(Key::Num8), 9);
+        self.player.select_block(self.get_key_state(Key::Num9), 10);
         //Jump
         let space = self.get_key_state(Key::Space);
         self.player.jump(space);

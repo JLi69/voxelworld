@@ -1,6 +1,7 @@
 mod addvertices;
 
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
+use addvertices::add_block_vertices_trans;
 use addvertices::{add_block_vertices_default, add_block_vertices_grass, add_block_vertices_log};
 
 type Int3 = (i32, i32, i32);
@@ -17,6 +18,14 @@ fn add_block_vertices(
     let blockid = chunk
         .get_block_relative(x as usize, y as usize, z as usize)
         .id;
+
+    if chunk
+        .get_block_relative(x as usize, y as usize, z as usize)
+        .transparent()
+    {
+        return;
+    }
+
     //TODO: add a better way of specifying how the faces of the blocks are textured
     //(probably as some kind of resource file) additionally, the unlabelled constants
     //should probably be deleted at some point
@@ -34,6 +43,24 @@ fn add_block_vertices(
             add_block_vertices_default(chunk, adj_chunks, xyz, vert_data);
         }
     }
+}
+
+fn add_block_vertices_transparent(
+    chunk: &Chunk,
+    adj_chunks: [Option<&Chunk>; 6],
+    xyz: Int3,
+    vert_data: &mut ChunkData,
+) {
+    let (x, y, z) = xyz;
+
+    if !chunk
+        .get_block_relative(x as usize, y as usize, z as usize)
+        .transparent()
+    {
+        return;
+    }
+
+    add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data);
 }
 
 /*
@@ -62,6 +89,7 @@ pub fn generate_chunk_vertex_data(chunk: &Chunk, adj_chunks: [Option<&Chunk>; 6]
             for z in 0..CHUNK_SIZE_I32 {
                 let pos = (x, y, z);
                 add_block_vertices(chunk, adj_chunks, pos, &mut chunk_vert_data);
+                add_block_vertices_transparent(chunk, adj_chunks, pos, &mut chunk_vert_data);
             }
         }
     }

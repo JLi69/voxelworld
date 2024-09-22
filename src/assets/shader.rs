@@ -218,6 +218,13 @@ impl ShaderProgram {
         })
     }
 
+    //Send an unsigned integer
+    pub fn uniform_uint(&self, uniform_name: &str, v: u32) {
+        self.uniform(uniform_name, |location| unsafe {
+            gl::Uniform1ui(location, v);
+        })
+    }
+
     //Send a boolean to the shader
     pub fn uniform_bool(&self, uniform_name: &str, b: bool) {
         self.uniform(uniform_name, |location| unsafe {

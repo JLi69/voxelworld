@@ -7,7 +7,8 @@ flat in uint blockid;
 flat in uint faceid;
 
 uniform vec3 selected;
-uniform bool selectedEmpty;
+uniform uint selectedid;
+bool selectedEmpty = selectedid == 0u;
 uniform sampler2D tex;
 
 const float shading[] = float[](0.9, 1.0, 0.7);
@@ -35,12 +36,28 @@ vec2 transformTc(vec2 tc) {
 	return vec2(tcx + x + offset, tcy + y + offset);
 }
 
+bool atEdge(float x) {
+	const float outlineSz = 0.006;
+	return fract(x) < outlineSz || fract(x) > (1.0 - outlineSz);
+}
+
+bool atOutline(vec3 v) {
+	return 
+		(atEdge(v.x) && atEdge(v.y)) || 
+		(atEdge(v.x) && atEdge(v.z)) || 
+		(atEdge(v.y) && atEdge(v.z));
+}
+
 void main() {
 	vec2 tc = transformTc(texturecoords[faceid]);
 	color = texture(tex, tc);
+	float alpha = color.a;
 	color *= shading[faceid];
-	vec4 highlightColor = 
-		color * (1.0 - float(fragIsSelected())) +
-		vec4(1.0, 1.0, 1.0, 1.0) * float(fragIsSelected());
-	color = mix(color, highlightColor, 0.2);
+	color.a = alpha;
+
+	float outline = float(atOutline(chunkfragpos) && fragIsSelected());
+	color = color * (1.0 - outline) + vec4(0.1, 0.1, 0.1, 1.0) * outline;
+
+	if(color.a < 0.5)
+		discard;
 }

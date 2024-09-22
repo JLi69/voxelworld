@@ -21,20 +21,56 @@ pub enum Axis {
     Z,
 }
 
+pub const TRANSPARENT_FLAG: u8 = 1 << 0;
+pub const CONNECT_FLAG: u8 = 1 << 1;
+
 #[derive(Clone, Copy)]
 pub struct Block {
     //Block id
     pub id: u8,
+    //Flags
+    //NOTE: This actually probably doesn't need to be stored for EVERY block,
+    //we can just have a map that takes an id and returns the block flags since
+    //in theory the block flags should be the same for every block and it would
+    //probably save memory
+    pub flags: u8,
 }
 
 impl Block {
     //Create a new empty block
     pub fn new() -> Self {
-        Self { id: 0 }
+        Self { id: 0, flags: 0 }
     }
 
     //Create a new block with an id
     pub fn new_id(blockid: u8) -> Self {
-        Self { id: blockid }
+        let mut blockflags = 0;
+
+        //TODO: Have a better way of configuring block flags other than hardcoding
+        if blockid == 7 {
+            //Leaves
+            blockflags |= TRANSPARENT_FLAG;
+        } else if blockid == 9 {
+            //Glass
+            blockflags |= TRANSPARENT_FLAG;
+            blockflags |= CONNECT_FLAG;
+        }
+
+        Self {
+            id: blockid,
+            flags: blockflags,
+        }
+    }
+
+    //Returns if the block is transparent
+    pub fn transparent(&self) -> bool {
+        self.flags & TRANSPARENT_FLAG != 0
+    }
+
+    //Returns if the block can "connect" to the block next to it
+    //(will not display any face if the block is transparent and the same
+    //block is next to it)
+    pub fn can_connect(&self) -> bool {
+        self.flags & CONNECT_FLAG != 0
     }
 }
