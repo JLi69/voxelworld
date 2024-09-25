@@ -6,7 +6,7 @@ mod voxel;
 use assets::Texture;
 use game::Game;
 use glfw::Context;
-use voxel::{World, CHUNK_SIZE_F32};
+use voxel::{build::BLOCK_REACH, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
     //Attempt to initialize glfw
@@ -25,10 +25,14 @@ fn main() {
     chunkvaos.generate_chunk_vaos(&gamestate.world);
 
     //Create shaders
+    //Chunk shader
     let vert = "assets/shaders/chunkvert.glsl";
     let frag = "assets/shaders/chunkfrag.glsl";
     let chunkshader = assets::program_from_vert_and_frag(vert, frag);
-    chunkshader.use_program();
+    //Cube outline shader
+    let vert = "assets/shaders/vert.glsl";
+    let frag = "assets/shaders/outlinefrag.glsl";
+    let outlineshader = assets::program_from_vert_and_frag(vert, frag);
 
     //Load textures
     let blocktexture = match Texture::load_from_file("assets/textures/blocktextures.png") {
@@ -38,6 +42,9 @@ fn main() {
             Texture::new()
         }
     };
+
+    //Generate models
+    let cube = gfx::models::gen_cube_vao();
 
     gfx::set_default_gl_state();
     //Main loop
@@ -53,6 +60,8 @@ fn main() {
         blocktexture.bind();
         //Display chunks
         chunkvaos.display_chunks(&chunkshader, &gamestate);
+        //Display selection outline
+        gfx::display::display_selected_outline(&outlineshader, &gamestate, &cube);
 
         //Update gameobjects
         gamestate.update_player(dt, window.get_cursor_mode());

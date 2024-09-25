@@ -3,7 +3,7 @@ pub mod chunk;
 pub mod coordinates;
 pub mod world;
 
-pub use self::build::{destroy_block, place_block, raycast, BLOCK_REACH};
+pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 pub use chunk::Chunk;
 pub use world::World;

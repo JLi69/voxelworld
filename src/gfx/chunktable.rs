@@ -1,12 +1,7 @@
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
 use crate::game::Game;
-use crate::voxel;
-use crate::voxel::BLOCK_REACH;
-use crate::voxel::{
-    build::get_raycast_voxel, world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World,
-    CHUNK_SIZE_I32,
-};
+use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
 use crate::CHUNK_SIZE_F32;
 use std::collections::HashMap;
 use std::mem::size_of;
@@ -198,16 +193,8 @@ impl ChunkVaoTable {
 
     //Displays all the chunk vaos
     pub fn display_chunks(&self, chunkshader: &ShaderProgram, gamestate: &Game) {
-        let pos = gamestate.cam.position();
-        let dir = gamestate.cam.forward();
-        let selected = voxel::raycast(pos, dir, BLOCK_REACH, &gamestate.world);
-
+        chunkshader.use_program();
         let view = gamestate.cam.get_view();
-        let (x, y, z, axis) = selected;
-        let (x, y, z) = get_raycast_voxel(x, y, z, dir, axis);
-        let selectedid = gamestate.world.get_block(x, y, z).id;
-        chunkshader.uniform_vec3f("selected", x as f32, y as f32, z as f32);
-        chunkshader.uniform_uint("selectedid", selectedid as u32);
         chunkshader.uniform_matrix4f("view", &view);
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);
 

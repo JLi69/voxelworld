@@ -1,6 +1,8 @@
 pub mod buildchunk;
 pub mod chunktable;
+pub mod display;
 mod face_data;
+pub mod models;
 
 use buildchunk::{generate_chunk_vertex_data, ChunkData};
 use cgmath::Matrix4;
