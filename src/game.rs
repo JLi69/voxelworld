@@ -25,6 +25,7 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
     window.set_mouse_button_polling(true);
     window.set_cursor_mode(CursorMode::Disabled);
     window.make_current();
+    glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
     (window, events)
 }
 
