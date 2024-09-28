@@ -4,6 +4,7 @@ pub mod physics;
 pub mod player;
 pub mod update;
 
+use crate::assets::texture::load_image_pixels;
 use crate::World;
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
@@ -25,6 +26,21 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
     window.set_mouse_button_polling(true);
     window.set_cursor_mode(CursorMode::Disabled);
     window.make_current();
+
+    //Set icon for window
+    match load_image_pixels("assets/icon.png") {
+        Ok((pixel_data, info)) => {
+            window.set_icon_from_pixels(vec![glfw::PixelImage {
+                width: info.width,
+                height: info.height,
+                pixels: pixel_data,
+            }]);
+        }
+        Err(msg) => {
+            eprintln!("{msg}");
+        }
+    }
+
     glfw.set_swap_interval(glfw::SwapInterval::Sync(1));
     (window, events)
 }

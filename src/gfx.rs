@@ -1,15 +1,15 @@
 pub mod buildchunk;
 pub mod chunktable;
 pub mod display;
-pub mod frustum;
 mod face_data;
+pub mod frustum;
 pub mod models;
 
+use crate::game::Camera;
 use buildchunk::{generate_chunk_vertex_data, ChunkData};
 use cgmath::Matrix4;
 pub use chunktable::{update_chunk_vaos, ChunkVaoTable};
 use glfw::PWindow;
-use crate::game::Camera;
 
 pub fn calculate_perspective(window: &PWindow, cam: &Camera) -> Matrix4<f32> {
     let (w, h) = window.get_size();

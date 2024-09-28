@@ -1,4 +1,4 @@
-use cgmath::{Deg, Matrix4, Vector3, Vector4, InnerSpace};
+use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
 const DEFAULT_ZNEAR: f32 = 0.1;
 const DEFAULT_ZFAR: f32 = 1000.0;
@@ -52,7 +52,9 @@ impl Camera {
 
     //Right vector for camera
     pub fn right(&self) -> Vector3<f32> {
-        Vector3::new(0.0, 1.0, 0.0).cross(self.forward()).normalize()
+        Vector3::new(0.0, 1.0, 0.0)
+            .cross(self.forward())
+            .normalize()
     }
 
     //Up vector for camera

@@ -3,8 +3,8 @@ use cgmath::Vector3;
 use super::frustum::Frustum;
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
-use crate::game::Game;
 use crate::game::physics::Hitbox;
+use crate::game::Game;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
 use crate::CHUNK_SIZE_F32;
 use std::collections::HashMap;
@@ -218,7 +218,7 @@ impl ChunkVaoTable {
             let y = pos.y as f32 * CHUNK_SIZE_F32;
             let z = pos.z as f32 * CHUNK_SIZE_F32;
 
-            //Calculate Chunk AABB  
+            //Calculate Chunk AABB
             let sz = CHUNK_SIZE_F32;
             let chunkcenter = Vector3::new(x + sz / 2.0, y + sz / 2.0, z + sz / 2.0);
             let aabb = Hitbox::from_vecs(chunkcenter, Vector3::new(sz, sz, sz));

@@ -62,7 +62,7 @@ fn main() {
         gamestate.persp = persp;
         let aspect = gfx::calculate_aspect(&window);
         gamestate.aspect = aspect;
-        
+
         //Display chunks
         blocktexture.bind();
         let drawn = chunkvaos.display_chunks(&chunkshader, &gamestate);

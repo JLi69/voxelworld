@@ -1,10 +1,10 @@
-use cgmath::{Vector3, InnerSpace};
-use crate::game::Camera;
 use crate::game::physics::Hitbox;
+use crate::game::Camera;
+use cgmath::{InnerSpace, Vector3};
 
 //A plane only needs to be defined by a distance to the origin and a normal vector
 pub struct Plane {
-    pub dist: f32, //Distance to the origin
+    pub dist: f32,          //Distance to the origin
     pub norm: Vector3<f32>, //Normal vector
 }
 
@@ -57,10 +57,20 @@ impl Frustum {
         let half_wfar = half_hfar * aspect;
 
         //Calculate plane normals
-        let left_n = cam.up().cross(cam.forward() * cam.zfar - cam.right() * half_wfar).normalize();
-        let right_n = (cam.forward() * cam.zfar + cam.right() * half_wfar).cross(cam.up()).normalize();
-        let top_n = cam.right().cross(cam.forward() * cam.zfar + cam.up() * half_hfar).normalize();
-        let bottom_n = (cam.forward() * cam.zfar - cam.up() * half_hfar).cross(cam.right()).normalize();
+        let left_n = cam
+            .up()
+            .cross(cam.forward() * cam.zfar - cam.right() * half_wfar)
+            .normalize();
+        let right_n = (cam.forward() * cam.zfar + cam.right() * half_wfar)
+            .cross(cam.up())
+            .normalize();
+        let top_n = cam
+            .right()
+            .cross(cam.forward() * cam.zfar + cam.up() * half_hfar)
+            .normalize();
+        let bottom_n = (cam.forward() * cam.zfar - cam.up() * half_hfar)
+            .cross(cam.right())
+            .normalize();
 
         Self {
             near: Plane::from_point(cam.position + cam.forward() * cam.znear, cam.forward()),
@@ -74,11 +84,11 @@ impl Frustum {
 
     //Returns true if an AABB intersects with the frustum
     pub fn intersects(&self, aabb: &Hitbox) -> bool {
-        self.near.aabb_in_front(aabb) && 
-            self.far.aabb_in_front(aabb) &&
-            self.left.aabb_in_front(aabb) &&
-            self.right.aabb_in_front(aabb) &&
-            self.top.aabb_in_front(aabb) &&
-            self.bottom.aabb_in_front(aabb)
+        self.near.aabb_in_front(aabb)
+            && self.far.aabb_in_front(aabb)
+            && self.left.aabb_in_front(aabb)
+            && self.right.aabb_in_front(aabb)
+            && self.top.aabb_in_front(aabb)
+            && self.bottom.aabb_in_front(aabb)
     }
 }
