@@ -1,6 +1,7 @@
 pub mod buildchunk;
 pub mod chunktable;
 pub mod display;
+pub mod frustum;
 mod face_data;
 pub mod models;
 
@@ -8,11 +9,18 @@ use buildchunk::{generate_chunk_vertex_data, ChunkData};
 use cgmath::Matrix4;
 pub use chunktable::{update_chunk_vaos, ChunkVaoTable};
 use glfw::PWindow;
+use crate::game::Camera;
 
-pub fn calculate_perspective(window: &PWindow) -> Matrix4<f32> {
+pub fn calculate_perspective(window: &PWindow, cam: &Camera) -> Matrix4<f32> {
     let (w, h) = window.get_size();
     let aspect = w as f32 / h as f32;
-    cgmath::perspective(cgmath::Deg(75.0), aspect, 0.1, 1000.0)
+    cgmath::perspective(cam.get_fovy(), aspect, cam.znear, cam.zfar)
+}
+
+//Returns the aspect ratio of the window as an f32
+pub fn calculate_aspect(window: &PWindow) -> f32 {
+    let (w, h) = window.get_size();
+    w as f32 / h as f32
 }
 
 pub fn output_errors() {

@@ -1,9 +1,17 @@
-use cgmath::{Deg, Matrix4, Vector3, Vector4};
+use cgmath::{Deg, Matrix4, Vector3, Vector4, InnerSpace};
+
+const DEFAULT_ZNEAR: f32 = 0.1;
+const DEFAULT_ZFAR: f32 = 1000.0;
+//In degrees
+const DEFAULT_FOV: f32 = 75.0;
 
 pub struct Camera {
     pub position: Vector3<f32>,
     pub yaw: f32,   //In degrees
     pub pitch: f32, //In degrees
+    pub znear: f32,
+    pub zfar: f32,
+    pub fovy: f32, //In degrees
 }
 
 impl Camera {
@@ -13,6 +21,9 @@ impl Camera {
             position: Vector3::new(x, y, z),
             yaw: 0.0,
             pitch: 0.0,
+            znear: DEFAULT_ZNEAR,
+            zfar: DEFAULT_ZFAR,
+            fovy: DEFAULT_FOV,
         }
     }
 
@@ -36,6 +47,21 @@ impl Camera {
         let dir = Matrix4::from_angle_y(Deg(-self.yaw))
             * Matrix4::from_angle_x(Deg(-self.pitch))
             * Vector4::new(0.0, 0.0, -1.0, 1.0);
-        Vector3::new(dir.x, dir.y, dir.z)
+        Vector3::new(dir.x, dir.y, dir.z).normalize()
+    }
+
+    //Right vector for camera
+    pub fn right(&self) -> Vector3<f32> {
+        Vector3::new(0.0, 1.0, 0.0).cross(self.forward()).normalize()
+    }
+
+    //Up vector for camera
+    pub fn up(&self) -> Vector3<f32> {
+        self.forward().cross(self.right()).normalize()
+    }
+
+    //Returns fovy in degrees for camera
+    pub fn get_fovy(&self) -> Deg<f32> {
+        Deg(self.fovy)
     }
 }

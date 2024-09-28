@@ -41,6 +41,7 @@ pub struct Game {
     dmousey: f32,
     pub world: World,
     pub persp: Matrix4<f32>,
+    pub aspect: f32,
 }
 
 impl Game {
@@ -57,6 +58,7 @@ impl Game {
             dmousey: 0.0,
             world: World::empty(),
             persp: Matrix4::identity(),
+            aspect: 1.0,
         }
     }
 

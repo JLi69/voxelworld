@@ -1,6 +1,10 @@
+use cgmath::Vector3;
+
+use super::frustum::Frustum;
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
 use crate::game::Game;
+use crate::game::physics::Hitbox;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
 use crate::CHUNK_SIZE_F32;
 use std::collections::HashMap;
@@ -192,12 +196,16 @@ impl ChunkVaoTable {
     }
 
     //Displays all the chunk vaos
-    pub fn display_chunks(&self, chunkshader: &ShaderProgram, gamestate: &Game) {
+    pub fn display_chunks(&self, chunkshader: &ShaderProgram, gamestate: &Game) -> u32 {
+        //Calculate view frustum
+        let view_frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
+
         chunkshader.use_program();
         let view = gamestate.cam.get_view();
         chunkshader.uniform_matrix4f("view", &view);
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);
 
+        let mut drawn_count = 0;
         for (i, vao) in self.vaos.iter().enumerate() {
             if self.vertex_count[i] == 0 {
                 continue;
@@ -207,12 +215,24 @@ impl ChunkVaoTable {
             let x = pos.x as f32 * CHUNK_SIZE_F32;
             let y = pos.y as f32 * CHUNK_SIZE_F32;
             let z = pos.z as f32 * CHUNK_SIZE_F32;
+
+            //Calculate Chunk AABB  
+            let sz = CHUNK_SIZE_F32;
+            let chunkcenter = Vector3::new(x + sz / 2.0, y + sz / 2.0, z + sz / 2.0);
+            let aabb = Hitbox::from_vecs(chunkcenter, Vector3::new(sz, sz, sz));
+            if !view_frustum.intersects(&aabb) {
+                continue;
+            }
+
+            drawn_count += 1;
             chunkshader.uniform_vec3f("chunkpos", x, y, z);
             unsafe {
                 gl::BindVertexArray(*vao);
                 gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_count[i]);
             }
         }
+
+        drawn_count
     }
 }
 

@@ -55,10 +55,13 @@ fn main() {
         //Display
         gfx::clear();
         //Update perspective matrix
-        let persp = gfx::calculate_perspective(&window);
+        let persp = gfx::calculate_perspective(&window, &gamestate.cam);
         gamestate.persp = persp;
-        blocktexture.bind();
+        let aspect = gfx::calculate_aspect(&window);
+        gamestate.aspect = aspect;
+        
         //Display chunks
+        blocktexture.bind();
         chunkvaos.display_chunks(&chunkshader, &gamestate);
         //Display selection outline
         gfx::display::display_selected_outline(&outlineshader, &gamestate, &cube);
