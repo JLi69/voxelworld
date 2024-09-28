@@ -49,6 +49,9 @@ fn main() {
     gfx::set_default_gl_state();
     //Main loop
     let mut dt = 0.0f32;
+    let mut fps_timer = 0.0;
+    let mut frames = 0;
+    let mut chunks_drawn = 0;
     while !window.should_close() {
         let start = std::time::Instant::now();
 
@@ -62,7 +65,8 @@ fn main() {
         
         //Display chunks
         blocktexture.bind();
-        chunkvaos.display_chunks(&chunkshader, &gamestate);
+        let drawn = chunkvaos.display_chunks(&chunkshader, &gamestate);
+        chunks_drawn += drawn;
         //Display selection outline
         gfx::display::display_selected_outline(&outlineshader, &gamestate, &cube);
 
@@ -70,6 +74,17 @@ fn main() {
         gamestate.update_player(dt, window.get_cursor_mode());
         //Destroy and place blocks
         gamestate.build(&mut chunkvaos);
+
+        //Output FPS
+        fps_timer += dt;
+        if fps_timer > 1.0 {
+            eprintln!("FPS: {frames} | Chunks drawn: {chunks_drawn}");
+            fps_timer = 0.0;
+            frames = 0;
+            chunks_drawn = 0;
+        } else {
+            frames += 1;
+        }
 
         gfx::output_errors();
         window.swap_buffers();

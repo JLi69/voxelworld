@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::mem::size_of;
 use std::os::raw::c_void;
 
+const BUF_COUNT: usize = 2;
+
 //Send chunk vertex data to a buffer and vao
 fn send_chunk_data_to_vao(vao: u32, block_buffer1: u32, block_buffer2: u32, chunkdata: &ChunkData) {
     if chunkdata.is_empty() {
@@ -65,7 +67,7 @@ impl ChunkVaoTable {
     pub fn new(count: usize) -> Self {
         Self {
             vaos: vec![0; count],
-            buffers: vec![0; 2 * count],
+            buffers: vec![0; BUF_COUNT * count],
             vertex_count: vec![0; count],
             chunk_positions: vec![ChunkPos::origin(); count],
             pos_to_idx: HashMap::new(),
@@ -96,8 +98,8 @@ impl ChunkVaoTable {
             self.vertex_count[i] = chunkdata.len() as i32 / 4;
             send_chunk_data_to_vao(
                 self.vaos[i],
-                self.buffers[2 * i],
-                self.buffers[2 * i + 1],
+                self.buffers[BUF_COUNT * i],
+                self.buffers[BUF_COUNT * i + 1],
                 &chunkdata,
             );
             let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
@@ -134,8 +136,8 @@ impl ChunkVaoTable {
             self.vertex_count[idx] = chunkdata.len() as i32 / 4;
             send_chunk_data_to_vao(
                 self.vaos[idx],
-                self.buffers[idx * 2],
-                self.buffers[idx * 2 + 1],
+                self.buffers[idx * BUF_COUNT],
+                self.buffers[idx * BUF_COUNT + 1],
                 &chunkdata,
             );
         }
