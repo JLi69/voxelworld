@@ -16,7 +16,7 @@ fn main() {
     let mut gamestate = Game::new();
     gamestate.init();
     gamestate.init_mouse_pos(&window);
-    gamestate.generate_world(16);
+    gamestate.generate_world(3);
     //Initialize gl
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
