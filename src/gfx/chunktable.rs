@@ -275,6 +275,17 @@ impl ChunkVaoTable {
         let view = gamestate.cam.get_view();
         chunkshader.uniform_matrix4f("view", &view);
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);
+        chunkshader.uniform_vec3f(
+            "campos",
+            gamestate.cam.position.x,
+            gamestate.cam.position.y, 
+            gamestate.cam.position.z,
+        );
+        let range = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32;
+        let dist = range * 0.7;
+        chunkshader.uniform_float("fogdist", dist);
+        chunkshader.uniform_float("fogstrength", 1.0 / (range * 0.2));
+        chunkshader.uniform_vec4f("fogcolor", 0.4, 0.8, 1.0, 1.0);
 
         let mut drawn_count = 0;
         for ((chunkx, chunky, chunkz), vao) in &self.vaos {

@@ -55,6 +55,10 @@ impl World {
         }
     }
 
+    pub fn get_range(&self) -> i32 {
+        self.range
+    }
+
     //Returns an optional immutable reference to a chunk based on the chunk
     //position - will return none if such chunk is not found
     pub fn get_chunk(&self, ix: i32, iy: i32, iz: i32) -> Option<&Chunk> {
