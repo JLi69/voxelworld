@@ -77,6 +77,7 @@ fn main() {
         //Destroy and place blocks
         gamestate.build(&mut chunkvaos);
         //Generate new chunks
+        gamestate.world.check_for_cache_clear();
         gamestate.world.clean_cache();
         gamestate
             .world

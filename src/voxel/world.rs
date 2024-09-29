@@ -3,9 +3,6 @@ mod flat_world;
 use super::{world_to_chunk_position, Block, Chunk};
 use std::collections::HashMap;
 
-//Absolute maximum size for the cache
-const MAX_CACHE_SIZE: usize = 2048;
-
 //World struct
 pub struct World {
     //This only stores chunks that are near to the player
@@ -18,6 +15,7 @@ pub struct World {
     centerz: i32,
     //cache of chunks that have been unloaded
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
+    clear_cache: bool
 }
 
 impl World {
@@ -30,6 +28,7 @@ impl World {
             centery: 0,
             centerz: 0,
             chunk_cache: HashMap::new(),
+            clear_cache: false,
         }
     }
 
@@ -52,6 +51,7 @@ impl World {
             centery: 0,
             centerz: 0,
             chunk_cache: HashMap::new(),
+            clear_cache: false,
         }
     }
 
@@ -91,19 +91,43 @@ impl World {
         Block::new()
     }
 
-    //If the cache gets too large, attempt to delete some sections
-    pub fn clean_cache(&mut self) {
-        if self.chunk_cache.len() <= MAX_CACHE_SIZE {
+    fn get_max_cache_sz(&self) -> usize {
+        let sz = self.range * 2 + 1;
+        (sz * sz * 8) as usize
+    }
+
+    //Checks if the world should clear its chunk cache
+    pub fn check_for_cache_clear(&mut self) { 
+        if self.chunk_cache.len() <= self.get_max_cache_sz() {
             return;
         }
 
-        while self.chunk_cache.len() > MAX_CACHE_SIZE / 2 {
+        eprintln!("Clearing chunk cache!");
+        self.clear_cache = true;
+    }
+
+    //If the cache gets too large, attempt to delete some sections
+    pub fn clean_cache(&mut self) {
+        if !self.clear_cache {
+            return;
+        }
+
+        let max_cache_sz = self.get_max_cache_sz();
+        let mut time_passed = 0.0;
+        let start = std::time::Instant::now();
+        while self.chunk_cache.len() > max_cache_sz as usize / 2 && time_passed < 0.01 {
             let to_delete = self.chunk_cache.keys().next().copied();
 
             if let Some(pos) = to_delete {
                 //TODO: add code to save chunks to disk
                 self.chunk_cache.remove(&pos);
             }
+            let now = std::time::Instant::now();
+            time_passed = (now - start).as_secs_f32();
+        }
+
+        if self.chunk_cache.len() <= max_cache_sz as usize / 2 {
+            self.clear_cache = false;
         }
     }
 
