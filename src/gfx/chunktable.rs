@@ -1,4 +1,3 @@
-use cgmath::Vector3;
 use super::frustum::Frustum;
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
@@ -6,6 +5,7 @@ use crate::game::physics::Hitbox;
 use crate::game::Game;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
 use crate::CHUNK_SIZE_F32;
+use cgmath::Vector3;
 use std::collections::{HashMap, VecDeque};
 use std::mem::size_of;
 use std::os::raw::c_void;
@@ -82,7 +82,7 @@ impl ChunkVaoTable {
         if let Some(pos) = top {
             let (x, y, z) = pos;
             if self.vaos.contains_key(&pos) {
-                self.update_chunk_vao(world.get_chunk(x, y, z), world); 
+                self.update_chunk_vao(world.get_chunk(x, y, z), world);
             } else {
                 //Create a new vao to be added
                 let mut vao = ChunkVao {
@@ -107,7 +107,7 @@ impl ChunkVaoTable {
                         world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
                     ];
 
-                    let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks); 
+                    let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
                     send_chunk_data_to_vao(&vao, &chunkdata);
                     vao.vert_count = chunkdata.len() as i32 / 4;
                     self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), vao);
@@ -128,15 +128,16 @@ impl ChunkVaoTable {
 
     pub fn delete_chunks(&mut self, centerx: i32, centery: i32, centerz: i32, range: i32) {
         let mut vaos_to_delete = vec![];
-        let mut buf_to_delete = vec![]; 
+        let mut buf_to_delete = vec![];
         let mut to_delete = vec![]; //Positions to delete from the map
         for ((x, y, z), vao) in &mut self.vaos {
-            if (centerx - x).abs() <= range &&
-                (centery - y).abs() <= range &&
-                (centerz - z).abs() <= range {
+            if (centerx - x).abs() <= range
+                && (centery - y).abs() <= range
+                && (centerz - z).abs() <= range
+            {
                 continue;
             }
-            
+
             vaos_to_delete.push(vao.id);
             for buf in vao.buffers {
                 buf_to_delete.push(buf);
@@ -183,12 +184,13 @@ impl ChunkVaoTable {
 
             let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
             let chunkvao = ChunkVao {
-                 id: vaos[i],
-                 buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
-                 vert_count: chunkdata.len() as i32 / 4,
+                id: vaos[i],
+                buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
+                vert_count: chunkdata.len() as i32 / 4,
             };
             send_chunk_data_to_vao(&chunkvao, &chunkdata);
-            self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), chunkvao);
+            self.vaos
+                .insert((chunkpos.x, chunkpos.y, chunkpos.z), chunkvao);
         }
     }
 
@@ -278,7 +280,7 @@ impl ChunkVaoTable {
         chunkshader.uniform_vec3f(
             "campos",
             gamestate.cam.position.x,
-            gamestate.cam.position.y, 
+            gamestate.cam.position.y,
             gamestate.cam.position.z,
         );
         let range = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32;

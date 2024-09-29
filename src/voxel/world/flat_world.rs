@@ -1,7 +1,10 @@
-use std::collections::HashSet;
-use cgmath::Vector3;
 use super::World;
-use crate::{voxel::{Block, Chunk, CHUNK_SIZE_I32, INDESTRUCTIBLE, CHUNK_SIZE_F32}, gfx::ChunkVaoTable};
+use crate::{
+    gfx::ChunkVaoTable,
+    voxel::{Block, Chunk, CHUNK_SIZE_F32, CHUNK_SIZE_I32, INDESTRUCTIBLE},
+};
+use cgmath::Vector3;
+use std::collections::HashSet;
 
 fn gen_flat_chunk(chunk: &mut Chunk) {
     let chunkpos = chunk.get_chunk_pos();
@@ -27,7 +30,7 @@ fn gen_flat_chunk(chunk: &mut Chunk) {
                 } else if y == -63 {
                     //Bottom of the world
                     chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
-                } 
+                }
             }
         }
     }
@@ -58,9 +61,10 @@ impl World {
         let mut in_range = HashSet::<(i32, i32, i32)>::new();
         let mut out_of_range = HashSet::<(i32, i32, i32)>::new();
         for (chunkx, chunky, chunkz) in self.chunks.keys() {
-            if (chunkx - x).abs() <= self.range &&
-                (chunky - y).abs() <= self.range &&
-                (chunkz - z).abs() <= self.range {
+            if (chunkx - x).abs() <= self.range
+                && (chunky - y).abs() <= self.range
+                && (chunkz - z).abs() <= self.range
+            {
                 in_range.insert((*chunkx, *chunky, *chunkz));
             } else {
                 out_of_range.insert((*chunkx, *chunky, *chunkz));

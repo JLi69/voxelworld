@@ -112,7 +112,7 @@ impl World {
     }
 
     //When a chunk gets unloaded, add it to a cache in case it needs to be reloaded
-    pub fn add_to_chunk_cache(&mut self, chunk: Chunk) { 
+    pub fn add_to_chunk_cache(&mut self, chunk: Chunk) {
         let pos = chunk.get_chunk_pos();
         self.chunk_cache.insert((pos.x, pos.y, pos.z), chunk);
     }
