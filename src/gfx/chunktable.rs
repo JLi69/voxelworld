@@ -151,11 +151,11 @@ impl ChunkVaoTable {
 
         unsafe {
             if !buf_to_delete.is_empty() {
-                gl::DeleteBuffers(buf_to_delete.len() as i32, &mut buf_to_delete[0]);
+                gl::DeleteBuffers(buf_to_delete.len() as i32, &buf_to_delete[0]);
             }
 
             if !vaos_to_delete.is_empty() {
-                gl::DeleteVertexArrays(vaos_to_delete.len() as i32, &mut vaos_to_delete[0]);
+                gl::DeleteVertexArrays(vaos_to_delete.len() as i32, &vaos_to_delete[0]);
             }
         }
     }

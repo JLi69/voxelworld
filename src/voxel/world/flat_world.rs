@@ -82,14 +82,28 @@ impl World {
 
         //Delete old chunks
         for to_delete in &out_of_range {
+            let chunk = self.chunks.get(to_delete);
+            if let Some(chunk) = chunk {
+                self.add_to_chunk_cache(chunk.clone());
+            }
             self.chunks.remove(to_delete);
         }
 
         //Generate new chunks
         for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if self.chunk_cache.contains_key(&pos) {
+                let new_chunk = self.chunk_cache.get(&pos);
+                if let Some(new_chunk) = new_chunk {
+                    self.chunks.insert(pos, new_chunk.clone());
+                    self.chunk_cache.remove(&pos);
+                }
+                continue;
+            }
+
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             gen_flat_chunk(&mut new_chunk);
-            self.chunks.insert((*chunkx, *chunky, *chunkz), new_chunk);
+            self.chunks.insert(pos, new_chunk);
         }
 
         //Set the center position

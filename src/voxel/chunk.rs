@@ -1,5 +1,6 @@
 use super::{Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK};
 
+#[derive(Clone)]
 pub struct Chunk {
     //Chunks are CHUNK_SIZE x CHUNK_SIZE x CHUNK_SIZE cubes
     //For convention, assume that x is left to right, z is
