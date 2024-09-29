@@ -1,10 +1,11 @@
 mod flat_world;
+use std::collections::HashMap;
 use super::{world_to_chunk_position, Block, Chunk, CHUNK_SIZE};
 
 //World struct
 pub struct World {
     //This only stores chunks that are near to the player
-    chunks: Vec<Chunk>,
+    pub chunks: HashMap<(i32, i32, i32), Chunk>,
     //Size of world in chunks
     size: usize,
     //Position of the center chunk
@@ -17,7 +18,7 @@ impl World {
     //Create an empty world
     pub fn empty() -> Self {
         Self {
-            chunks: vec![],
+            chunks: HashMap::new(),
             size: 0,
             centerx: 0,
             centery: 0,
@@ -31,11 +32,11 @@ impl World {
         let sz = 2 * range + 1;
 
         //Create chunk list
-        let mut chunklist = vec![];
+        let mut chunklist = HashMap::new();
         for y in -(range as i32)..=(range as i32) {
             for z in -(range as i32)..=(range as i32) {
                 for x in -(range as i32)..=(range as i32) {
-                    chunklist.push(Chunk::new(x, y, z));
+                    chunklist.insert((x, y, z), Chunk::new(x, y, z));
                 }
             }
         }
@@ -47,11 +48,6 @@ impl World {
             centery: 0,
             centerz: 0,
         }
-    }
-
-    //Returns an immutable reference to a chunk based on an index
-    pub fn get_chunk_by_idx(&self, index: usize) -> &Chunk {
-        &self.chunks[index]
     }
 
     //Returns length of chunk list
@@ -83,11 +79,7 @@ impl World {
             return None;
         }
 
-        let sz = self.size as i32;
-        let index_y = (iy - self.centery + range) * sz * sz;
-        let index_z = (iz - self.centerz + range) * sz;
-        let index_x = ix - self.centerx + range;
-        Some(&self.chunks[(index_z + index_y + index_x) as usize])
+        self.chunks.get(&(ix, iy, iz))
     }
 
     //Same is get_chunk except the reference is mutable
@@ -102,11 +94,7 @@ impl World {
             return None;
         }
 
-        let sz = self.size as i32;
-        let index_y = (iy - self.centery + range) * sz * sz;
-        let index_z = (iz - self.centerz + range) * sz;
-        let index_x = ix - self.centerx + range;
-        Some(&mut self.chunks[(index_z + index_y + index_x) as usize])
+        self.chunks.get_mut(&(ix, iy, iz))
     }
 
     //Sets a block based on position,

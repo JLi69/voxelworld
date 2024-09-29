@@ -34,7 +34,7 @@ fn gen_flat_chunk(chunk: &mut Chunk) {
 impl World {
     //Generates a flat world
     pub fn gen_flat(&mut self) {
-        for chunk in &mut self.chunks {
+        for chunk in &mut self.chunks.values_mut() {
             gen_flat_chunk(chunk);
         }
     }

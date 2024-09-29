@@ -81,8 +81,7 @@ impl ChunkVaoTable {
             gl::GenBuffers(self.buffers.len() as i32, &mut self.buffers[0]);
         }
 
-        for i in 0..world.get_chunk_count() {
-            let chunk = world.get_chunk_by_idx(i);
+        for (i, chunk) in world.chunks.values().enumerate() {
             let chunkpos = chunk.get_chunk_pos();
             let adj_chunks = [
                 world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
@@ -102,19 +101,7 @@ impl ChunkVaoTable {
                 self.buffers[BUF_COUNT * i + 1],
                 &chunkdata,
             );
-            let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
-            self.pos_to_idx.insert(pos, i);
-        }
-    }
-
-    //Return the index of a chunk based on a position, returns none if no
-    //such position can be found
-    fn convert_pos_to_idx(&self, chunkpos: &ChunkPos) -> usize {
-        let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
-        match self.pos_to_idx.get(&pos) {
-            Some(idx) => *idx,
-            //Return an out of bounds index if we cannot locate a position
-            _ => self.vaos.len(),
+            self.pos_to_idx.insert((chunkpos.x, chunkpos.y, chunkpos.z), i);
         }
     }
 
@@ -131,15 +118,19 @@ impl ChunkVaoTable {
                 world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
             ];
             let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
-            let idx = self.convert_pos_to_idx(&chunkpos);
-            self.chunk_positions[idx] = chunkpos;
-            self.vertex_count[idx] = chunkdata.len() as i32 / 4;
-            send_chunk_data_to_vao(
-                self.vaos[idx],
-                self.buffers[idx * BUF_COUNT],
-                self.buffers[idx * BUF_COUNT + 1],
-                &chunkdata,
-            );
+            
+            let idx = self.pos_to_idx.get(&(chunkpos.x, chunkpos.y, chunkpos.z));
+            if let Some(idx) = idx {
+                let i = *idx;
+                self.chunk_positions[i] = chunkpos;
+                self.vertex_count[i] = chunkdata.len() as i32 / 4;
+                send_chunk_data_to_vao(
+                    self.vaos[i],
+                    self.buffers[idx * BUF_COUNT],
+                    self.buffers[idx * BUF_COUNT + 1],
+                    &chunkdata,
+                );
+            }
         }
     }
 
@@ -178,10 +169,8 @@ impl ChunkVaoTable {
     //Updates a single chunk and if necessary, also updates the adjacent chunks
     pub fn update_chunk_with_adj(&mut self, x: i32, y: i32, z: i32, world: &World) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
-        let pos = (chunkx, chunky, chunkz);
-        if let Some(i) = self.pos_to_idx.get(&pos) {
-            let idx = *i;
-            let chunk = world.get_chunk_by_idx(idx);
+        let chunk = world.get_chunk(chunkx, chunky, chunkz);
+        if let Some(chunk) = chunk {
             let chunkpos = chunk.get_chunk_pos();
             let adj_chunks = [
                 world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
