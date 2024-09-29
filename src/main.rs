@@ -6,12 +6,14 @@ mod voxel;
 use assets::Texture;
 use game::Game;
 use glfw::Context;
-use voxel::{build::BLOCK_REACH, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
+use voxel::{build::BLOCK_REACH, World, CHUNK_SIZE_F32, EMPTY_BLOCK, flags::init_voxel_flags};
 
 fn main() {
     //Attempt to initialize glfw
     let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to init glfw!");
     let (mut window, events) = game::init_window(&mut glfw);
+    //Initialize voxel flags
+    init_voxel_flags();
     //Initialize game state
     let mut gamestate = Game::new();
     gamestate.init();
