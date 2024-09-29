@@ -21,7 +21,7 @@ fn main() {
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
     //Generate chunk vaos
-    let mut chunkvaos = gfx::ChunkVaoTable::new(gamestate.world.get_chunk_count());
+    let mut chunkvaos = gfx::ChunkVaoTable::new();
     chunkvaos.generate_chunk_vaos(&gamestate.world);
 
     //Create shaders
@@ -74,6 +74,9 @@ fn main() {
         gamestate.update_player(dt, window.get_cursor_mode());
         //Destroy and place blocks
         gamestate.build(&mut chunkvaos);
+        //Generate new chunks
+        gamestate.world.gen_more_flat(gamestate.player.position, &mut chunkvaos);
+        chunkvaos.update_chunks(&gamestate.world);
 
         //Output FPS
         fps_timer += dt;

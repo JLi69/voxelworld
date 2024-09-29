@@ -87,7 +87,7 @@ impl Game {
     }
 
     //Generate world
-    pub fn generate_world(&mut self, range: usize) {
+    pub fn generate_world(&mut self, range: i32) {
         self.world = World::new(range);
         self.world.gen_flat();
     }

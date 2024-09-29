@@ -13,11 +13,6 @@ pub struct ChunkPos {
 }
 
 impl ChunkPos {
-    //Returns the (0, 0, 0)
-    pub fn origin() -> Self {
-        Self { x: 0, y: 0, z: 0 }
-    }
-
     //Returns (posx, posy, posz)
     pub fn new(posx: i32, posy: i32, posz: i32) -> Self {
         Self {

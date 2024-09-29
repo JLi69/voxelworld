@@ -1,5 +1,4 @@
 use cgmath::Vector3;
-
 use super::frustum::Frustum;
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
@@ -7,21 +6,27 @@ use crate::game::physics::Hitbox;
 use crate::game::Game;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
 use crate::CHUNK_SIZE_F32;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::mem::size_of;
 use std::os::raw::c_void;
 
 const BUF_COUNT: usize = 2;
 
+struct ChunkVao {
+    id: u32,
+    buffers: [u32; BUF_COUNT],
+    vert_count: i32,
+}
+
 //Send chunk vertex data to a buffer and vao
-fn send_chunk_data_to_vao(vao: u32, block_buffer1: u32, block_buffer2: u32, chunkdata: &ChunkData) {
+fn send_chunk_data_to_vao(chunkvao: &ChunkVao, chunkdata: &ChunkData) {
     if chunkdata.is_empty() {
         return;
     }
 
     unsafe {
-        gl::BindVertexArray(vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, block_buffer1);
+        gl::BindVertexArray(chunkvao.id);
+        gl::BindBuffer(gl::ARRAY_BUFFER, chunkvao.buffers[0]);
         gl::BufferData(
             gl::ARRAY_BUFFER,
             (chunkdata.len() * size_of::<u8>()) as isize,
@@ -36,7 +41,7 @@ fn send_chunk_data_to_vao(vao: u32, block_buffer1: u32, block_buffer2: u32, chun
             std::ptr::null::<u8>() as *const c_void,
         );
         gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, block_buffer2);
+        gl::BindBuffer(gl::ARRAY_BUFFER, chunkvao.buffers[1]);
         gl::BufferData(
             gl::ARRAY_BUFFER,
             (chunkdata.len() * size_of::<u8>()) as isize,
@@ -55,30 +60,114 @@ fn send_chunk_data_to_vao(vao: u32, block_buffer1: u32, block_buffer2: u32, chun
 }
 
 pub struct ChunkVaoTable {
-    pub vaos: Vec<u32>,
-    pub buffers: Vec<u32>,
-    pub vertex_count: Vec<i32>,
-    pub chunk_positions: Vec<ChunkPos>,
-    pos_to_idx: HashMap<(i32, i32, i32), usize>,
+    vaos: HashMap<(i32, i32, i32), ChunkVao>,
+    to_update: VecDeque<(i32, i32, i32)>,
 }
 
 impl ChunkVaoTable {
     //Create a new chunk vao table
-    pub fn new(count: usize) -> Self {
+    pub fn new() -> Self {
         Self {
-            vaos: vec![0; count],
-            buffers: vec![0; BUF_COUNT * count],
-            vertex_count: vec![0; count],
-            chunk_positions: vec![ChunkPos::origin(); count],
-            pos_to_idx: HashMap::new(),
+            vaos: HashMap::new(),
+            to_update: VecDeque::new(),
+        }
+    }
+
+    pub fn add_to_update(&mut self, x: i32, y: i32, z: i32) {
+        self.to_update.push_back((x, y, z));
+    }
+
+    fn update_chunk(&mut self, world: &World) {
+        let top = self.to_update.pop_front();
+        if let Some(pos) = top {
+            let (x, y, z) = pos;
+            if self.vaos.contains_key(&pos) {
+                self.update_chunk_vao(world.get_chunk(x, y, z), world); 
+            } else {
+                //Create a new vao to be added
+                let mut vao = ChunkVao {
+                    id: 0,
+                    buffers: [0; BUF_COUNT],
+                    vert_count: 0,
+                };
+
+                unsafe {
+                    gl::GenVertexArrays(1, &mut vao.id);
+                    gl::GenBuffers(BUF_COUNT as i32, &mut vao.buffers[0]);
+                }
+
+                if let Some(chunk) = world.get_chunk(x, y, z) {
+                    let chunkpos = chunk.get_chunk_pos();
+                    let adj_chunks = [
+                        world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
+                        world.get_chunk(chunkpos.x, chunkpos.y - 1, chunkpos.z),
+                        world.get_chunk(chunkpos.x - 1, chunkpos.y, chunkpos.z),
+                        world.get_chunk(chunkpos.x + 1, chunkpos.y, chunkpos.z),
+                        world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z - 1),
+                        world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
+                    ];
+
+                    let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks); 
+                    send_chunk_data_to_vao(&vao, &chunkdata);
+                    vao.vert_count = chunkdata.len() as i32 / 4;
+                    self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), vao);
+                }
+            }
+        }
+    }
+
+    pub fn update_chunks(&mut self, world: &World) {
+        let start = std::time::Instant::now();
+        let mut total_time = 0.0;
+        while total_time < 0.01 && !self.to_update.is_empty() {
+            self.update_chunk(world);
+            let now = std::time::Instant::now();
+            total_time = (now - start).as_secs_f32();
+        }
+    }
+
+    pub fn delete_chunks(&mut self, centerx: i32, centery: i32, centerz: i32, range: i32) {
+        let mut vaos_to_delete = vec![];
+        let mut buf_to_delete = vec![]; 
+        let mut to_delete = vec![]; //Positions to delete from the map
+        for ((x, y, z), vao) in &mut self.vaos {
+            if (centerx - x).abs() <= range &&
+                (centery - y).abs() <= range &&
+                (centerz - z).abs() <= range {
+                continue;
+            }
+            
+            vaos_to_delete.push(vao.id);
+            for buf in vao.buffers {
+                buf_to_delete.push(buf);
+            }
+
+            to_delete.push((*x, *y, *z));
+        }
+
+        for pos in to_delete {
+            self.vaos.remove(&pos);
+        }
+
+        unsafe {
+            if !buf_to_delete.is_empty() {
+                gl::DeleteBuffers(buf_to_delete.len() as i32, &mut buf_to_delete[0]);
+            }
+
+            if !vaos_to_delete.is_empty() {
+                gl::DeleteVertexArrays(vaos_to_delete.len() as i32, &mut vaos_to_delete[0]);
+            }
         }
     }
 
     //Call this to initialize all of the chunk vaos and buffers
     pub fn generate_chunk_vaos(&mut self, world: &World) {
+        let mut vaos = vec![0; world.chunks.len()];
+        let mut buffers = vec![0; world.chunks.len() * BUF_COUNT];
+
         unsafe {
-            gl::GenVertexArrays(self.vaos.len() as i32, &mut self.vaos[0]);
-            gl::GenBuffers(self.buffers.len() as i32, &mut self.buffers[0]);
+            gl::GenVertexArrays(vaos.len() as i32, &mut vaos[0]);
+            gl::GenBuffers(buffers.len() as i32, &mut buffers[0]);
         }
 
         for (i, chunk) in world.chunks.values().enumerate() {
@@ -93,16 +182,13 @@ impl ChunkVaoTable {
             ];
 
             let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
-            self.chunk_positions[i] = chunkpos;
-            self.vertex_count[i] = chunkdata.len() as i32 / 4;
-            send_chunk_data_to_vao(
-                self.vaos[i],
-                self.buffers[BUF_COUNT * i],
-                self.buffers[BUF_COUNT * i + 1],
-                &chunkdata,
-            );
-            self.pos_to_idx
-                .insert((chunkpos.x, chunkpos.y, chunkpos.z), i);
+            let chunkvao = ChunkVao {
+                 id: vaos[i],
+                 buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
+                 vert_count: chunkdata.len() as i32 / 4,
+            };
+            send_chunk_data_to_vao(&chunkvao, &chunkdata);
+            self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), chunkvao);
         }
     }
 
@@ -120,17 +206,10 @@ impl ChunkVaoTable {
             ];
             let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
 
-            let idx = self.pos_to_idx.get(&(chunkpos.x, chunkpos.y, chunkpos.z));
-            if let Some(idx) = idx {
-                let i = *idx;
-                self.chunk_positions[i] = chunkpos;
-                self.vertex_count[i] = chunkdata.len() as i32 / 4;
-                send_chunk_data_to_vao(
-                    self.vaos[i],
-                    self.buffers[idx * BUF_COUNT],
-                    self.buffers[idx * BUF_COUNT + 1],
-                    &chunkdata,
-                );
+            let chunk = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
+            if let Some(chunk) = chunk {
+                chunk.vert_count = chunkdata.len() as i32 / 4;
+                send_chunk_data_to_vao(chunk, &chunkdata);
             }
         }
     }
@@ -198,12 +277,12 @@ impl ChunkVaoTable {
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);
 
         let mut drawn_count = 0;
-        for (i, vao) in self.vaos.iter().enumerate() {
-            if self.vertex_count[i] == 0 {
+        for ((chunkx, chunky, chunkz), vao) in &self.vaos {
+            if vao.vert_count == 0 {
                 continue;
             }
 
-            let pos = self.chunk_positions[i];
+            let pos = ChunkPos::new(*chunkx, *chunky, *chunkz);
             let x = pos.x as f32 * CHUNK_SIZE_F32;
             let y = pos.y as f32 * CHUNK_SIZE_F32;
             let z = pos.z as f32 * CHUNK_SIZE_F32;
@@ -219,8 +298,8 @@ impl ChunkVaoTable {
             drawn_count += 1;
             chunkshader.uniform_vec3f("chunkpos", x, y, z);
             unsafe {
-                gl::BindVertexArray(*vao);
-                gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_count[i]);
+                gl::BindVertexArray(vao.id);
+                gl::DrawArrays(gl::TRIANGLES, 0, vao.vert_count);
             }
         }
 
