@@ -98,11 +98,7 @@ impl World {
         }
 
         while self.chunk_cache.len() > MAX_CACHE_SIZE / 2 {
-            let to_delete = if self.chunk_cache.len() > MAX_CACHE_SIZE {
-                self.chunk_cache.keys().next().copied()
-            } else {
-                None
-            };
+            let to_delete = self.chunk_cache.keys().next().copied();
 
             if let Some(pos) = to_delete {
                 //TODO: add code to save chunks to disk
