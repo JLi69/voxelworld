@@ -1,6 +1,6 @@
 mod flat_world;
-use std::collections::HashMap;
 use super::{world_to_chunk_position, Block, Chunk, CHUNK_SIZE};
+use std::collections::HashMap;
 
 //World struct
 pub struct World {

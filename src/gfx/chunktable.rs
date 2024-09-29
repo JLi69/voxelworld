@@ -101,7 +101,8 @@ impl ChunkVaoTable {
                 self.buffers[BUF_COUNT * i + 1],
                 &chunkdata,
             );
-            self.pos_to_idx.insert((chunkpos.x, chunkpos.y, chunkpos.z), i);
+            self.pos_to_idx
+                .insert((chunkpos.x, chunkpos.y, chunkpos.z), i);
         }
     }
 
@@ -118,7 +119,7 @@ impl ChunkVaoTable {
                 world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
             ];
             let chunkdata = generate_chunk_vertex_data(chunk, adj_chunks);
-            
+
             let idx = self.pos_to_idx.get(&(chunkpos.x, chunkpos.y, chunkpos.z));
             if let Some(idx) = idx {
                 let i = *idx;

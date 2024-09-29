@@ -1,4 +1,4 @@
-use super::{Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32};
+use super::{Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK};
 
 pub struct Chunk {
     //Chunks are CHUNK_SIZE x CHUNK_SIZE x CHUNK_SIZE cubes
@@ -16,15 +16,40 @@ pub struct Chunk {
 impl Chunk {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
         Self {
-            blocks: vec![Block::new(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE],
+            blocks: vec![],
             ix: x,
             iy: y,
             iz: z,
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        for b in &self.blocks {
+            if b.id != EMPTY_BLOCK {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    //Frees memory if the chunk is completely empty
+    pub fn handle_empty(&mut self) {
+        if self.blocks.is_empty() {
+            return;
+        }
+
+        if self.is_empty() {
+            self.blocks.clear();
+        }
+    }
+
     //Relative the position of the chunk (0 <= x, y, z < CHUNK_SIZE)
     pub fn get_block_relative(&self, x: usize, y: usize, z: usize) -> Block {
+        if self.blocks.is_empty() {
+            return Block::new();
+        }
+
         //Out of bounds, return 0
         if x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE {
             return Block::new();
@@ -37,6 +62,16 @@ impl Chunk {
     }
 
     pub fn set_block_relative(&mut self, x: usize, y: usize, z: usize, block: Block) {
+        if self.blocks.is_empty() && block.id != EMPTY_BLOCK {
+            self.blocks = vec![Block::new(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+        } else if !self.blocks.is_empty() && block.id == EMPTY_BLOCK {
+            self.handle_empty();
+        }
+
+        if self.blocks.is_empty() && block.id == EMPTY_BLOCK {
+            return;
+        }
+
         //Out of bounds
         if x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE {
             return;
@@ -85,7 +120,7 @@ impl Chunk {
             return;
         }
 
-        self.set_block_relative(index_x as usize, index_y as usize, index_z as usize, block)
+        self.set_block_relative(index_x as usize, index_y as usize, index_z as usize, block);
     }
 
     pub fn get_chunk_pos(&self) -> ChunkPos {
