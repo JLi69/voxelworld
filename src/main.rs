@@ -76,6 +76,7 @@ fn main() {
         gamestate.update_player(dt, window.get_cursor_mode());
         //Destroy and place blocks
         gamestate.build(&mut chunkvaos);
+        gamestate.update_build_cooldown(dt);
         //Generate new chunks
         gamestate.world.check_for_cache_clear();
         gamestate.world.clean_cache();

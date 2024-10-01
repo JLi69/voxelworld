@@ -1,10 +1,12 @@
 use super::player::CAMERA_OFFSET;
-use super::{Game, KeyState};
+use super::Game;
 use crate::gfx::{self, ChunkVaoTable};
 use crate::voxel::{destroy_block, place_block};
 use cgmath::Vector3;
 use glfw::{CursorMode, Key};
 use glfw::{MouseButtonLeft, MouseButtonRight};
+
+const BUILD_COOLDOWN: f32 = 0.2;
 
 impl Game {
     //Update player and camera
@@ -44,19 +46,27 @@ impl Game {
         self.player.jump(space);
     }
 
+    pub fn update_build_cooldown(&mut self, dt: f32) {
+        self.build_cooldown -= dt;
+        self.destroy_cooldown -= dt;
+    }
+
     //Place and destroy blocks
     pub fn build(&mut self, chunkvaos: &mut ChunkVaoTable) {
         //Destroy blocks
         let pos = self.cam.position;
         let dir = self.cam.forward();
-        if self.get_mouse_state(MouseButtonLeft) == KeyState::JustPressed {
+        if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
             let destroyed = destroy_block(pos, dir, &mut self.world);
             gfx::update_chunk_vaos(chunkvaos, destroyed, &self.world);
+            self.destroy_cooldown = BUILD_COOLDOWN;
         }
+
         //Place blocks
-        if self.get_mouse_state(MouseButtonRight) == KeyState::JustPressed {
+        if self.get_mouse_state(MouseButtonRight).is_held() && self.build_cooldown <= 0.0 {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunkvaos, placed, &self.world);
+            self.build_cooldown = BUILD_COOLDOWN;
         }
     }
 }

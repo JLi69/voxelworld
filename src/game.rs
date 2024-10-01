@@ -55,6 +55,8 @@ pub struct Game {
     mousey: f32,
     dmousex: f32, //Change in mouse position since last frame
     dmousey: f32,
+    build_cooldown: f32,
+    destroy_cooldown: f32,
     pub world: World,
     pub persp: Matrix4<f32>,
     pub aspect: f32,
@@ -72,6 +74,8 @@ impl Game {
             mousey: 0.0,
             dmousex: 0.0,
             dmousey: 0.0,
+            build_cooldown: 0.0,
+            destroy_cooldown: 0.0,
             world: World::empty(),
             persp: Matrix4::identity(),
             aspect: 1.0,
