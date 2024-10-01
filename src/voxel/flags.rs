@@ -18,7 +18,5 @@ pub fn init_voxel_flags() {
 
 //Read only
 pub fn get_flag(id: u8) -> u8 {
-    unsafe {
-        VOXEL_FLAGS[id as usize]
-    }
+    unsafe { VOXEL_FLAGS[id as usize] }
 }

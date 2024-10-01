@@ -15,7 +15,7 @@ pub struct World {
     centerz: i32,
     //cache of chunks that have been unloaded
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
-    clear_cache: bool
+    clear_cache: bool,
 }
 
 impl World {
@@ -97,7 +97,7 @@ impl World {
     }
 
     //Checks if the world should clear its chunk cache
-    pub fn check_for_cache_clear(&mut self) { 
+    pub fn check_for_cache_clear(&mut self) {
         if self.chunk_cache.len() <= self.get_max_cache_sz() {
             return;
         }

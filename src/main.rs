@@ -6,7 +6,7 @@ mod voxel;
 use assets::Texture;
 use game::Game;
 use glfw::Context;
-use voxel::{build::BLOCK_REACH, World, CHUNK_SIZE_F32, EMPTY_BLOCK, flags::init_voxel_flags};
+use voxel::{build::BLOCK_REACH, flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
     //Attempt to initialize glfw

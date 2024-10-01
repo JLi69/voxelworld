@@ -1,12 +1,12 @@
 pub mod build;
 pub mod chunk;
 pub mod coordinates;
-pub mod world;
 pub mod flags;
+pub mod world;
 
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
-use self::flags::{TRANSPARENT_FLAG, CONNECT_FLAG, get_flag};
+use self::flags::{get_flag, CONNECT_FLAG, TRANSPARENT_FLAG};
 pub use chunk::Chunk;
 pub use world::World;
 
@@ -37,9 +37,7 @@ impl Block {
 
     //Create a new block with an id
     pub fn new_id(blockid: u8) -> Self {
-        Self {
-            id: blockid,
-        }
+        Self { id: blockid }
     }
 
     //Returns if the block is transparent
