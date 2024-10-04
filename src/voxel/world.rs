@@ -1,6 +1,9 @@
+mod default_world;
 mod flat_world;
+mod gen_more;
 
 use super::{world_to_chunk_position, Block, Chunk};
+use noise::{Fbm, Perlin};
 use std::collections::HashMap;
 
 //World struct
@@ -16,6 +19,7 @@ pub struct World {
     //cache of chunks that have been unloaded
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
     clear_cache: bool,
+    terrain_generator: Fbm<Perlin>,
 }
 
 impl World {
@@ -29,11 +33,12 @@ impl World {
             centerz: 0,
             chunk_cache: HashMap::new(),
             clear_cache: false,
+            terrain_generator: Fbm::new(0),
         }
     }
 
     //Create a new chunk from a chunk render distance (range)
-    pub fn new(chunk_range: i32) -> Self {
+    pub fn new(seed: u32, chunk_range: i32) -> Self {
         //Create chunk list
         let mut chunklist = HashMap::new();
         for y in -chunk_range..=chunk_range {
@@ -44,6 +49,10 @@ impl World {
             }
         }
 
+        let mut terrain_noise = Fbm::new(seed);
+        terrain_noise.octaves = 5;
+        terrain_noise.persistence = 0.47;
+
         Self {
             chunks: chunklist,
             range: chunk_range,
@@ -52,6 +61,7 @@ impl World {
             centerz: 0,
             chunk_cache: HashMap::new(),
             clear_cache: false,
+            terrain_generator: terrain_noise,
         }
     }
 
@@ -93,7 +103,7 @@ impl World {
 
     fn get_max_cache_sz(&self) -> usize {
         let sz = self.range * 2 + 1;
-        (sz * sz * 8) as usize
+        ((sz * sz * 8) as usize).max(4096)
     }
 
     //Checks if the world should clear its chunk cache
@@ -115,7 +125,7 @@ impl World {
         let max_cache_sz = self.get_max_cache_sz();
         let mut time_passed = 0.0;
         let start = std::time::Instant::now();
-        while self.chunk_cache.len() > max_cache_sz as usize / 2 && time_passed < 0.01 {
+        while self.chunk_cache.len() > max_cache_sz / 2 && time_passed < 0.01 {
             let to_delete = self.chunk_cache.keys().next().copied();
 
             if let Some(pos) = to_delete {
@@ -126,7 +136,7 @@ impl World {
             time_passed = (now - start).as_secs_f32();
         }
 
-        if self.chunk_cache.len() <= max_cache_sz as usize / 2 {
+        if self.chunk_cache.len() <= max_cache_sz / 2 {
             self.clear_cache = false;
         }
     }

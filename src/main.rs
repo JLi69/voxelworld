@@ -6,6 +6,7 @@ mod voxel;
 use assets::Texture;
 use game::Game;
 use glfw::Context;
+use rand::Rng;
 use voxel::{build::BLOCK_REACH, flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
@@ -18,7 +19,9 @@ fn main() {
     let mut gamestate = Game::new();
     gamestate.init();
     gamestate.init_mouse_pos(&window);
-    gamestate.generate_world(3);
+    let seed = rand::thread_rng().gen();
+    eprintln!("seed: {seed}");
+    gamestate.generate_world(seed, 3);
     //Initialize gl
     gl::load_with(|s| window.get_proc_address(s) as *const _);
 
@@ -82,7 +85,7 @@ fn main() {
         gamestate.world.clean_cache();
         gamestate
             .world
-            .gen_more_flat(gamestate.player.position, &mut chunkvaos);
+            .gen_more_default(gamestate.player.position, &mut chunkvaos);
         chunkvaos.update_chunks(&gamestate.world);
 
         //Output FPS

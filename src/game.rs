@@ -4,8 +4,8 @@ pub mod physics;
 pub mod player;
 pub mod update;
 
-use crate::assets::texture::load_image_pixels;
 use crate::World;
+use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT};
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
 use glfw::MouseButton;
@@ -91,8 +91,17 @@ impl Game {
     }
 
     //Generate world
-    pub fn generate_world(&mut self, range: i32) {
-        self.world = World::new(range);
-        self.world.gen_flat();
+    pub fn generate_world(&mut self, seed: u32, range: i32) {
+        self.world = World::new(seed, range);
+        self.world.gen_default();
+
+        //Set position of the player
+        for ref y in (-64..=128).rev() {
+            self.player.position.y = *y as f32;
+            if self.player.check_collision(&self.world).is_some() {
+                self.player.position.y += PLAYER_HEIGHT / 2.0;
+                break;
+            }
+        }
     }
 }

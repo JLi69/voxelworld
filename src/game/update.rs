@@ -60,6 +60,8 @@ impl Game {
             let destroyed = destroy_block(pos, dir, &mut self.world);
             gfx::update_chunk_vaos(chunkvaos, destroyed, &self.world);
             self.destroy_cooldown = BUILD_COOLDOWN;
+        } else if !self.get_mouse_state(MouseButtonLeft).is_held() {
+            self.destroy_cooldown = 0.0;
         }
 
         //Place blocks
@@ -67,6 +69,8 @@ impl Game {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunkvaos, placed, &self.world);
             self.build_cooldown = BUILD_COOLDOWN;
+        } else if !self.get_mouse_state(MouseButtonRight).is_held() {
+            self.build_cooldown = 0.0;
         }
     }
 }
