@@ -198,7 +198,7 @@ pub fn place_block(
     let blockid2 = world.get_block(ix, iy, iz).id;
     if blockid2 == EMPTY_BLOCK && blockid1 != EMPTY_BLOCK {
         world.set_block(ix, iy, iz, player.selected_block);
-        let block_hitbox = Hitbox::from_block(ix, iy, iz); 
+        let block_hitbox = Hitbox::from_block(ix, iy, iz);
         if player.get_hitbox().intersects(&block_hitbox) {
             world.set_block(ix, iy, iz, Block::new_id(0));
             return None;
