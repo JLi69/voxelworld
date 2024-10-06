@@ -6,6 +6,7 @@ use crate::gfx;
 use egui_backend::egui::{self, Color32};
 use glfw::{Context, CursorMode, Glfw, PWindow};
 
+//Selections that the user can make on the main menu
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum MainMenuOutput {
     CreateWorld,
@@ -27,6 +28,7 @@ fn display_main_title(ctx: &egui::Context) {
         });
 }
 
+//Displays all the buttons on the main menu
 fn display_main_menu(ui: &mut egui::Ui) -> Option<MainMenuOutput> {
     let mut selected = None;
 

@@ -8,7 +8,7 @@ use glfw::{Context, Glfw, PWindow};
 use rand::Rng;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
-//State for the main menu
+//State for the create world menu
 struct CreateWorldMenuState {
     world_name: String,
     seed: String,
@@ -17,7 +17,7 @@ struct CreateWorldMenuState {
     quit_to_menu: bool,
 }
 
-//Initialize the main menu state
+//Initialize the create world menu state
 impl CreateWorldMenuState {
     fn new() -> Self {
         Self {
@@ -107,6 +107,7 @@ fn display_create_world(
     });
 }
 
+//Display the create world menu screen
 pub fn run_create_world_menu(
     gamestate: &mut Game,
     window: &mut PWindow,

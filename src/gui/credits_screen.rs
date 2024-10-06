@@ -7,6 +7,8 @@ use glfw::{Context, Glfw, PWindow};
 use std::fs::File;
 use std::io::Read;
 
+//Read `assets/credits.txt` and return the contents as a vector of strings where
+//each element of the vector is a line in the file
 fn read_credits_text() -> Vec<String> {
     let path = "assets/credits.txt";
     match File::open(path) {
@@ -27,12 +29,14 @@ fn read_credits_text() -> Vec<String> {
     }
 }
 
+//Display the credits, line by line
 fn display_credits(ui: &mut egui::Ui, credits: &[String]) {
     for text in credits {
         ui.label(menu_text(text, 24.0, Color32::WHITE));
     }
 }
 
+//Display credits
 pub fn run_credits_screen(
     gamestate: &mut Game,
     window: &mut PWindow,
@@ -73,6 +77,7 @@ pub fn run_credits_screen(
                     ui.label(menu_text("Credits", 48.0, Color32::WHITE));
                     display_credits(ui, &credits_text);
 
+                    //Return to main menu
                     if ui
                         .button(menu_text("Main Menu", 24.0, Color32::WHITE))
                         .clicked()
