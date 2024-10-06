@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod camera;
 pub mod gameloop;
 pub mod input;
@@ -10,6 +11,7 @@ use crate::World;
 use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT};
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
+use egui_gl_glfw::egui::FontDefinitions;
 pub use gameloop::run;
 use glfw::MouseButton;
 pub use glfw::{Context, CursorMode, Key, PWindow};
@@ -65,6 +67,7 @@ pub struct Game {
     pub world: World,
     pub persp: Matrix4<f32>,
     pub aspect: f32,
+    fonts: FontDefinitions,
 }
 
 impl Game {
@@ -84,6 +87,7 @@ impl Game {
             world: World::empty(),
             persp: Matrix4::identity(),
             aspect: 1.0,
+            fonts: FontDefinitions::default(),
         }
     }
 

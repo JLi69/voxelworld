@@ -1,46 +1,20 @@
 use super::egui_backend;
-use super::{init_egui_input_state, load_font, set_ui_gl_state};
+use super::{init_egui_input_state, set_ui_gl_state};
+use super::{menu_text, transparent_frame};
 use crate::game::{EventHandler, Game};
 use crate::gfx;
-use crate::voxel::world::WorldGenType;
 use egui_backend::egui::{self, Color32};
 use glfw::{Context, CursorMode, Glfw, PWindow};
-use rand::Rng;
-use std::hash::{DefaultHasher, Hash, Hasher};
 
-//State for the main menu
-struct MainMenuState {
-    world_name: String,
-    seed: String,
-    gen_type: WorldGenType,
-    quit_menu: bool,
-}
-
-//Initialize the main menu state
-impl MainMenuState {
-    fn new() -> Self {
-        Self {
-            world_name: "New World".to_string(),
-            seed: "".to_string(),
-            gen_type: WorldGenType::DefaultGen,
-            quit_menu: false,
-        }
-    }
-}
-
-//Creates an egui frame that is completely transparent
-fn transparent_frame() -> egui::Frame {
-    egui::Frame::none()
-        .fill(egui::Color32::TRANSPARENT)
-        .inner_margin(egui::Margin::symmetric(16.0, 16.0))
-}
-
-//Generates text to be displayed
-fn menu_text(text: &str, sz: f32, col: Color32) -> egui::RichText {
-    egui::RichText::new(text).size(sz).color(col)
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum MainMenuOutput {
+    CreateWorld,
+    Credits,
+    Quit,
 }
 
 //Displays the main title
+//TODO: probably improve how this looks
 fn display_main_title(ctx: &egui::Context) {
     egui::TopBottomPanel::top("top_panel")
         .frame(transparent_frame())
@@ -53,67 +27,43 @@ fn display_main_title(ctx: &egui::Context) {
         });
 }
 
-//Converts a string into a u32 seed
-fn convert_string_to_seed(seed: String) -> u32 {
-    match seed.parse::<u32>() {
-        Ok(val) => val,
-        Err(_) => {
-            let mut hashstate = DefaultHasher::new();
-            seed.hash(&mut hashstate);
-            hashstate.finish() as u32
-        }
-    }
-}
+fn display_main_menu(ui: &mut egui::Ui) -> Option<MainMenuOutput> {
+    let mut selected = None;
 
-//For when the user wants to create a new world
-fn create_new_world(menu_state: &mut MainMenuState, gamestate: &mut Game) {
-    let seed = if !menu_state.seed.is_empty() {
-        convert_string_to_seed(menu_state.seed.clone())
-    } else {
-        rand::thread_rng().gen()
-    };
-    gamestate.generate_world(seed, 3, menu_state.gen_type);
-}
-
-//Display the create world gui
-fn display_create_world(ui: &mut egui::Ui, menu_state: &mut MainMenuState, gamestate: &mut Game) {
     ui.vertical_centered(|ui| {
-        ui.label(menu_text("Create world", 32.0, Color32::WHITE));
-        ui.label(menu_text("World Name", 24.0, Color32::WHITE));
-        ui.text_edit_singleline(&mut menu_state.world_name);
-
-        ui.label(" ");
-        ui.label(menu_text("World Generation", 24.0, Color32::WHITE));
         if ui
-            .radio(
-                menu_state.gen_type == WorldGenType::DefaultGen,
-                menu_text("Default", 20.0, Color32::WHITE),
-            )
+            .button(menu_text("Play World", 28.0, Color32::WHITE))
             .clicked()
         {
-            menu_state.gen_type = WorldGenType::DefaultGen;
-        }
-        if ui
-            .radio(
-                menu_state.gen_type == WorldGenType::Flat,
-                menu_text("Flat", 20.0, Color32::WHITE),
-            )
-            .clicked()
-        {
-            menu_state.gen_type = WorldGenType::Flat;
+            todo!();
         }
 
         ui.label(" ");
-        ui.label(menu_text("Seed", 24.0, Color32::WHITE));
-        ui.text_edit_singleline(&mut menu_state.seed);
         if ui
-            .button(menu_text("Create", 24.0, Color32::WHITE))
+            .button(menu_text("New World", 28.0, Color32::WHITE))
             .clicked()
         {
-            menu_state.quit_menu = true;
-            create_new_world(menu_state, gamestate);
+            selected = Some(MainMenuOutput::CreateWorld);
+        }
+
+        ui.label(" ");
+        if ui
+            .button(menu_text("Credits", 28.0, Color32::WHITE))
+            .clicked()
+        {
+            selected = Some(MainMenuOutput::Credits);
+        }
+
+        ui.label(" ");
+        if ui
+            .button(menu_text("Quit Game", 28.0, Color32::WHITE))
+            .clicked()
+        {
+            selected = Some(MainMenuOutput::Quit);
         }
     });
+
+    selected
 }
 
 //Display the main menu
@@ -122,12 +72,12 @@ pub fn run_main_menu(
     window: &mut PWindow,
     glfw: &mut Glfw,
     events: &EventHandler,
-) {
-    let fonts = load_font();
+) -> MainMenuOutput {
+    let font = gamestate.get_font();
     let mut painter = egui_backend::Painter::new(window);
     let ctx = egui::Context::default();
     let native_pixels_per_point = window.get_content_scale().0;
-    ctx.set_fonts(fonts);
+    ctx.set_fonts(font);
 
     //Initialize egui input state
     let mut input_state = init_egui_input_state(window);
@@ -135,8 +85,8 @@ pub fn run_main_menu(
     set_ui_gl_state();
     window.set_cursor_mode(CursorMode::Normal);
     let start = std::time::Instant::now();
-    let mut menu_state = MainMenuState::new();
-    while !window.should_close() && !menu_state.quit_menu {
+    let mut selected = None;
+    while !window.should_close() && selected.is_none() {
         //Display
         gfx::clear();
 
@@ -150,10 +100,11 @@ pub fn run_main_menu(
 
         //Display main menu
         display_main_title(&ctx);
+
         egui::CentralPanel::default()
             .frame(transparent_frame())
             .show(&ctx, |ui| {
-                display_create_world(ui, &mut menu_state, gamestate);
+                selected = display_main_menu(ui);
             });
 
         //End frame
@@ -181,4 +132,12 @@ pub fn run_main_menu(
         window.swap_buffers();
         glfw.poll_events();
     }
+
+    let selected = selected.unwrap_or(MainMenuOutput::Quit);
+
+    if selected == MainMenuOutput::Quit {
+        window.set_should_close(true);
+    }
+
+    selected
 }

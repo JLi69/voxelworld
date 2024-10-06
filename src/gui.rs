@@ -1,13 +1,16 @@
+pub mod create_world_menu;
+pub mod credits_screen;
 pub mod main_menu;
 
+pub use create_world_menu::run_create_world_menu;
+pub use credits_screen::run_credits_screen;
 use egui_backend::{
-    egui::{vec2, FontData, FontDefinitions, FontFamily, Pos2, RawInput, Rect},
+    egui::{self, vec2, Color32, Pos2, RawInput, Rect},
     glfw::PWindow,
     EguiInputState,
 };
 use egui_gl_glfw as egui_backend;
 pub use main_menu::run_main_menu;
-use std::{fs::File, io::Read};
 
 //Initialized the egui input state
 fn init_egui_input_state(window: &PWindow) -> EguiInputState {
@@ -33,37 +36,14 @@ pub fn set_ui_gl_state() {
     }
 }
 
-//TODO: add a better way of loading fonts
-pub fn load_font() -> FontDefinitions {
-    //Load fonts
-    let mut fonts = FontDefinitions::default();
-    let path = "assets/fonts/8BitOperator/8bitOperatorPlus-Regular.ttf".to_string();
-    let font_file = File::open(&path);
-    match font_file {
-        Ok(mut font_file) => {
-            let mut bytes = vec![];
-            let res = font_file.read_to_end(&mut bytes);
-            match res {
-                Ok(sz) => eprintln!("read {sz} bytes from {path}"),
-                Err(msg) => eprintln!("{msg}"),
-            }
-            fonts
-                .font_data
-                .insert("8BitOperator".to_string(), FontData::from_owned(bytes));
-        }
-        Err(msg) => {
-            eprintln!("Failed to open: {path}");
-            eprintln!("{msg}");
-        }
-    }
+//Creates an egui frame that is completely transparent
+fn transparent_frame() -> egui::Frame {
+    egui::Frame::none()
+        .fill(egui::Color32::TRANSPARENT)
+        .inner_margin(egui::Margin::symmetric(16.0, 16.0))
+}
 
-    if let Some(prop) = fonts.families.get_mut(&FontFamily::Proportional) {
-        prop.insert(0, "8BitOperator".to_string());
-    }
-
-    if let Some(mono) = fonts.families.get_mut(&FontFamily::Monospace) {
-        mono.insert(0, "8BitOperator".to_string());
-    }
-
-    fonts
+//Generates text to be displayed
+fn menu_text(text: &str, sz: f32, col: Color32) -> egui::RichText {
+    egui::RichText::new(text).size(sz).color(col)
 }

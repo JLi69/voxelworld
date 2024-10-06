@@ -5,6 +5,7 @@ mod gui;
 mod voxel;
 
 use game::Game;
+use gui::main_menu::MainMenuOutput;
 use voxel::{build::BLOCK_REACH, flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
@@ -16,11 +17,27 @@ fn main() {
     //Initialize game state
     let mut gamestate = Game::new();
     gamestate.init();
+    gamestate.load_assets();
     gamestate.init_mouse_pos(&window);
     //Initialize gl
     gl::load_with(|s| window.get_proc_address(s) as *const _);
     gfx::set_default_gl_state();
 
-    gui::run_main_menu(&mut gamestate, &mut window, &mut glfw, &events);
-    game::run(&mut gamestate, &mut window, &mut glfw, &events);
+    while !window.should_close() {
+        let selected = gui::run_main_menu(&mut gamestate, &mut window, &mut glfw, &events);
+
+        let quit_to_menu = match selected {
+            MainMenuOutput::CreateWorld => {
+                gui::run_create_world_menu(&mut gamestate, &mut window, &mut glfw, &events)
+            }
+            MainMenuOutput::Credits => {
+                gui::run_credits_screen(&mut gamestate, &mut window, &mut glfw, &events)
+            }
+            _ => true,
+        };
+
+        if !quit_to_menu {
+            game::run(&mut gamestate, &mut window, &mut glfw, &events);
+        }
+    }
 }
