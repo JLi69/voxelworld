@@ -1,5 +1,6 @@
 use crate::gfx;
 use crate::Game;
+use egui_gl_glfw::EguiInputState;
 use glfw::CursorMode;
 use glfw::MouseButton;
 use glfw::{Action, GlfwReceiver, Key, PWindow, WindowEvent};
@@ -61,6 +62,37 @@ impl Game {
     pub fn handle_events(&mut self, events: &EventHandler) {
         //Handle events
         for (_, event) in glfw::flush_messages(events) {
+            match event {
+                //Handle window resize
+                WindowEvent::FramebufferSize(w, h) => {
+                    gfx::handle_window_resize(w, h);
+                }
+                //Handle key event
+                WindowEvent::Key(key, _scancode, action, _mods) => {
+                    self.set_key_state(key, action);
+                }
+                //Handle cursor position changes
+                WindowEvent::CursorPos(x, y) => {
+                    self.handle_mouse_pos(x, y);
+                }
+                //Handle mouse button event
+                WindowEvent::MouseButton(button, action, _mods) => {
+                    self.set_mouse_state(button, action);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    //Handle glfw events
+    pub fn handle_events_egui(
+        &mut self,
+        events: &EventHandler,
+        egui_input_state: &mut EguiInputState,
+    ) {
+        //Handle events
+        for (_, event) in glfw::flush_messages(events) {
+            egui_gl_glfw::handle_event(event.clone(), egui_input_state);
             match event {
                 //Handle window resize
                 WindowEvent::FramebufferSize(w, h) => {

@@ -1,13 +1,16 @@
 pub mod camera;
+pub mod gameloop;
 pub mod input;
 pub mod physics;
 pub mod player;
 pub mod update;
 
+use crate::voxel::world::WorldGenType;
 use crate::World;
 use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT};
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
+pub use gameloop::run;
 use glfw::MouseButton;
 pub use glfw::{Context, CursorMode, Key, PWindow};
 pub use input::{release_cursor, EventHandler, KeyState};
@@ -17,6 +20,7 @@ pub use std::collections::HashMap;
 
 //Initialize window, call this at the beginning of the game
 pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
+    glfw.window_hint(glfw::WindowHint::ContextVersion(3, 3));
     let (mut window, events) = glfw
         .create_window(960, 640, "voxelworld", glfw::WindowMode::Windowed)
         .expect("Failed to init window!");
@@ -24,6 +28,7 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
     window.set_framebuffer_size_polling(true);
     window.set_cursor_pos_polling(true);
     window.set_mouse_button_polling(true);
+    window.set_char_polling(true);
     window.set_cursor_mode(CursorMode::Disabled);
     window.make_current();
 
@@ -91,9 +96,9 @@ impl Game {
     }
 
     //Generate world
-    pub fn generate_world(&mut self, seed: u32, range: i32) {
-        self.world = World::new(seed, range);
-        self.world.gen_default();
+    pub fn generate_world(&mut self, seed: u32, range: i32, gen_type: WorldGenType) {
+        self.world = World::new(seed, range, gen_type);
+        self.world.generate_world();
 
         //Set position of the player
         for ref y in (-64..=128).rev() {

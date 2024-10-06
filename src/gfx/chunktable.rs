@@ -318,6 +318,37 @@ impl ChunkVaoTable {
 
         drawn_count
     }
+
+    //Delete all buffers and vaos
+    pub fn clear(&mut self) {
+        if self.vaos.is_empty() {
+            return;
+        }
+
+        let mut buffers = vec![];
+        let mut vaoids = vec![];
+
+        for vao in self.vaos.values() {
+            vaoids.push(vao.id);
+            for buf in vao.buffers {
+                buffers.push(buf)
+            }
+        }
+
+        unsafe {
+            gl::DeleteBuffers(buffers.len() as i32, &buffers[0]);
+            gl::DeleteVertexArrays(vaoids.len() as i32, &vaoids[0]);
+        }
+
+        self.to_update.clear();
+        self.vaos.clear();
+    }
+}
+
+impl Drop for ChunkVaoTable {
+    fn drop(&mut self) {
+        self.clear();
+    }
 }
 
 //Update a chunk table based on a option of a potential block that was changed

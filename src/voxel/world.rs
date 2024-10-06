@@ -3,8 +3,16 @@ mod flat_world;
 mod gen_more;
 
 use super::{world_to_chunk_position, Block, Chunk};
+use crate::gfx::ChunkVaoTable;
+use cgmath::Vector3;
 use noise::{Fbm, Perlin};
 use std::collections::HashMap;
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum WorldGenType {
+    DefaultGen,
+    Flat,
+}
 
 //World struct
 pub struct World {
@@ -20,6 +28,7 @@ pub struct World {
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
     clear_cache: bool,
     terrain_generator: Fbm<Perlin>,
+    pub gen_type: WorldGenType,
 }
 
 impl World {
@@ -34,11 +43,12 @@ impl World {
             chunk_cache: HashMap::new(),
             clear_cache: false,
             terrain_generator: Fbm::new(0),
+            gen_type: WorldGenType::DefaultGen,
         }
     }
 
     //Create a new chunk from a chunk render distance (range)
-    pub fn new(seed: u32, chunk_range: i32) -> Self {
+    pub fn new(seed: u32, chunk_range: i32, generation: WorldGenType) -> Self {
         //Create chunk list
         let mut chunklist = HashMap::new();
         for y in -chunk_range..=chunk_range {
@@ -62,6 +72,7 @@ impl World {
             chunk_cache: HashMap::new(),
             clear_cache: false,
             terrain_generator: terrain_noise,
+            gen_type: generation,
         }
     }
 
@@ -145,5 +156,21 @@ impl World {
     pub fn add_to_chunk_cache(&mut self, chunk: Chunk) {
         let pos = chunk.get_chunk_pos();
         self.chunk_cache.insert((pos.x, pos.y, pos.z), chunk);
+    }
+
+    //Generate world
+    pub fn generate_world(&mut self) {
+        match self.gen_type {
+            WorldGenType::DefaultGen => self.gen_default(),
+            WorldGenType::Flat => self.gen_flat(),
+        }
+    }
+
+    //Generate more world
+    pub fn generate_more(&mut self, pos: Vector3<f32>, chunktable: &mut ChunkVaoTable) {
+        match self.gen_type {
+            WorldGenType::DefaultGen => self.gen_more_default(pos, chunktable),
+            WorldGenType::Flat => self.gen_more_flat(pos, chunktable),
+        }
     }
 }
