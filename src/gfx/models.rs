@@ -41,6 +41,7 @@ const CUBE_INDICES: [u32; 36] = [
     5, 6, 7,
 ];
 
+#[derive(Clone)]
 pub struct Vao {
     vao_id: u32,
     buffers: Vec<u32>,

@@ -1,6 +1,5 @@
 use super::frustum::Frustum;
 use super::{generate_chunk_vertex_data, ChunkData};
-use crate::assets::shader::ShaderProgram;
 use crate::game::physics::Hitbox;
 use crate::game::Game;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
@@ -269,11 +268,12 @@ impl ChunkVaoTable {
     }
 
     //Displays all the chunk vaos
-    pub fn display_chunks(&self, chunkshader: &ShaderProgram, gamestate: &Game) -> u32 {
+    pub fn display_chunks(&self, gamestate: &Game) -> u32 {
+        gamestate.textures.bind("blocks");
         //Calculate view frustum
         let view_frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
 
-        chunkshader.use_program();
+        let chunkshader = gamestate.shaders.use_program("chunk");
         let view = gamestate.cam.get_view();
         chunkshader.uniform_matrix4f("view", &view);
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);

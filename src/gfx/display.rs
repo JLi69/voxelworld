@@ -1,10 +1,10 @@
-use super::models::Vao;
+use crate::game::assets::models::draw_elements;
 use crate::voxel;
-use crate::{assets::shader::ShaderProgram, game::Game, BLOCK_REACH, EMPTY_BLOCK};
+use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
 use cgmath::{Matrix4, SquareMatrix, Vector3};
 
-pub fn display_selected_outline(outlineshader: &ShaderProgram, gamestate: &Game, cube: &Vao) {
-    outlineshader.use_program();
+pub fn display_selected_outline(gamestate: &Game) {
+    let outlineshader = gamestate.shaders.use_program("outline");
     outlineshader.uniform_vec4f("incolor", 0.1, 0.1, 0.1, 1.0);
     outlineshader.uniform_matrix4f("persp", &gamestate.persp);
     outlineshader.uniform_matrix4f("view", &gamestate.cam.get_view());
@@ -23,7 +23,7 @@ pub fn display_selected_outline(outlineshader: &ShaderProgram, gamestate: &Game,
     transform = transform * Matrix4::from_scale(1.001);
     outlineshader.uniform_matrix4f("transform", &transform);
     if gamestate.world.get_block(ix, iy, iz).id != EMPTY_BLOCK {
-        cube.bind();
-        cube.draw_elements();
+        let cube = gamestate.models.bind("cube");
+        draw_elements(cube);
     }
 }

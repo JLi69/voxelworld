@@ -12,6 +12,8 @@ fn main() {
     //Attempt to initialize glfw
     let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to init glfw!");
     let (mut window, events) = game::init_window(&mut glfw);
+    //Initialize gl
+    gl::load_with(|s| window.get_proc_address(s) as *const _);
     //Initialize voxel flags
     init_voxel_flags();
     //Initialize game state
@@ -19,9 +21,6 @@ fn main() {
     gamestate.init();
     gamestate.load_assets();
     gamestate.init_mouse_pos(&window);
-    //Initialize gl
-    gl::load_with(|s| window.get_proc_address(s) as *const _);
-    gfx::set_default_gl_state();
 
     while !window.should_close() {
         let selected = gui::run_main_menu(&mut gamestate, &mut window, &mut glfw, &events);

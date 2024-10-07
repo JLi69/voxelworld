@@ -9,6 +9,9 @@ pub mod update;
 use crate::voxel::world::WorldGenType;
 use crate::World;
 use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT};
+use assets::models::ModelManager;
+use assets::shaders::ShaderManager;
+use assets::textures::TextureManager;
 pub use camera::Camera;
 use cgmath::{Matrix4, SquareMatrix};
 use egui_gl_glfw::egui::FontDefinitions;
@@ -67,7 +70,11 @@ pub struct Game {
     pub world: World,
     pub persp: Matrix4<f32>,
     pub aspect: f32,
-    fonts: FontDefinitions,
+    //Manage fonts, textures, models, and shaders
+    pub fonts: FontDefinitions,
+    pub models: ModelManager,
+    pub shaders: ShaderManager,
+    pub textures: TextureManager,
 }
 
 impl Game {
@@ -88,6 +95,9 @@ impl Game {
             persp: Matrix4::identity(),
             aspect: 1.0,
             fonts: FontDefinitions::default(),
+            models: ModelManager::new(),
+            shaders: ShaderManager::new(),
+            textures: TextureManager::new(),
         }
     }
 

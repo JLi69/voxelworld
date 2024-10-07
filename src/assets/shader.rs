@@ -85,6 +85,7 @@ pub fn create_and_compile_shader(path: &str, shader_type: GLenum) -> u32 {
     shader
 }
 
+#[derive(Copy, Clone)]
 pub struct ShaderProgram {
     program_id: u32,
 }
@@ -98,6 +99,11 @@ impl ShaderProgram {
                 program_id: gl::CreateProgram(),
             }
         }
+    }
+
+    //Creates a shader program with id 0, this should be an invalid program in OpenGL
+    pub fn zero() -> Self {
+        Self { program_id: 0 }
     }
 
     //Add and link shaders together to create a shader program

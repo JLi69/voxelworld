@@ -1,5 +1,5 @@
 use super::{EventHandler, Game};
-use crate::{assets, assets::Texture, game, gfx};
+use crate::{game, gfx};
 use glfw::{Context, Glfw, PWindow};
 
 pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: &EventHandler) {
@@ -11,29 +11,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     //Generate chunk vaos
     let mut chunkvaos = gfx::ChunkVaoTable::new();
     chunkvaos.generate_chunk_vaos(&gamestate.world);
-
-    //TODO: make a way to easily access and manage shaders, textures, and models
-    //Create shaders
-    //Chunk shader
-    let vert = "assets/shaders/chunkvert.glsl";
-    let frag = "assets/shaders/chunkfrag.glsl";
-    let chunkshader = assets::program_from_vert_and_frag(vert, frag);
-    //Cube outline shader
-    let vert = "assets/shaders/vert.glsl";
-    let frag = "assets/shaders/outlinefrag.glsl";
-    let outlineshader = assets::program_from_vert_and_frag(vert, frag);
-
-    //Load textures
-    let blocktexture = match Texture::load_from_file("assets/textures/blocktextures.png") {
-        Ok(tex) => tex,
-        Err(msg) => {
-            eprintln!("{msg}");
-            Texture::new()
-        }
-    };
-
-    //Generate models
-    let cube = gfx::models::gen_cube_vao();
 
     //Main loop
     let mut dt = 0.0f32;
@@ -53,11 +30,10 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gamestate.aspect = aspect;
 
         //Display chunks
-        blocktexture.bind();
-        let drawn = chunkvaos.display_chunks(&chunkshader, gamestate);
+        let drawn = chunkvaos.display_chunks(gamestate);
         chunks_drawn += drawn;
         //Display selection outline
-        gfx::display::display_selected_outline(&outlineshader, gamestate, &cube);
+        gfx::display::display_selected_outline(gamestate);
 
         //Update gameobjects
         gamestate.update_player(dt, window.get_cursor_mode());
