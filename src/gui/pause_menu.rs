@@ -1,10 +1,10 @@
-use egui_backend::egui::{self, Color32};
 use super::menu_text;
+use egui_backend::egui::{self, Color32};
 use egui_gl_glfw as egui_backend;
 
 pub enum PauseMenuAction {
     Unpause,
-    QuitToMainMenu, 
+    QuitToMainMenu,
 }
 
 //Creates an egui frame that is grayed out
@@ -32,12 +32,18 @@ fn display_pause_menu(ui: &mut egui::Ui) -> Option<PauseMenuAction> {
     let mut action = None;
     ui.vertical_centered(|ui| {
         ui.add_space(64.0);
-        if ui.button(menu_text("Return to Game", 32.0, Color32::WHITE)).clicked() {
+        if ui
+            .button(menu_text("Return to Game", 32.0, Color32::WHITE))
+            .clicked()
+        {
             action = Some(PauseMenuAction::Unpause);
         }
-        
+
         ui.add_space(64.0);
-        if ui.button(menu_text("Quit to Main Menu", 32.0, Color32::WHITE)).clicked() {
+        if ui
+            .button(menu_text("Quit to Main Menu", 32.0, Color32::WHITE))
+            .clicked()
+        {
             action = Some(PauseMenuAction::QuitToMainMenu);
         }
     });
@@ -51,7 +57,7 @@ pub fn run_pause_menu(
     ctx: &egui::Context,
     input_state: &mut egui_backend::EguiInputState,
     painter: &mut egui_backend::Painter,
-) -> Option<PauseMenuAction> { 
+) -> Option<PauseMenuAction> {
     //Begin frame
     ctx.begin_frame(input_state.input.take());
 
@@ -72,7 +78,7 @@ pub fn run_pause_menu(
         pixels_per_point,
         viewport_output: _,
     } = ctx.end_frame();
-    
+
     //Display
     let clipped_shapes = ctx.tessellate(shapes, pixels_per_point);
     painter.paint_and_update_textures(1.0, &clipped_shapes, &textures_delta);

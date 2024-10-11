@@ -10,7 +10,7 @@ const BUILD_COOLDOWN: f32 = 0.2;
 
 impl Game {
     //Update player and camera
-    pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) { 
+    pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) {
         if cursormode == CursorMode::Disabled {
             let (dmousex, dmousey) = self.get_mouse_diff();
             //Rotate camera
@@ -81,7 +81,7 @@ impl Game {
     //Handle pausing
     pub fn pause(&mut self) {
         if self.get_key_state(Key::Escape) == KeyState::JustPressed {
-            self.paused = !self.paused; 
+            self.paused = !self.paused;
         }
     }
 }

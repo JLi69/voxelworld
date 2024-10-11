@@ -1,9 +1,9 @@
 use super::{EventHandler, Game};
+use crate::gui;
 use crate::{game, gfx, gui::pause_menu::PauseMenuAction};
-use glfw::{Context, Glfw, PWindow};
 use egui_backend::egui;
 use egui_gl_glfw as egui_backend;
-use crate::gui;
+use glfw::{Context, Glfw, PWindow};
 
 pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: &EventHandler) {
     if window.should_close() {
@@ -34,7 +34,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     while !window.should_close() && !quit {
         let start = std::time::Instant::now();
 
-        //Display 
+        //Display
         gfx::set_default_gl_state();
         gfx::clear();
         //Update perspective matrix

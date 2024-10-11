@@ -59,6 +59,7 @@ impl Game {
     }
 
     //Handle glfw events
+    #[allow(dead_code)]
     pub fn handle_events(&mut self, events: &EventHandler) {
         //Handle events
         for (_, event) in glfw::flush_messages(events) {
