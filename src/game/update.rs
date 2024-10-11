@@ -6,7 +6,7 @@ use cgmath::Vector3;
 use glfw::{CursorMode, Key};
 use glfw::{MouseButtonLeft, MouseButtonRight};
 
-const BUILD_COOLDOWN: f32 = 0.2;
+const BUILD_COOLDOWN: f32 = 0.15;
 
 impl Game {
     //Update player and camera
@@ -63,7 +63,11 @@ impl Game {
         if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
             let destroyed = destroy_block(pos, dir, &mut self.world);
             gfx::update_chunk_vaos(chunkvaos, destroyed, &self.world);
-            self.destroy_cooldown = BUILD_COOLDOWN;
+            if destroyed.is_some() {
+                self.destroy_cooldown = BUILD_COOLDOWN;
+            } else {
+                self.destroy_cooldown = 0.0;
+            }
         }
 
         //Place blocks
@@ -74,7 +78,11 @@ impl Game {
         if self.get_mouse_state(MouseButtonRight).is_held() && self.build_cooldown <= 0.0 {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunkvaos, placed, &self.world);
-            self.build_cooldown = BUILD_COOLDOWN;
+            if placed.is_some() {
+                self.build_cooldown = BUILD_COOLDOWN;
+            } else {
+                self.build_cooldown = 0.0;
+            }
         }
     }
 
