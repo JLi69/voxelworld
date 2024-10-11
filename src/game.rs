@@ -57,6 +57,7 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
 
 //Game state struct
 pub struct Game {
+    paused: bool,
     pub cam: Camera,
     pub player: Player,
     key_states: HashMap<Key, KeyState>,
@@ -81,6 +82,7 @@ impl Game {
     //Create game state
     pub fn new() -> Self {
         Self {
+            paused: false,
             cam: Camera::new(0.0, 0.0, 0.0),
             player: Player::new(0.0, 0.0, 0.0),
             key_states: HashMap::new(),
@@ -99,6 +101,13 @@ impl Game {
             shaders: ShaderManager::new(),
             textures: TextureManager::new(),
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.cam = Camera::new(0.0, 0.0, 0.0);
+        self.player= Player::new(0.0, 0.0, 0.0);
+        self.build_cooldown = 0.0;
+        self.destroy_cooldown = 0.0;
     }
 
     //Initialize game state

@@ -1,6 +1,7 @@
 pub mod create_world_menu;
 pub mod credits_screen;
 pub mod main_menu;
+pub mod pause_menu;
 
 pub use create_world_menu::run_create_world_menu;
 pub use credits_screen::run_credits_screen;
@@ -11,9 +12,10 @@ use egui_backend::{
 };
 use egui_gl_glfw as egui_backend;
 pub use main_menu::run_main_menu;
+pub use pause_menu::run_pause_menu;
 
 //Initialized the egui input state
-fn init_egui_input_state(window: &PWindow) -> EguiInputState {
+pub fn init_egui_input_state(window: &PWindow) -> EguiInputState {
     let (w, h) = window.get_framebuffer_size();
     let native_pixels_per_point = window.get_content_scale().0;
     let dimensions = vec2(w as f32, h as f32) / native_pixels_per_point;

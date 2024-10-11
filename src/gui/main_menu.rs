@@ -111,17 +111,12 @@ pub fn run_main_menu(
 
         //End frame
         let egui::FullOutput {
-            platform_output,
+            platform_output: _,
             textures_delta,
             shapes,
             pixels_per_point,
             viewport_output: _,
         } = ctx.end_frame();
-
-        //Handle copy pasting
-        if !platform_output.copied_text.is_empty() {
-            egui_backend::copy_to_clipboard(&mut input_state, platform_output.copied_text);
-        }
 
         //Display
         let clipped_shapes = ctx.tessellate(shapes, pixels_per_point);

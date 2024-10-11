@@ -1,5 +1,5 @@
 use super::player::CAMERA_OFFSET;
-use super::Game;
+use super::{Game, KeyState};
 use crate::gfx::{self, ChunkVaoTable};
 use crate::voxel::{destroy_block, place_block};
 use cgmath::Vector3;
@@ -10,7 +10,7 @@ const BUILD_COOLDOWN: f32 = 0.2;
 
 impl Game {
     //Update player and camera
-    pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) {
+    pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) { 
         if cursormode == CursorMode::Disabled {
             let (dmousex, dmousey) = self.get_mouse_diff();
             //Rotate camera
@@ -75,6 +75,13 @@ impl Game {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunkvaos, placed, &self.world);
             self.build_cooldown = BUILD_COOLDOWN;
+        }
+    }
+
+    //Handle pausing
+    pub fn pause(&mut self) {
+        if self.get_key_state(Key::Escape) == KeyState::JustPressed {
+            self.paused = !self.paused; 
         }
     }
 }
