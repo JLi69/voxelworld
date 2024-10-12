@@ -57,9 +57,13 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
 
 //Game state struct
 pub struct Game {
-    paused: bool,
+    //Game objects
     pub cam: Camera,
     pub player: Player,
+    //World
+    pub world: World,
+    //Input state 
+    paused: bool,
     key_states: HashMap<Key, KeyState>,
     mouse_states: HashMap<MouseButton, KeyState>,
     mousex: f32, //Mouse cursor position
@@ -67,8 +71,8 @@ pub struct Game {
     dmousex: f32, //Change in mouse position since last frame
     dmousey: f32,
     build_cooldown: f32,
-    destroy_cooldown: f32,
-    pub world: World,
+    destroy_cooldown: f32, 
+    //Perspective matrix and aspect
     pub persp: Matrix4<f32>,
     pub aspect: f32,
     //Manage fonts, textures, models, and shaders
