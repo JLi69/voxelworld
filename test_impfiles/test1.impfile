@@ -1,0 +1,6 @@
+# This is a comment
+"entry1" {
+	# This is a second comment
+	"var1" = "hello"; # This is a comment on the same line as a variable
+	"var2" = "good bye";
+}

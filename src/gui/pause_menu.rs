@@ -59,7 +59,7 @@ pub fn run_pause_menu(
     painter: &mut egui_backend::Painter,
 ) -> Option<PauseMenuAction> {
     //Begin frame
-    ctx.begin_frame(input_state.input.take());
+    ctx.begin_pass(input_state.input.take());
 
     puase_title(ctx);
 
@@ -77,7 +77,7 @@ pub fn run_pause_menu(
         shapes,
         pixels_per_point,
         viewport_output: _,
-    } = ctx.end_frame();
+    } = ctx.end_pass();
 
     //Display
     let clipped_shapes = ctx.tessellate(shapes, pixels_per_point);

@@ -1,0 +1,6 @@
+# This file has a syntax error
+
+"error" {
+	# There should only be one equals sign
+	"blah" == "blah"
+}

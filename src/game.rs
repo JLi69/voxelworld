@@ -62,7 +62,7 @@ pub struct Game {
     pub player: Player,
     //World
     pub world: World,
-    //Input state 
+    //Input state
     paused: bool,
     key_states: HashMap<Key, KeyState>,
     mouse_states: HashMap<MouseButton, KeyState>,
@@ -71,7 +71,7 @@ pub struct Game {
     dmousex: f32, //Change in mouse position since last frame
     dmousey: f32,
     build_cooldown: f32,
-    destroy_cooldown: f32, 
+    destroy_cooldown: f32,
     //Perspective matrix and aspect
     pub persp: Matrix4<f32>,
     pub aspect: f32,

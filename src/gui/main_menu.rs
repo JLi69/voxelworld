@@ -98,7 +98,7 @@ pub fn run_main_menu(
         let (w, h) = window.get_framebuffer_size();
         painter.set_size(w as u32, h as u32);
 
-        ctx.begin_frame(input_state.input.take());
+        ctx.begin_pass(input_state.input.take());
 
         //Display main menu
         display_main_title(&ctx);
@@ -116,7 +116,7 @@ pub fn run_main_menu(
             shapes,
             pixels_per_point,
             viewport_output: _,
-        } = ctx.end_frame();
+        } = ctx.end_pass();
 
         //Display
         let clipped_shapes = ctx.tessellate(shapes, pixels_per_point);

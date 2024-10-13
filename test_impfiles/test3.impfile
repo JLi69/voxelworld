@@ -1,0 +1,9 @@
+# This file has a syntax error
+
+"error" {
+	"blah" this should not be here "hello world";
+}
+
+"this should not be read" {
+	
+}

@@ -2,6 +2,7 @@ mod assets;
 mod game;
 mod gfx;
 mod gui;
+mod impfile;
 mod voxel;
 
 use game::Game;

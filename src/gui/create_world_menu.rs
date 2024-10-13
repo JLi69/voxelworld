@@ -137,7 +137,7 @@ pub fn run_create_world_menu(
         let (w, h) = window.get_framebuffer_size();
         painter.set_size(w as u32, h as u32);
 
-        ctx.begin_frame(input_state.input.take());
+        ctx.begin_pass(input_state.input.take());
 
         //Display create world menu
         egui::CentralPanel::default()
@@ -153,7 +153,7 @@ pub fn run_create_world_menu(
             shapes,
             pixels_per_point,
             viewport_output: _,
-        } = ctx.end_frame();
+        } = ctx.end_pass();
 
         //Handle copy pasting
         if !platform_output.copied_text.is_empty() {

@@ -1,0 +1,14 @@
+"foo" {
+	"a" = "bar";
+	"b" = "baz";
+	"c" = "buzz";
+}
+
+"foo2" {
+	"var1" = "fizz";
+	"var2" = "buzz";
+}
+
+"foo3" {
+	# Empty entry
+}
