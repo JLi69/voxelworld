@@ -117,25 +117,8 @@ impl World {
         self.delete_out_of_range(&out_of_range);
 
         //Generate height map
-        let mut heightmap = HashMap::<(i32, i32), Vec<i32>>::new();
-        for (chunkx, _, chunkz) in &to_generate {
-            if heightmap.contains_key(&(*chunkx, *chunkz)) {
-                continue;
-            }
-            let posx = chunkx * CHUNK_SIZE_I32;
-            let posz = chunkz * CHUNK_SIZE_I32;
-            let mut heights = vec![0; (CHUNK_SIZE_I32 * CHUNK_SIZE_I32) as usize];
-            for x in posx..(posx + CHUNK_SIZE_I32) {
-                for z in posz..(posz + CHUNK_SIZE_I32) {
-                    let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-                    let point = [x as f64 / 192.0, z as f64 / 192.0];
-                    let noise_height = self.terrain_generator.get(point);
-                    let h = (noise_height * 47.0) as i32 + 16;
-                    heights[index] = h;
-                }
-            }
-            heightmap.insert((*chunkx, *chunkz), heights);
-        }
+        let positions = to_generate.iter().copied().collect();
+        let heightmap = generate_heightmap(&positions, &self.terrain_generator);
 
         //Generate new chunks
         for (chunkx, chunky, chunkz) in &to_generate {
