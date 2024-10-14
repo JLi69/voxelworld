@@ -1,0 +1,14 @@
+# This is a list of shaders that are to be imported
+# Shaders must have the following variables:
+# 'vert' - path to the vertex shader relative to the executable
+# 'frag' - path to the fragment shader relative to the executable
+
+"chunk" {
+	"vert" = "assets/shaders/chunkvert.glsl";
+	"frag" = "assets/shaders/chunkfrag.glsl";
+}
+
+"outline" {
+	"vert" = "assets/shaders/vert.glsl";
+	"frag" = "assets/shaders/outlinefrag.glsl";
+}

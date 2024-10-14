@@ -1,6 +1,23 @@
-use crate::assets;
+use crate::{assets, impfile};
 use crate::assets::shader::ShaderProgram;
+use crate::impfile::Entry;
 use std::collections::HashMap;
+
+struct ShaderMetaData {
+    name: String,
+    vert: String,
+    frag: String,
+}
+
+impl ShaderMetaData {
+    pub fn from_entry(entry: &Entry) -> Self {
+        Self {
+            name: entry.get_name(),
+            vert: entry.get_var("vert"),
+            frag: entry.get_var("frag"),
+        }
+    }
+}
 
 pub struct ShaderManager {
     shaders: HashMap<String, ShaderProgram>,
@@ -34,17 +51,12 @@ impl ShaderManager {
     }
 
     //Loads shaders, should be called at the beginning of the program
-    pub fn load_shaders(&mut self) {
-        //Create shaders
-        //Chunk shader
-        let vert = "assets/shaders/chunkvert.glsl";
-        let frag = "assets/shaders/chunkfrag.glsl";
-        let chunkshader = assets::program_from_vert_and_frag(vert, frag);
-        self.shaders.insert("chunk".to_string(), chunkshader);
-        //Cube outline shader
-        let vert = "assets/shaders/vert.glsl";
-        let frag = "assets/shaders/outlinefrag.glsl";
-        let outlineshader = assets::program_from_vert_and_frag(vert, frag);
-        self.shaders.insert("outline".to_string(), outlineshader);
+    pub fn load_shaders(&mut self, path: &str) {
+        let shaders = impfile::parse_file(path);
+        for entry in shaders {
+            let metadata = ShaderMetaData::from_entry(&entry);
+            let shader = assets::program_from_vert_and_frag(&metadata.vert, &metadata.frag);
+            self.shaders.insert(metadata.name, shader);
+        }
     }
 }

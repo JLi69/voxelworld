@@ -44,7 +44,7 @@ impl Game {
     pub fn load_assets(&mut self) {
         load_font("assets/fonts/pixeloid/PixeloidSans.ttf", &mut self.fonts);
         self.models.add_default_models();
-        self.shaders.load_shaders();
-        self.textures.load_textures();
+        self.shaders.load_shaders("assets/shaders.impfile");
+        self.textures.load_textures("assets/textures.impfile");
     }
 }

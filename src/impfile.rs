@@ -263,7 +263,7 @@ fn parse_entry(file_chars: &mut Peekable<Chars>) -> Result<Entry, String> {
     Ok(entry)
 }
 
-fn parse_file(path: &str) -> EntryList {
+pub fn parse_file(path: &str) -> EntryList {
     let mut entries = vec![];
 
     let file = File::open(path);
@@ -272,7 +272,7 @@ fn parse_file(path: &str) -> EntryList {
         Ok(mut file) => {
             let res = file.read_to_string(&mut file_contents);
             match res {
-                Ok(sz) => eprintln!("read {sz} bytes"),
+                Ok(sz) => eprintln!("read {sz} bytes from {path}"),
                 Err(msg) => eprintln!("E: {msg}"),
             }
         }

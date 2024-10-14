@@ -1,0 +1,7 @@
+# This is a list of textures to be imported
+# Textures must have the following variables:
+# 'path' is the path to the texture relative to the executable
+
+"blocks" {
+	"path" = "assets/textures/blocktextures.png";
+}

@@ -1,5 +1,19 @@
-use crate::assets::Texture;
+use crate::{assets::Texture, impfile::{Entry, self}};
 use std::collections::HashMap;
+
+struct TextureMetaData {
+    name: String,
+    path: String,
+}
+
+impl TextureMetaData {
+    pub fn from_entry(entry: &Entry) -> Self {
+        Self {
+            name: entry.get_name(),
+            path: entry.get_var("path"),
+        }
+    }
+}
 
 pub struct TextureManager {
     textures: HashMap<String, Texture>,
@@ -34,8 +48,12 @@ impl TextureManager {
     }
 
     //Loads all textures, should be called at the beginning of the game
-    pub fn load_textures(&mut self) {
-        let blocktexture = load_texture("assets/textures/blocktextures.png");
-        self.textures.insert("blocks".to_string(), blocktexture);
+    pub fn load_textures(&mut self, path: &str) {
+        let textures = impfile::parse_file(path);
+        for entry in textures {
+            let metadata = TextureMetaData::from_entry(&entry);
+            let texture = load_texture(&metadata.path);
+            self.textures.insert(metadata.name, texture);
+        }
     }
 }
