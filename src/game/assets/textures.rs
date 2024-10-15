@@ -1,4 +1,7 @@
-use crate::{assets::Texture, impfile::{Entry, self}};
+use crate::{
+    assets::Texture,
+    impfile::{self, Entry},
+};
 use std::collections::HashMap;
 
 struct TextureMetaData {

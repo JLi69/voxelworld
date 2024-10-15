@@ -6,9 +6,9 @@ pub mod physics;
 pub mod player;
 pub mod update;
 
+use crate::impfile;
 use crate::voxel::world::WorldGenType;
-use crate::World;
-use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT};
+use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT, World};
 use assets::models::ModelManager;
 use assets::shaders::ShaderManager;
 use assets::textures::TextureManager;
@@ -22,6 +22,19 @@ pub use input::{release_cursor, EventHandler, KeyState};
 use physics::Hitbox;
 use player::Player;
 pub use std::collections::HashMap;
+
+//Application config values, these are not meant to be changed by normal users
+struct Config {
+    font_path: String,
+}
+
+impl Config {
+    pub fn default() -> Self {
+        Self {
+            font_path: String::new(),
+        }
+    }
+}
 
 //Initialize window, call this at the beginning of the game
 pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
@@ -80,6 +93,8 @@ pub struct Game {
     pub models: ModelManager,
     pub shaders: ShaderManager,
     pub textures: TextureManager,
+    //Config
+    cfg: Config,
 }
 
 impl Game {
@@ -104,6 +119,7 @@ impl Game {
             models: ModelManager::new(),
             shaders: ShaderManager::new(),
             textures: TextureManager::new(),
+            cfg: Config::default(),
         }
     }
 
@@ -135,5 +151,15 @@ impl Game {
                 break;
             }
         }
+    }
+
+    pub fn load_config(&mut self, path: &str) {
+        let entries = impfile::parse_file(path);
+        if entries.is_empty() {
+            eprintln!("Error: empty config file");
+            return;
+        }
+        let e = &entries[0];
+        self.cfg.font_path = e.get_var("font_path");
     }
 }

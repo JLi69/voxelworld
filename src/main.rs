@@ -20,6 +20,7 @@ fn main() {
     //Initialize game state
     let mut gamestate = Game::new();
     gamestate.init();
+    gamestate.load_config("cfg.impfile");
     gamestate.load_assets();
     gamestate.init_mouse_pos(&window);
 

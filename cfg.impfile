@@ -1,0 +1,8 @@
+# This is a file of config values that control how the game looks/behaves,
+# this file should probably not be edited but if you want to try experimenting,
+# go ahead and have some fun!
+# (just maybe back this file up in case you screw something up and can't fix it)
+
+"config" {
+	"font_path" = "assets/fonts/pixeloid/PixeloidSans.ttf";
+}

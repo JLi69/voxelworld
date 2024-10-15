@@ -1,6 +1,6 @@
-use crate::{assets, impfile};
 use crate::assets::shader::ShaderProgram;
 use crate::impfile::Entry;
+use crate::{assets, impfile};
 use std::collections::HashMap;
 
 struct ShaderMetaData {
