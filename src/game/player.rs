@@ -1,4 +1,5 @@
 use super::Hitbox;
+use crate::impfile;
 use crate::voxel::Block;
 use crate::voxel::World;
 use crate::voxel::EMPTY_BLOCK;
@@ -223,5 +224,19 @@ impl Player {
         }
 
         None
+    }
+
+    pub fn to_entry(&self) -> impfile::Entry {
+        let mut entry = impfile::Entry::new("player");
+       
+        entry.add_float("x", self.position.x);
+        entry.add_float("y", self.position.y);
+        entry.add_float("z", self.position.z);
+        entry.add_bool("falling", self.falling);
+        entry.add_float("velocity_y", self.velocity_y);
+        entry.add_float("rotation", self.rotation);
+        entry.add_integer("selected_block", self.selected_block.id as i64);
+
+        entry
     }
 }

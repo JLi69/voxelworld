@@ -5,6 +5,8 @@ use egui_backend::egui;
 use egui_gl_glfw as egui_backend;
 use glfw::{Context, Glfw, PWindow};
 
+const SAVE_TIME_INTERVAL: f32 = 60.0;
+
 pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: &EventHandler) {
     if window.should_close() {
         return;
@@ -26,6 +28,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     //Main loop
     let mut dt = 0.0f32;
     let mut fps_timer = 0.0;
+    let mut save_timer = 0.0;
     let mut frames = 0;
     let mut chunks_drawn = 0;
     let mut quit = false;
@@ -69,7 +72,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
                     gamestate.paused = false;
                     quit = true;
                     window.set_cursor_mode(glfw::CursorMode::Normal);
-                    gamestate.reset();
                 }
             }
         }
@@ -89,6 +91,13 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             .world
             .generate_more(gamestate.player.position, &mut chunkvaos);
         chunkvaos.update_chunks(&gamestate.world);
+
+        //Handle save
+        save_timer -= dt;
+        if save_timer < 0.0 {
+            gamestate.save_game();
+            save_timer = SAVE_TIME_INTERVAL;
+        }
 
         //Output FPS
         fps_timer += dt;
@@ -118,6 +127,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         dt = (end - start).as_secs_f32();
     }
 
+    gamestate.save_game();
+    gamestate.reset();
     //Clean up
     chunkvaos.clear();
 }

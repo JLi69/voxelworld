@@ -5,11 +5,13 @@ mod gui;
 mod impfile;
 mod voxel;
 
-use game::Game;
+use game::{save, Game};
 use gui::main_menu::MainMenuOutput;
 use voxel::{build::BLOCK_REACH, flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
+    //Attempt to create save directory
+    save::create_save_dir();
     //Attempt to initialize glfw
     let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to init glfw!");
     let (mut window, events) = game::init_window(&mut glfw);

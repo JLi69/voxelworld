@@ -1,5 +1,5 @@
 use super::{init_egui_input_state, menu_text, set_ui_gl_state, transparent_frame};
-use crate::game::{EventHandler, Game};
+use crate::game::{save, EventHandler, Game};
 use crate::gfx;
 use crate::voxel::world::WorldGenType;
 use egui_backend::egui::{self, Color32};
@@ -95,7 +95,14 @@ fn display_create_world(
             .clicked()
         {
             menu_state.create_world = true;
+            let path = save::get_world_path(&menu_state.world_name);
             create_new_world(menu_state, gamestate);
+            gamestate.world.path = path;
+            eprintln!("Created world: {}", gamestate.world.path);
+            if let Err(msg) = save::create_world_dir(&gamestate.world.path) {
+                eprintln!("Error: failed to create world: {msg}");
+                menu_state.create_world = false;
+            }
         }
 
         if ui

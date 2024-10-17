@@ -61,6 +61,10 @@ impl Entry {
         self.variables.insert(var_name.to_string(), b.to_string());
     }
 
+    pub fn add_integer(&mut self, var_name: &str, i: i64) {
+        self.variables.insert(var_name.to_string(), i.to_string());
+    }
+
     //Converts the value into a formatted string, used for serializing to a file
     pub fn to_impfile_string(&self) -> String {
         let mut res = String::new();
@@ -146,6 +150,16 @@ pub fn write_comment(outfile: &mut File, comment_text: &str) {
         }
 
         text.push(ch);
+    }
+
+    let mut comment_text = String::new();
+    comment_text.push_str("# ");
+    comment_text.push_str(&text);
+    comment_text.push('\n');
+    let res = outfile.write_all(comment_text.as_bytes());
+    //Output any potential errors
+    if let Err(msg) = res {
+        eprintln!("E: {msg}");
     }
 }
 

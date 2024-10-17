@@ -1,6 +1,7 @@
 mod default_world;
 mod flat_world;
 mod gen_more;
+mod save;
 
 use super::{world_to_chunk_position, Block, Chunk};
 use crate::gfx::ChunkVaoTable;
@@ -28,7 +29,10 @@ pub struct World {
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
     clear_cache: bool,
     terrain_generator: Fbm<Perlin>,
+    world_seed: u32,
     pub gen_type: WorldGenType,
+    //World path
+    pub path: String,
 }
 
 impl World {
@@ -44,6 +48,8 @@ impl World {
             clear_cache: false,
             terrain_generator: Fbm::new(0),
             gen_type: WorldGenType::DefaultGen,
+            world_seed: 0,
+            path: String::new(),
         }
     }
 
@@ -73,6 +79,8 @@ impl World {
             clear_cache: false,
             terrain_generator: terrain_noise,
             gen_type: generation,
+            world_seed: seed,
+            path: String::new(),
         }
     }
 
@@ -172,5 +180,10 @@ impl World {
             WorldGenType::DefaultGen => self.gen_more_default(pos, chunktable),
             WorldGenType::Flat => self.gen_more_flat(pos, chunktable),
         }
+    }
+
+    //Returns seed of world
+    pub fn get_seed(&self) -> u32 {
+        self.world_seed
     }
 }

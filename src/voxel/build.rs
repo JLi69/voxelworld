@@ -4,7 +4,7 @@ use crate::game::physics::Hitbox;
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
 
-pub const BLOCK_REACH: f32 = 5.0;
+pub const BLOCK_REACH: f32 = 4.0;
 
 /*
  * These are functions related to placing/building in the world

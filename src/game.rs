@@ -4,6 +4,7 @@ pub mod gameloop;
 pub mod input;
 pub mod physics;
 pub mod player;
+pub mod save;
 pub mod update;
 
 use crate::impfile;
@@ -141,6 +142,7 @@ impl Game {
     //Generate world
     pub fn generate_world(&mut self, seed: u32, range: i32, gen_type: WorldGenType) {
         self.world = World::new(seed, range, gen_type);
+        eprintln!("Created world with seed: {}", self.world.get_seed());
         self.world.generate_world();
 
         //Set position of the player
