@@ -10,6 +10,7 @@ use glfw::{Context, CursorMode, Glfw, PWindow};
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum MainMenuOutput {
     CreateWorld,
+    SelectWorld,
     Credits,
     Quit,
 }
@@ -37,7 +38,7 @@ fn display_main_menu(ui: &mut egui::Ui) -> Option<MainMenuOutput> {
             .button(menu_text("Play World", 28.0, Color32::WHITE))
             .clicked()
         {
-            todo!();
+            selected = Some(MainMenuOutput::SelectWorld);
         }
 
         ui.label(" ");

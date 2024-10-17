@@ -93,6 +93,7 @@ fn display_create_world(
         if ui
             .button(menu_text("Create", 24.0, Color32::WHITE))
             .clicked()
+            && !menu_state.world_name.is_empty()
         {
             menu_state.create_world = true;
             let path = save::get_world_path(&menu_state.world_name);

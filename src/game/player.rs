@@ -228,7 +228,7 @@ impl Player {
 
     pub fn to_entry(&self) -> impfile::Entry {
         let mut entry = impfile::Entry::new("player");
-       
+
         entry.add_float("x", self.position.x);
         entry.add_float("y", self.position.y);
         entry.add_float("z", self.position.z);

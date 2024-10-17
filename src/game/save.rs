@@ -1,8 +1,9 @@
-use std::{path::Path, fs::File, io::Write};
-use crate::impfile;
 use super::Game;
+use crate::impfile;
+use std::{fs::File, io::Write, path::Path};
 
-const SAVE_PATH: &str = "saves/";
+pub const SAVE_PATH: &str = "saves/";
+pub const CHUNK_PATH: &str = "chunkdata/";
 
 pub fn create_save_dir() {
     if Path::new(SAVE_PATH).exists() {
@@ -37,7 +38,7 @@ pub fn create_world_dir(world_path: &str) -> Result<(), String> {
     }
 
     std::fs::create_dir(world_path).map_err(|e| e.to_string())?;
-    let chunk_path = world_path.to_string() + "chunkdata/";
+    let chunk_path = world_path.to_string() + CHUNK_PATH;
     std::fs::create_dir(chunk_path).map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -46,19 +47,14 @@ impl Game {
     pub fn save_game(&self) {
         //Save player
         let player_entry = self.player.to_entry();
-        let player_save_path = self.world.path.clone() + "player.impfile"; 
+        let player_save_path = self.world.path.clone() + "player.impfile";
         let player_entry_str = player_entry.to_impfile_string();
         let res = match File::create(player_save_path) {
             Ok(mut player_file) => {
-                impfile::write_comment(
-                    &mut player_file, 
-                    "This file contains saved player data",
-                );
+                impfile::write_comment(&mut player_file, "This file contains saved player data");
                 player_file.write_all(player_entry_str.as_bytes())
             }
-            Err(msg) => {
-                Err(msg) 
-            }
+            Err(msg) => Err(msg),
         };
 
         if let Err(msg) = res {

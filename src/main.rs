@@ -30,6 +30,9 @@ fn main() {
         let selected = gui::run_main_menu(&mut gamestate, &mut window, &mut glfw, &events);
 
         let quit_to_menu = match selected {
+            MainMenuOutput::SelectWorld => {
+                gui::run_select_world_menu(&mut gamestate, &mut window, &mut glfw, &events)
+            }
             MainMenuOutput::CreateWorld => {
                 gui::run_create_world_menu(&mut gamestate, &mut window, &mut glfw, &events)
             }

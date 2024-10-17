@@ -1,6 +1,6 @@
-use crate::impfile::{Entry, self};
-use std::{fs::File, io::Write};
 use super::{World, WorldGenType};
+use crate::impfile::{self, Entry};
+use std::{fs::File, io::Write};
 
 fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
     match world_gen_type {
@@ -34,9 +34,7 @@ impl World {
                 impfile::write_comment(&mut player_file, "World metadata");
                 player_file.write_all(world_entry_str.as_bytes())
             }
-            Err(msg) => {
-                Err(msg) 
-            }
+            Err(msg) => Err(msg),
         };
 
         if let Err(msg) = res {
