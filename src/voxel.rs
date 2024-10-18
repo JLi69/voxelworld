@@ -27,17 +27,31 @@ pub enum Axis {
 pub struct Block {
     //Block id
     pub id: u8,
+    //Orientation of the block
+    //0 = up (normal)
+    //1 = right
+    //2 = front
+    //3 = down
+    //4 = left
+    //5 = back
+    pub orientation: u8,
 }
 
 impl Block {
     //Create a new empty block
     pub fn new() -> Self {
-        Self { id: 0 }
+        Self {
+            id: 0,
+            orientation: 0,
+        }
     }
 
     //Create a new block with an id
     pub fn new_id(blockid: u8) -> Self {
-        Self { id: blockid }
+        Self {
+            id: blockid,
+            orientation: 0,
+        }
     }
 
     //Returns if the block is transparent

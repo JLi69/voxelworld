@@ -152,18 +152,39 @@ pub fn add_block_vertices_log(
     xyz: Int3,
     vert_data: &mut ChunkData,
     faceytexture: u8,
+    sidetexture_rotated: u8,
 ) {
     let (x, y, z) = xyz;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
-    if blockid == EMPTY_BLOCK {
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
+    if block.id == EMPTY_BLOCK {
         return;
     }
 
-    let facex = FaceInfo::new(blockid, 0);
+    /*let facex = FaceInfo::new(blockid, 0);
     let facey = FaceInfo::new(faceytexture, 1);
-    let facez = FaceInfo::new(blockid, 2);
+    let facez = FaceInfo::new(blockid, 2);*/
+    let (facex, facey, facez) = match block.orientation % 3 {
+        0 => (
+            FaceInfo::new(block.id, 0),
+            FaceInfo::new(faceytexture, 1),
+            FaceInfo::new(block.id, 2),
+        ),
+        1 => (
+            FaceInfo::new(faceytexture, 0),
+            FaceInfo::new(block.id, 1),
+            FaceInfo::new(sidetexture_rotated, 2),
+        ),
+        2 => (
+            FaceInfo::new(sidetexture_rotated, 0),
+            FaceInfo::new(sidetexture_rotated, 1),
+            FaceInfo::new(faceytexture, 2),
+        ),
+        _ => (
+            FaceInfo::new(block.id, 0),
+            FaceInfo::new(faceytexture, 1),
+            FaceInfo::new(block.id, 2),
+        ),
+    };
 
     #[rustfmt::skip]
     add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey);

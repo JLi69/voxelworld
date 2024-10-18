@@ -184,20 +184,39 @@ pub fn place_block(
         world.get_block(ix, iy, iz).id
     };
     let (mut ix, mut iy, mut iz) = get_raycast_voxel(x, y, z, dir, axis);
+    let mut block = player.selected_block;
     match axis {
         Axis::X => {
             ix -= dir.x.signum() as i32;
+            //Set orientation of the block
+            if dir.x.signum() as i32 == -1 {
+                block.orientation = 4;
+            } else if dir.x.signum() as i32 == 1 {
+                block.orientation = 1;
+            }
         }
         Axis::Y => {
             iy -= dir.y.signum() as i32;
+            //Set orientation of the block
+            if dir.y.signum() as i32 == -1 {
+                block.orientation = 3;
+            } else if dir.y.signum() as i32 == 1 {
+                block.orientation = 0;
+            }
         }
         Axis::Z => {
             iz -= dir.z.signum() as i32;
+            //Set orientation of the block
+            if dir.z.signum() as i32 == -1 {
+                block.orientation = 5;
+            } else if dir.z.signum() as i32 == 1 {
+                block.orientation = 2;
+            }
         }
     }
     let blockid2 = world.get_block(ix, iy, iz).id;
     if blockid2 == EMPTY_BLOCK && blockid1 != EMPTY_BLOCK {
-        world.set_block(ix, iy, iz, player.selected_block);
+        world.set_block(ix, iy, iz, block);
         let block_hitbox = Hitbox::from_block(ix, iy, iz);
         if player.get_hitbox().intersects(&block_hitbox) {
             world.set_block(ix, iy, iz, Block::new_id(0));

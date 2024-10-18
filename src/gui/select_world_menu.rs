@@ -55,6 +55,7 @@ fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
     ui.vertical_centered(|ui| {
         ui.label(" ");
         ui.label(menu_text("Select World", 32.0, Color32::WHITE));
+        ui.label(" ");
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             for world in &menu_state.worlds {
@@ -66,6 +67,7 @@ fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
             }
         });
 
+        ui.label(" ");
         if ui
             .button(menu_text("Play World!", 24.0, Color32::WHITE))
             .clicked()
@@ -73,6 +75,16 @@ fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
         {
             let path = SAVE_PATH.to_string() + menu_state.selected_world.clone().as_str() + "/";
             eprintln!("Attempting to load {path}...");
+        }
+
+        //Delete world
+        if ui
+            .button(menu_text("Delete World", 24.0, Color32::WHITE))
+            .clicked()
+            && !menu_state.selected_world.is_empty()
+        {
+            let path = SAVE_PATH.to_string() + menu_state.selected_world.clone().as_str() + "/";
+            eprintln!("Attempting to delete {path}...");
         }
 
         if ui

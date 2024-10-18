@@ -36,7 +36,7 @@ fn add_block_vertices(
         }
         8 => {
             //Log
-            add_block_vertices_log(chunk, adj_chunks, xyz, vert_data, 24);
+            add_block_vertices_log(chunk, adj_chunks, xyz, vert_data, 24, 25);
         }
         _ => {
             //Everything else
