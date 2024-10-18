@@ -10,6 +10,7 @@ struct SelectWorldMenuState {
     create_world: bool,
     quit_to_menu: bool,
     selected_world: String,
+    to_delete: String,
     worlds: Vec<String>,
 }
 
@@ -20,6 +21,7 @@ impl SelectWorldMenuState {
             create_world: false,
             quit_to_menu: false,
             selected_world: String::new(),
+            to_delete: String::new(),
             worlds: vec![],
         }
     }
@@ -29,6 +31,7 @@ impl SelectWorldMenuState {
     }
 
     fn get_world_list(&mut self) {
+        self.worlds.clear();
         match std::fs::read_dir(SAVE_PATH) {
             Ok(dir_contents) => {
                 for entry in dir_contents.flatten() {
@@ -83,8 +86,7 @@ fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
             .clicked()
             && !menu_state.selected_world.is_empty()
         {
-            let path = SAVE_PATH.to_string() + menu_state.selected_world.clone().as_str() + "/";
-            eprintln!("Attempting to delete {path}...");
+            menu_state.to_delete = menu_state.selected_world.clone();
         }
 
         if ui
@@ -92,6 +94,48 @@ fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
             .clicked()
         {
             menu_state.quit_to_menu = true;
+        }
+    });
+}
+
+//Display the delete world gui
+fn display_delete_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState, h: i32) {
+    ui.vertical_centered(|ui| {
+        ui.add_space(h as f32 / 4.0);
+        ui.label(menu_text(
+            format!("You are about to delete: \"{}\"", menu_state.to_delete).as_str(),
+            32.0,
+            Color32::RED,
+        ));
+        ui.label(menu_text(
+            "WARNING: Deleting a world is permanent, are you sure you want to do this?",
+            40.0,
+            Color32::RED,
+        ));
+        ui.label(" ");
+
+        if ui
+            .button(menu_text("Cancel", 24.0, Color32::WHITE))
+            .clicked()
+        {
+            menu_state.to_delete = String::new();
+        }
+
+        //Delete world
+        if ui
+            .button(menu_text("Yes, delete it!", 24.0, Color32::RED))
+            .clicked()
+            && !menu_state.selected_world.is_empty()
+        {
+            let path = SAVE_PATH.to_string() + menu_state.selected_world.clone().as_str() + "/";
+            eprintln!("Attempting to delete {path}...");
+            if let Err(msg) = std::fs::remove_dir_all(&path) {
+                eprintln!("Failed to delete: {path}");
+                eprintln!("{msg}");
+            }
+            menu_state.to_delete = String::new();
+            menu_state.selected_world = String::new();
+            menu_state.get_world_list();
         }
     });
 }
@@ -131,10 +175,15 @@ pub fn run_select_world_menu(
         ctx.begin_pass(input_state.input.take());
 
         //Display create world menu
+        let (_w, h) = window.get_framebuffer_size();
         egui::CentralPanel::default()
             .frame(transparent_frame())
             .show(&ctx, |ui| {
-                display_create_world(ui, &mut menu_state);
+                if menu_state.to_delete.is_empty() {
+                    display_create_world(ui, &mut menu_state);
+                } else {
+                    display_delete_world(ui, &mut menu_state, h);
+                }
             });
 
         //End frame
