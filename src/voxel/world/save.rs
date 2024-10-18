@@ -1,5 +1,5 @@
 use super::{World, WorldGenType};
-use crate::impfile::{self, Entry};
+use crate::{impfile::{self, Entry}, voxel::Chunk};
 use std::{fs::File, io::Write};
 
 fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
@@ -14,6 +14,15 @@ fn string_to_gen_type(s: &str) -> WorldGenType {
         WorldGenType::Flat
     } else {
         WorldGenType::DefaultGen
+    }
+}
+
+pub fn save_chunk(chunk: &Chunk, world_path: &str) {
+    if let Err(path) = chunk.save_chunk(world_path) {
+        if let Err(msg) = std::fs::remove_file(&path) {
+            eprintln!("Failed to remove {path}");
+            eprintln!("{msg}");
+        }
     }
 }
 
@@ -44,5 +53,19 @@ impl World {
 
     pub fn save(&self) {
         self.save_world_metadata();
+        for chunk in self.chunks.values() {
+            save_chunk(chunk, &self.path);
+        }
+    }
+
+    pub fn save_all(&self) { 
+        self.save_world_metadata();
+        for chunk in self.chunks.values() { 
+            save_chunk(chunk, &self.path);
+        }
+
+        for chunk in self.chunk_cache.values() {
+            save_chunk(chunk, &self.path);
+        }
     }
 }

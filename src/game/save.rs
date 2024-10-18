@@ -10,7 +10,7 @@ pub fn create_save_dir() {
         return;
     }
 
-    if let Err(msg) = std::fs::create_dir(SAVE_PATH) {
+    if let Err(msg) = std::fs::create_dir_all(SAVE_PATH) {
         eprintln!("{msg}");
         panic!("Failed to create save directory, killing program.");
     }
@@ -37,14 +37,14 @@ pub fn create_world_dir(world_path: &str) -> Result<(), String> {
         return Err("Path exists".to_string());
     }
 
-    std::fs::create_dir(world_path).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(world_path).map_err(|e| e.to_string())?;
     let chunk_path = world_path.to_string() + CHUNK_PATH;
-    std::fs::create_dir(chunk_path).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(chunk_path).map_err(|e| e.to_string())?;
     Ok(())
 }
 
 impl Game {
-    pub fn save_game(&self) {
+    fn save_player(&self) {
         //Save player
         let player_entry = self.player.to_entry();
         let player_save_path = self.world.path.clone() + "player.impfile";
@@ -60,8 +60,16 @@ impl Game {
         if let Err(msg) = res {
             eprintln!("E: Failed to save player: {msg}");
         }
+    }
 
+    pub fn save_game(&self) {
+        self.save_player();
         //Save world
         self.world.save();
+    }
+
+    pub fn save_entire_world(&self) {
+        self.save_player();
+        self.world.save_all();
     }
 }

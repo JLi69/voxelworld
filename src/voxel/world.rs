@@ -148,7 +148,9 @@ impl World {
             let to_delete = self.chunk_cache.keys().next().copied();
 
             if let Some(pos) = to_delete {
-                //TODO: add code to save chunks to disk
+                if let Some(chunk) = self.chunk_cache.get(&pos) {
+                    save::save_chunk(chunk, &self.path);
+                }
                 self.chunk_cache.remove(&pos);
             }
             let now = std::time::Instant::now();

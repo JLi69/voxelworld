@@ -127,7 +127,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         dt = (end - start).as_secs_f32();
     }
 
-    gamestate.save_game();
+    gamestate.save_entire_world();
     gamestate.reset();
     //Clean up
     chunkvaos.clear();

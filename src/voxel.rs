@@ -23,7 +23,7 @@ pub enum Axis {
     Z,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Block {
     //Block id
     pub id: u8,
