@@ -24,6 +24,7 @@ impl Entry {
         }
     }
 
+    #[allow(dead_code)]
     pub fn from_vec(entry_name: &str, vars: Vec<(String, String)>) -> Self {
         let mut variable_map = HashMap::new();
         for (name, value) in vars {
