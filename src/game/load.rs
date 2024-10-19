@@ -1,5 +1,5 @@
+use super::{player::Player, Camera, Game};
 use crate::{impfile, voxel::World};
-use super::{Game, Camera, player::Player};
 
 fn load_camera(path: &str) -> Camera {
     let camera_file_entries = impfile::parse_file(path);

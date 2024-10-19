@@ -74,7 +74,7 @@ impl World {
                     self.chunk_cache.remove(&pos);
                 }
                 continue;
-            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) { 
+            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) {
                 self.chunks.insert(pos, chunk);
                 continue;
             }

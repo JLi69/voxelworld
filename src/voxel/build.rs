@@ -189,27 +189,27 @@ pub fn place_block(
         Axis::X => {
             ix -= dir.x.signum() as i32;
             //Set orientation of the block
-            if dir.x.signum() as i32 == -1 {
+            if dir.x.signum() as i32 == -1 && block.can_rotate() {
                 block.orientation = 4;
-            } else if dir.x.signum() as i32 == 1 {
+            } else if dir.x.signum() as i32 == 1 && block.can_rotate() {
                 block.orientation = 1;
             }
         }
         Axis::Y => {
             iy -= dir.y.signum() as i32;
             //Set orientation of the block
-            if dir.y.signum() as i32 == -1 {
+            if dir.y.signum() as i32 == -1 && block.can_rotate() {
                 block.orientation = 3;
-            } else if dir.y.signum() as i32 == 1 {
+            } else if dir.y.signum() as i32 == 1 && block.can_rotate() {
                 block.orientation = 0;
             }
         }
         Axis::Z => {
             iz -= dir.z.signum() as i32;
             //Set orientation of the block
-            if dir.z.signum() as i32 == -1 {
+            if dir.z.signum() as i32 == -1 && block.can_rotate() {
                 block.orientation = 5;
-            } else if dir.z.signum() as i32 == 1 {
+            } else if dir.z.signum() as i32 == 1 && block.can_rotate() {
                 block.orientation = 2;
             }
         }

@@ -85,13 +85,13 @@ impl Camera {
         let x = entry.get_var("x").parse::<f32>().unwrap_or(0.0);
         let y = entry.get_var("y").parse::<f32>().unwrap_or(0.0);
         let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0);
-        Self { 
-            position: Vector3::new(x, y, z), 
-            yaw: entry.get_var("yaw").parse::<f32>().unwrap_or(0.0), 
-            pitch: entry.get_var("pitch").parse::<f32>().unwrap_or(0.0), 
-            znear: DEFAULT_ZNEAR, 
-            zfar: DEFAULT_ZFAR, 
-            fovy: DEFAULT_FOV, 
+        Self {
+            position: Vector3::new(x, y, z),
+            yaw: entry.get_var("yaw").parse::<f32>().unwrap_or(0.0),
+            pitch: entry.get_var("pitch").parse::<f32>().unwrap_or(0.0),
+            znear: DEFAULT_ZNEAR,
+            zfar: DEFAULT_ZFAR,
+            fovy: DEFAULT_FOV,
         }
     }
 }

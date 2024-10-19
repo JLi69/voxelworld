@@ -1,8 +1,11 @@
+use super::{World, WorldGenType, OCTAVES, PERSISTENCE};
+use crate::{
+    impfile::{self, Entry},
+    voxel::Chunk,
+};
 use noise::Fbm;
 use rand::Rng;
 use std::collections::HashMap;
-use super::{World, WorldGenType};
-use crate::{impfile::{self, Entry}, voxel::Chunk};
 use std::{fs::File, io::Write};
 
 fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
@@ -59,17 +62,20 @@ impl World {
         for chunk in self.chunks.values() {
             save_chunk(chunk, &self.path);
         }
+        eprintln!("Saved chunks.");
     }
 
-    pub fn save_all(&self) { 
+    pub fn save_all(&self) {
         self.save_world_metadata();
-        for chunk in self.chunks.values() { 
+        for chunk in self.chunks.values() {
             save_chunk(chunk, &self.path);
         }
+        eprintln!("Saved chunks.");
 
         for chunk in self.chunk_cache.values() {
             save_chunk(chunk, &self.path);
         }
+        eprintln!("Saved chunks in cache.");
     }
 
     pub fn load_world_metadata(world_dir_path: &str) -> Self {
@@ -80,23 +86,38 @@ impl World {
         }
 
         let rand_seed = rand::thread_rng().gen::<u32>();
-        let seed = world_metadata_entries[0].get_var("seed").parse::<u32>().unwrap_or(rand_seed);
+        let seed = world_metadata_entries[0]
+            .get_var("seed")
+            .parse::<u32>()
+            .unwrap_or(rand_seed);
         let mut terrain_noise = Fbm::new(seed);
-        terrain_noise.octaves = 5;
-        terrain_noise.persistence = 0.47;
+        terrain_noise.octaves = OCTAVES;
+        terrain_noise.persistence = PERSISTENCE;
 
-        Self { 
-            chunks: HashMap::new(), 
-            range: world_metadata_entries[0].get_var("range").parse::<i32>().unwrap_or(3), 
-            centerx: world_metadata_entries[0].get_var("centerx").parse::<i32>().unwrap_or(0), 
-            centery: world_metadata_entries[0].get_var("centery").parse::<i32>().unwrap_or(0), 
-            centerz: world_metadata_entries[0].get_var("centerz").parse::<i32>().unwrap_or(0), 
-            chunk_cache: HashMap::new(), 
-            clear_cache: false, 
-            terrain_generator: terrain_noise, 
-            world_seed: seed, 
-            gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")), 
-            path: world_dir_path.to_string(), 
+        Self {
+            chunks: HashMap::new(),
+            range: world_metadata_entries[0]
+                .get_var("range")
+                .parse::<i32>()
+                .unwrap_or(3),
+            centerx: world_metadata_entries[0]
+                .get_var("centerx")
+                .parse::<i32>()
+                .unwrap_or(0),
+            centery: world_metadata_entries[0]
+                .get_var("centery")
+                .parse::<i32>()
+                .unwrap_or(0),
+            centerz: world_metadata_entries[0]
+                .get_var("centerz")
+                .parse::<i32>()
+                .unwrap_or(0),
+            chunk_cache: HashMap::new(),
+            clear_cache: false,
+            terrain_generator: terrain_noise,
+            world_seed: seed,
+            gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")),
+            path: world_dir_path.to_string(),
         }
     }
 

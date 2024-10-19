@@ -9,6 +9,9 @@ use cgmath::Vector3;
 use noise::{Fbm, Perlin};
 use std::collections::HashMap;
 
+pub const OCTAVES: usize = 5;
+pub const PERSISTENCE: f64 = 0.47;
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WorldGenType {
     DefaultGen,
@@ -66,8 +69,8 @@ impl World {
         }
 
         let mut terrain_noise = Fbm::new(seed);
-        terrain_noise.octaves = 5;
-        terrain_noise.persistence = 0.47;
+        terrain_noise.octaves = OCTAVES;
+        terrain_noise.persistence = PERSISTENCE;
 
         Self {
             chunks: chunklist,
