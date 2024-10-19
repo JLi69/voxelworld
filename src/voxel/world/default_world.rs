@@ -128,7 +128,10 @@ impl World {
                 if let Some(new_chunk) = new_chunk {
                     self.chunks.insert(pos, new_chunk.clone());
                     self.chunk_cache.remove(&pos);
-                }
+                } 
+                continue;
+            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) { 
+                self.chunks.insert(pos, chunk);
                 continue;
             }
 

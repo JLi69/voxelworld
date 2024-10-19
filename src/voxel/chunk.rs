@@ -1,4 +1,5 @@
 pub mod save;
+pub mod load;
 use super::{Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK};
 
 #[derive(Clone)]

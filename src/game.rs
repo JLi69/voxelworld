@@ -6,6 +6,7 @@ pub mod physics;
 pub mod player;
 pub mod save;
 pub mod update;
+pub mod load;
 
 use crate::impfile;
 use crate::voxel::world::WorldGenType;

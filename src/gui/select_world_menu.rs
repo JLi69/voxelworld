@@ -54,7 +54,11 @@ impl SelectWorldMenuState {
 }
 
 //Display the select world gui
-fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState) {
+fn display_create_world(
+    ui: &mut egui::Ui,
+    menu_state: &mut SelectWorldMenuState,
+    gamestate: &mut Game,
+) {
     ui.vertical_centered(|ui| {
         ui.label(" ");
         ui.label(menu_text("Select World", 32.0, Color32::WHITE));
@@ -78,6 +82,8 @@ fn display_create_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
         {
             let path = SAVE_PATH.to_string() + menu_state.selected_world.clone().as_str() + "/";
             eprintln!("Attempting to load {path}...");
+            gamestate.load_world(&path);
+            menu_state.create_world = true;
         }
 
         //Delete world
@@ -180,7 +186,7 @@ pub fn run_select_world_menu(
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 if menu_state.to_delete.is_empty() {
-                    display_create_world(ui, &mut menu_state);
+                    display_create_world(ui, &mut menu_state, gamestate);
                 } else {
                     display_delete_world(ui, &mut menu_state, h);
                 }

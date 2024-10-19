@@ -23,7 +23,7 @@ pub enum Axis {
     Z,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Block {
     //Block id
     pub id: u8,
@@ -51,6 +51,14 @@ impl Block {
         Self {
             id: blockid,
             orientation: 0,
+        }
+    }
+    
+    //Create a new block with id and orientation
+    pub fn new_id_orientation(blockid: u8, block_orientation: u8) -> Self {
+        Self {
+            id: blockid,
+            orientation: block_orientation,
         }
     }
 

@@ -62,13 +62,32 @@ impl Game {
         }
     }
 
+    fn save_camera(&self) {
+        //Save camera
+        let camera_entry = self.cam.to_entry();
+        let camera_save_path = self.world.path.clone() + "camera.impfile";
+        let camera_entry_str = camera_entry.to_impfile_string();
+        let res = match File::create(camera_save_path) {
+            Ok(mut camera_file) => {
+                impfile::write_comment(&mut camera_file, "This file contains saved camera data");
+                camera_file.write_all(camera_entry_str.as_bytes())
+            }
+            Err(msg) => Err(msg),
+        };
+
+        if let Err(msg) = res {
+            eprintln!("E: Failed to save camera: {msg}");
+        }
+    }
+
     pub fn save_game(&self) {
+        self.save_camera();
         self.save_player();
-        //Save world
         self.world.save();
     }
 
     pub fn save_entire_world(&self) {
+        self.save_camera();
         self.save_player();
         self.world.save_all();
     }

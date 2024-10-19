@@ -47,9 +47,6 @@ impl World {
     }
 
     //Generates new flat world chunks
-    //NOTE: if a chunk gets deloaded and reloaded, anything built in that chunk will be
-    //deleted, TODO: add a way to save chunks to disk and reload them
-    //pos represents the player position
     pub fn gen_more_flat(&mut self, pos: Vector3<f32>, chunktable: &mut ChunkVaoTable) {
         //Check if the player is in the center chunk
         let x = (pos.x / CHUNK_SIZE_F32).floor() as i32;
@@ -76,6 +73,9 @@ impl World {
                     self.chunks.insert(pos, new_chunk.clone());
                     self.chunk_cache.remove(&pos);
                 }
+                continue;
+            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) { 
+                self.chunks.insert(pos, chunk);
                 continue;
             }
 

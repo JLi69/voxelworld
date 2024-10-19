@@ -1,3 +1,6 @@
+use noise::Fbm;
+use rand::Rng;
+use std::collections::HashMap;
 use super::{World, WorldGenType};
 use crate::{impfile::{self, Entry}, voxel::Chunk};
 use std::{fs::File, io::Write};
@@ -66,6 +69,43 @@ impl World {
 
         for chunk in self.chunk_cache.values() {
             save_chunk(chunk, &self.path);
+        }
+    }
+
+    pub fn load_world_metadata(world_dir_path: &str) -> Self {
+        let path = world_dir_path.to_string() + "world.impfile";
+        let world_metadata_entries = impfile::parse_file(&path);
+        if world_metadata_entries.is_empty() {
+            return Self::empty();
+        }
+
+        let rand_seed = rand::thread_rng().gen::<u32>();
+        let seed = world_metadata_entries[0].get_var("seed").parse::<u32>().unwrap_or(rand_seed);
+    
+        Self { 
+            chunks: HashMap::new(), 
+            range: world_metadata_entries[0].get_var("range").parse::<i32>().unwrap_or(3), 
+            centerx: world_metadata_entries[0].get_var("centerx").parse::<i32>().unwrap_or(0), 
+            centery: world_metadata_entries[0].get_var("centery").parse::<i32>().unwrap_or(0), 
+            centerz: world_metadata_entries[0].get_var("centerz").parse::<i32>().unwrap_or(0), 
+            chunk_cache: HashMap::new(), 
+            clear_cache: false, 
+            terrain_generator: Fbm::new(seed), 
+            world_seed: seed, 
+            gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")), 
+            path: world_dir_path.to_string(), 
+        }
+    }
+
+    pub fn load_chunks(&mut self) {
+        for y in (self.centery - self.range)..=(self.centery + self.range) {
+            for z in (self.centerz - self.range)..=(self.centerz + self.range) {
+                for x in (self.centerx - self.range)..=(self.centerx + self.range) {
+                    if let Some(chunk) = Chunk::load_chunk(&self.path, x, y, z) {
+                        self.chunks.insert((x, y, z), chunk);
+                    }
+                }
+            }
         }
     }
 }

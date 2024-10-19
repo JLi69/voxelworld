@@ -1,5 +1,7 @@
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
+use crate::impfile;
+
 const DEFAULT_ZNEAR: f32 = 0.1;
 const DEFAULT_ZFAR: f32 = 1000.0;
 //In degrees
@@ -65,5 +67,31 @@ impl Camera {
     //Returns fovy in degrees for camera
     pub fn get_fovy(&self) -> Deg<f32> {
         Deg(self.fovy)
+    }
+
+    pub fn to_entry(&self) -> impfile::Entry {
+        let mut entry = impfile::Entry::new("camera");
+
+        entry.add_float("x", self.position.x);
+        entry.add_float("y", self.position.y);
+        entry.add_float("z", self.position.z);
+        entry.add_float("yaw", self.yaw);
+        entry.add_float("pitch", self.pitch);
+
+        entry
+    }
+
+    pub fn from_entry(entry: &impfile::Entry) -> Self {
+        let x = entry.get_var("x").parse::<f32>().unwrap_or(0.0);
+        let y = entry.get_var("y").parse::<f32>().unwrap_or(0.0);
+        let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0);
+        Self { 
+            position: Vector3::new(x, y, z), 
+            yaw: entry.get_var("yaw").parse::<f32>().unwrap_or(0.0), 
+            pitch: entry.get_var("pitch").parse::<f32>().unwrap_or(0.0), 
+            znear: DEFAULT_ZNEAR, 
+            zfar: DEFAULT_ZFAR, 
+            fovy: DEFAULT_FOV, 
+        }
     }
 }
