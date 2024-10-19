@@ -81,7 +81,10 @@ impl World {
 
         let rand_seed = rand::thread_rng().gen::<u32>();
         let seed = world_metadata_entries[0].get_var("seed").parse::<u32>().unwrap_or(rand_seed);
-    
+        let mut terrain_noise = Fbm::new(seed);
+        terrain_noise.octaves = 5;
+        terrain_noise.persistence = 0.47;
+
         Self { 
             chunks: HashMap::new(), 
             range: world_metadata_entries[0].get_var("range").parse::<i32>().unwrap_or(3), 
@@ -90,7 +93,7 @@ impl World {
             centerz: world_metadata_entries[0].get_var("centerz").parse::<i32>().unwrap_or(0), 
             chunk_cache: HashMap::new(), 
             clear_cache: false, 
-            terrain_generator: Fbm::new(seed), 
+            terrain_generator: terrain_noise, 
             world_seed: seed, 
             gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")), 
             path: world_dir_path.to_string(), 
