@@ -14,7 +14,7 @@ impl Game {
         if cursormode == CursorMode::Disabled {
             let (dmousex, dmousey) = self.get_mouse_diff();
             //Rotate camera
-            self.cam.rotate(dmousex, dmousey, 0.04);
+            self.cam.rotate(dmousex, dmousey, 0.06);
         }
 
         //Set rotation of player
@@ -24,12 +24,17 @@ impl Game {
         //Set position of camera
         self.cam.position = self.player.position + Vector3::new(0.0, CAMERA_OFFSET, 0.0);
         //Move player
+        let shift = self.get_key_state(Key::LeftShift);
+        self.player.sprint(shift);
         let w = self.get_key_state(Key::W);
         let s = self.get_key_state(Key::S);
         let a = self.get_key_state(Key::A);
         let d = self.get_key_state(Key::D);
         self.player.strafe(a, d);
         self.player.move_forward(w, s);
+        //Jump
+        let space = self.get_key_state(Key::Space);
+        self.player.jump(space);
         //Select blocks
         self.player.select_block(self.get_key_state(Key::Num1), 1);
         self.player.select_block(self.get_key_state(Key::Num2), 2);
@@ -40,10 +45,7 @@ impl Game {
         self.player.select_block(self.get_key_state(Key::Num7), 8);
         self.player.select_block(self.get_key_state(Key::Num8), 9);
         self.player.select_block(self.get_key_state(Key::Num9), 10);
-        self.player.select_block(self.get_key_state(Key::Num0), 11);
-        //Jump
-        let space = self.get_key_state(Key::Space);
-        self.player.jump(space);
+        self.player.select_block(self.get_key_state(Key::Num0), 11); 
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {

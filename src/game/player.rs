@@ -10,8 +10,10 @@ use super::KeyState;
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
 pub const CAMERA_OFFSET: f32 = 0.7;
-pub const GRAVITY: f32 = 9.8;
-pub const JUMP_FORCE: f32 = 5.0;
+pub const GRAVITY: f32 = 24.0;
+pub const JUMP_FORCE: f32 = 7.5;
+pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
+pub const SPRINT_AMT: f32 = 1.33;
 
 pub struct Player {
     pub position: Vector3<f32>,
@@ -24,6 +26,7 @@ pub struct Player {
     //TODO: This should probably be replaced with some sort of inventory,
     //for now this can just function as the player's "selected" block id
     pub selected_block: Block,
+    jump_cooldown: f32,
 }
 
 impl Player {
@@ -38,6 +41,7 @@ impl Player {
             speed: DEFAULT_PLAYER_SPEED,
             rotation: 0.0,
             selected_block: Block::new_id(1),
+            jump_cooldown: 0.0,
         }
     }
 
@@ -49,13 +53,22 @@ impl Player {
 
     //Jump up in the y direction
     pub fn jump(&mut self, jump_key: KeyState) {
-        if self.falling || self.velocity_y != 0.0 {
+        if self.falling || self.velocity_y != 0.0 || self.jump_cooldown > 0.0 {
             return;
         }
 
         if jump_key == KeyState::Held {
             self.velocity_y = JUMP_FORCE;
             self.falling = true;
+        }
+    }
+
+    //Sprint when a key is pressed
+    pub fn sprint(&mut self, sprint_key: KeyState) {
+        if sprint_key.is_held() {
+            self.speed = DEFAULT_PLAYER_SPEED * SPRINT_AMT;
+        } else {
+            self.speed = DEFAULT_PLAYER_SPEED;
         }
     }
 
@@ -92,7 +105,8 @@ impl Player {
         //Direction for xz plane
         let dirxz = Vector3::new(self.direction.x, 0.0, self.direction.z);
         if dirxz.magnitude() > 0.0 {
-            vel += dirxz.normalize() * self.speed;
+            let drag = (1.0 - (-self.velocity_y).min(GRAVITY * 0.2) / (GRAVITY * 0.5)).clamp(0.0, 1.0);
+            vel += dirxz.normalize() * self.speed * drag;
         }
 
         //Transform the velocity based on the yaw of the camera
@@ -104,6 +118,9 @@ impl Player {
 
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
+        //Update jump cooldown
+        self.jump_cooldown -= dt;
+
         //Move camera on position
         let velocity = self.calculate_velocity();
 
@@ -120,12 +137,20 @@ impl Player {
         //We lower the player's y position to check if we intersect with any blocks
         self.position.y -= 0.02;
         let block_hitbox = self.check_collision(world);
+        //Check if the player was falling in the previous frame
+        let falling_prev = self.falling;
         if let Some(block_hitbox) = block_hitbox {
             self.uncollide_y(&block_hitbox);
         } else {
             self.falling = true;
             //If we don't intersect with anything, reset the y position
             self.position.y += 0.02;
+        }
+        
+        //Check if the player is no longer falling
+        if falling_prev && !self.falling {
+            //We landed on the ground, set the jump cooldown
+            self.jump_cooldown = JUMP_COOLDOWN;
         }
 
         //Move in the x direction
@@ -254,6 +279,7 @@ impl Player {
             speed: DEFAULT_PLAYER_SPEED,
             rotation: entry.get_var("rotation").parse::<f32>().unwrap_or(0.0),
             selected_block: Block::new_id(blockid),
+            jump_cooldown: 0.0,
         }
     }
 }
