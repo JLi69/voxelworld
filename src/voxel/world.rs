@@ -32,6 +32,7 @@ pub struct World {
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
     clear_cache: bool,
     terrain_generator: Fbm<Perlin>,
+    noise_cave_generator: Perlin,
     world_seed: u32,
     pub gen_type: WorldGenType,
     //World path
@@ -50,6 +51,7 @@ impl World {
             chunk_cache: HashMap::new(),
             clear_cache: false,
             terrain_generator: Fbm::new(0),
+            noise_cave_generator: Perlin::new(0),
             gen_type: WorldGenType::DefaultGen,
             world_seed: 0,
             path: String::new(),
@@ -81,6 +83,7 @@ impl World {
             chunk_cache: HashMap::new(),
             clear_cache: false,
             terrain_generator: terrain_noise,
+            noise_cave_generator: Perlin::new(seed + 1),
             gen_type: generation,
             world_seed: seed,
             path: String::new(),

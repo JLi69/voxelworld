@@ -124,7 +124,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gamestate.update_input_states();
         gamestate.handle_events_egui(events, &mut input_state);
         let end = std::time::Instant::now();
-        dt = (end - start).as_secs_f32();
+        dt = (end - start).as_secs_f32().min(0.05);
     }
 
     gamestate.save_entire_world();

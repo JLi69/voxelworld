@@ -15,7 +15,27 @@ use cgmath::Vector3;
 use noise::{Fbm, NoiseFn, Perlin};
 use std::collections::HashMap;
 
-fn gen_chunk(chunk: &mut Chunk, heights: &[i32]) {
+//cave_y1 = cave lower y bound
+//cave_y2 = middle
+//cave_y3 = cave upper y bound
+fn cave_perc(y: i32, cave_y1: i32, cave_y2: i32, cave_y3: i32) -> f64 {
+    if y > cave_y2 {
+        let t = (y - cave_y2) as f64 / (cave_y3 - cave_y2) as f64;
+        ((1.0 - t) * 0.8 - 1.0).max(-0.7)
+    } else if y <= cave_y2 && y > cave_y1 {
+        let t = (y - cave_y2) as f64 / (cave_y2 - cave_y1) as f64;
+        (1.0 - t * t) * 0.8 - 1.0
+    } else {
+        -1.0
+    }
+}
+
+fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
+    let xyz = [x as f64 / 8.0, y as f64 / 8.0, z as f64 / 8.0];
+    cave_noise.get(xyz) < cave_perc(y, -59, -51, 48)
+}
+
+fn gen_chunk(chunk: &mut Chunk, heights: &[i32], cave_noise: &Perlin) {
     let chunkpos = chunk.get_chunk_pos();
     let posx = chunkpos.x * CHUNK_SIZE_I32;
     let posy = chunkpos.y * CHUNK_SIZE_I32;
@@ -34,6 +54,17 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32]) {
             }
 
             for y in posy..(posy + CHUNK_SIZE_I32).min(height + 1) {
+                if y == -64 {
+                    //Bottom of the world
+                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
+                    continue;
+                }
+
+                //Generate noise caves
+                if is_noise_cave(x, y, z, cave_noise) {
+                    continue;
+                }
+
                 if y == height {
                     //Grass
                     chunk.set_block(x, y, z, Block::new_id(1));
@@ -43,9 +74,6 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32]) {
                 } else if y < height && y > -64 {
                     //Stone
                     chunk.set_block(x, y, z, Block::new_id(2));
-                } else if y == -64 {
-                    //Bottom of the world
-                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
                 }
             }
         }
@@ -93,7 +121,7 @@ impl World {
             let pos = chunk.get_chunk_pos();
             let xz = (pos.x, pos.z);
             if let Some(heights) = heightmap.get(&xz) {
-                gen_chunk(chunk, heights);
+                gen_chunk(chunk, heights, &self.noise_cave_generator);
             }
         }
     }
@@ -138,7 +166,7 @@ impl World {
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             //Should always evaluate to true
             if let Some(heights) = heightmap.get(&(*chunkx, *chunkz)) {
-                gen_chunk(&mut new_chunk, heights);
+                gen_chunk(&mut new_chunk, heights, &self.noise_cave_generator);
             }
             self.chunks.insert(pos, new_chunk);
         }

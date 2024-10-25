@@ -9,6 +9,7 @@ use super::KeyState;
 
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
+pub const PLAYER_SIZE: f32 = 0.5;
 pub const CAMERA_OFFSET: f32 = 0.7;
 pub const GRAVITY: f32 = 24.0;
 pub const JUMP_FORCE: f32 = 7.5;
@@ -34,7 +35,7 @@ impl Player {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self {
             position: Vector3::new(x, y, z),
-            dimensions: Vector3::new(0.5, PLAYER_HEIGHT, 0.5),
+            dimensions: Vector3::new(PLAYER_SIZE, PLAYER_HEIGHT, PLAYER_SIZE),
             direction: Vector3::new(0.0, 0.0, 0.0),
             falling: true,
             velocity_y: 0.0,
@@ -105,8 +106,7 @@ impl Player {
         //Direction for xz plane
         let dirxz = Vector3::new(self.direction.x, 0.0, self.direction.z);
         if dirxz.magnitude() > 0.0 {
-            let drag = (1.0 - (-self.velocity_y).min(GRAVITY * 0.2) / (GRAVITY * 0.5)).clamp(0.0, 1.0);
-            vel += dirxz.normalize() * self.speed * drag;
+            vel += dirxz.normalize() * self.speed;
         }
 
         //Transform the velocity based on the yaw of the camera
@@ -146,7 +146,7 @@ impl Player {
             //If we don't intersect with anything, reset the y position
             self.position.y += 0.02;
         }
-        
+
         //Check if the player is no longer falling
         if falling_prev && !self.falling {
             //We landed on the ground, set the jump cooldown
@@ -272,7 +272,7 @@ impl Player {
         let blockid = entry.get_var("selected_block").parse::<u8>().unwrap_or(0);
         Self {
             position: Vector3::new(x, y, z),
-            dimensions: Vector3::new(0.5, PLAYER_HEIGHT, 0.5),
+            dimensions: Vector3::new(PLAYER_SIZE, PLAYER_HEIGHT, PLAYER_SIZE),
             direction: Vector3::new(0.0, 0.0, 0.0),
             falling: entry.get_var("falling").parse::<bool>().unwrap_or(false),
             velocity_y: entry.get_var("velocity_y").parse::<f32>().unwrap_or(0.0),
