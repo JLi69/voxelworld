@@ -106,7 +106,8 @@ impl Player {
         //Direction for xz plane
         let dirxz = Vector3::new(self.direction.x, 0.0, self.direction.z);
         if dirxz.magnitude() > 0.0 {
-            vel += dirxz.normalize() * self.speed;
+            let drag = 1.0 - (-self.velocity_y / GRAVITY * 4.0).clamp(0.0, 0.4);
+            vel += dirxz.normalize() * self.speed * drag;
         }
 
         //Transform the velocity based on the yaw of the camera
