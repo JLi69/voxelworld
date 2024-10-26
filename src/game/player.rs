@@ -4,17 +4,17 @@ use crate::voxel::Block;
 use crate::voxel::World;
 use crate::voxel::EMPTY_BLOCK;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
-
 use super::KeyState;
 
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
-pub const PLAYER_SIZE: f32 = 0.5;
+pub const PLAYER_SIZE: f32 = 0.6;
 pub const CAMERA_OFFSET: f32 = 0.7;
 pub const GRAVITY: f32 = 24.0;
 pub const JUMP_FORCE: f32 = 7.5;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
 pub const SPRINT_AMT: f32 = 1.33;
+const BLOCK_OFFSET: f32 = 0.01;
 
 pub struct Player {
     pub position: Vector3<f32>,
@@ -153,18 +153,44 @@ impl Player {
             self.jump_cooldown = JUMP_COOLDOWN;
         }
 
-        //Move in the x direction
-        self.position.x += velocity.x * dt;
-        let block_hitbox = self.check_collision(world);
-        if let Some(block_hitbox) = block_hitbox {
-            self.uncollide_x(&block_hitbox);
-        }
+        let mut dx = velocity.x * dt;
+        let mut dz = velocity.z * dt;
+        let mut dist_remaining = (dx * dx + dz * dz).sqrt();
+     
+        while dist_remaining > 0.0 {
+            let d = dist_remaining.min(0.25);
+            
+            let vx = if (d / dist_remaining * dx).abs() < BLOCK_OFFSET {
+                dx = 0.0;
+                0.0
+            } else {
+                d / dist_remaining * dx
+            };
 
-        //Move in the z direction
-        self.position.z += velocity.z * dt;
-        let block_hitbox = self.check_collision(world);
-        if let Some(block_hitbox) = block_hitbox {
-            self.uncollide_z(&block_hitbox);
+            let vz = if (d / dist_remaining * dz).abs() < BLOCK_OFFSET {
+                dz = 0.0;
+                0.0
+            } else {
+                d / dist_remaining * dz
+            };
+
+            //Move in the x direction
+            self.position.x += vx;
+            let block_hitbox = self.check_collision(world);
+            if let Some(block_hitbox) = block_hitbox {
+                self.uncollide_x(&block_hitbox);
+            }
+
+            //Move in the z direction
+            self.position.z += vz;
+            let block_hitbox = self.check_collision(world);
+            if let Some(block_hitbox) = block_hitbox {
+                self.uncollide_z(&block_hitbox);
+            }
+
+            dx -= vx;
+            dz -= vz;
+            dist_remaining = (dx * dx + dz * dz).sqrt();
         }
     }
 
@@ -182,10 +208,10 @@ impl Player {
 
         //Uncollide in the x axis
         let sx = player_hitbox.dimensions.x + hitbox.dimensions.x;
-        if self.position.x < hitbox.position.x - hitbox.dimensions.x / 2.0 {
-            self.position.x = hitbox.position.x - sx / 2.0;
-        } else if self.position.x > hitbox.position.x + hitbox.dimensions.x / 2.0 {
-            self.position.x = hitbox.position.x + sx / 2.0;
+        if self.position.x < hitbox.position.x {
+            self.position.x = hitbox.position.x - sx / 2.0 - BLOCK_OFFSET;
+        } else if self.position.x > hitbox.position.x {
+            self.position.x = hitbox.position.x + sx / 2.0 + BLOCK_OFFSET;
         }
     }
 
@@ -197,10 +223,10 @@ impl Player {
         }
 
         let sz = player_hitbox.dimensions.z + hitbox.dimensions.z;
-        if self.position.z < hitbox.position.z - hitbox.dimensions.z / 2.0 {
-            self.position.z = hitbox.position.z - sz / 2.0;
-        } else if self.position.z > hitbox.position.z + hitbox.dimensions.z / 2.0 {
-            self.position.z = hitbox.position.z + sz / 2.0;
+        if self.position.z < hitbox.position.z {
+            self.position.z = hitbox.position.z - sz / 2.0 - BLOCK_OFFSET;
+        } else if self.position.z > hitbox.position.z {
+            self.position.z = hitbox.position.z + sz / 2.0 + BLOCK_OFFSET;
         }
     }
 
@@ -234,6 +260,8 @@ impl Player {
         let iy = self.position.y.floor() as i32;
         let iz = self.position.z.floor() as i32;
 
+        let mut hit: Option<Hitbox> = None;
+        let mut min_dist = 999.0;
         for x in (ix - 2)..=(ix + 2) {
             for y in (iy - 2)..=(iy + 2) {
                 for z in (iz - 2)..=(iz + 2) {
@@ -241,14 +269,22 @@ impl Player {
                         continue;
                     }
                     let block_hitbox = Hitbox::from_block(x, y, z);
-                    if self.get_hitbox().intersects(&block_hitbox) {
-                        return Some(block_hitbox);
+
+                    if !self.get_hitbox().intersects(&block_hitbox) {
+                        continue;
                     }
+                    
+                    if (block_hitbox.position - self.position).magnitude() > min_dist {
+                        continue;
+                    }
+
+                    min_dist = (block_hitbox.position - self.position).magnitude();
+                    hit = Some(block_hitbox);
                 }
             }
         }
 
-        None
+        hit
     }
 
     pub fn to_entry(&self) -> impfile::Entry {
