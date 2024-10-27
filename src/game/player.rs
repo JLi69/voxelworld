@@ -1,10 +1,10 @@
 use super::Hitbox;
+use super::KeyState;
 use crate::impfile;
 use crate::voxel::Block;
 use crate::voxel::World;
 use crate::voxel::EMPTY_BLOCK;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
-use super::KeyState;
 
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
@@ -117,29 +117,10 @@ impl Player {
         Vector3::new(vel_transformed.x, vel_transformed.y, vel_transformed.z)
     }
 
-    //Move the player and handle collision
-    pub fn update(&mut self, dt: f32, world: &World) {
-        //Update jump cooldown
-        self.jump_cooldown -= dt;
-
-        //Move camera on position
-        let velocity = self.calculate_velocity();
-
-        //NOTE: the collision detection here might not be accurate if the player
-        //is travelling too fast or the framerate is too slow
-        //TODO: This should probably be fixed/improved later
-
-        //Move in y direction
-        self.position.y += self.velocity_y * 0.5 * dt;
-        if self.falling {
-            self.velocity_y -= dt * GRAVITY;
-        }
-        self.position.y += self.velocity_y * 0.5 * dt;
+    fn check_y_collision(&mut self, world: &World) {
         //We lower the player's y position to check if we intersect with any blocks
         self.position.y -= 0.02;
         let block_hitbox = self.check_collision(world);
-        //Check if the player was falling in the previous frame
-        let falling_prev = self.falling;
         if let Some(block_hitbox) = block_hitbox {
             self.uncollide_y(&block_hitbox);
         } else {
@@ -147,6 +128,34 @@ impl Player {
             //If we don't intersect with anything, reset the y position
             self.position.y += 0.02;
         }
+    }
+
+    fn update_y(&mut self, dt: f32, world: &World) {
+        let mut vy = dt * self.velocity_y;
+        let mut dist_remaining = vy.abs();
+        while dist_remaining > 0.0 {
+            let dy = vy.min(0.25);
+            self.position.y += dy;
+            vy -= dy;
+            dist_remaining -= dy.abs();
+            self.check_y_collision(world);
+        }
+    }
+
+    //Move the player and handle collision
+    pub fn update(&mut self, dt: f32, world: &World) {
+        //Update jump cooldown
+        self.jump_cooldown -= dt;
+
+        //Check if the player was falling in the previous frame
+        let falling_prev = self.falling;
+        //Move in y direction
+        self.update_y(dt * 0.5, world);
+        if self.falling {
+            self.velocity_y -= dt * GRAVITY;
+        }
+        self.update_y(dt * 0.5, world);
+        self.check_y_collision(world);
 
         //Check if the player is no longer falling
         if falling_prev && !self.falling {
@@ -154,13 +163,14 @@ impl Player {
             self.jump_cooldown = JUMP_COOLDOWN;
         }
 
+        //Move in the xz plane
+        let velocity = self.calculate_velocity();
         let mut dx = velocity.x * dt;
         let mut dz = velocity.z * dt;
         let mut dist_remaining = (dx * dx + dz * dz).sqrt();
-     
         while dist_remaining > 0.0 {
             let d = dist_remaining.min(0.25);
-            
+
             let vx = if (d / dist_remaining * dx).abs() < BLOCK_OFFSET {
                 dx = 0.0;
                 0.0
@@ -244,6 +254,7 @@ impl Player {
             self.position.y = hitbox.position.y - sy / 2.0;
             self.falling = true;
             self.velocity_y = 0.0;
+            self.position.y -= 0.01;
         } else if self.position.y > hitbox.position.y {
             self.position.y = hitbox.position.y + sy / 2.0;
             //Increase the y position so that we are slightly hovering over
@@ -274,7 +285,7 @@ impl Player {
                     if !self.get_hitbox().intersects(&block_hitbox) {
                         continue;
                     }
-                    
+
                     if (block_hitbox.position - self.position).magnitude() > min_dist {
                         continue;
                     }
