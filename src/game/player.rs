@@ -130,60 +130,70 @@ impl Player {
         }
     }
 
-    fn update_y(&mut self, dt: f32, world: &World) {
-        let mut vy = dt * self.velocity_y;
-        let mut dist_remaining = vy.abs();
-        while dist_remaining > 0.0 {
-            let dy = vy.min(0.25);
-            self.position.y += dy;
-            vy -= dy;
-            dist_remaining -= dy.abs();
-            self.check_y_collision(world);
+    fn can_move_in_x(&mut self, world: &World) -> bool {
+        let x = self.position.x;
+
+        self.position.x = x - BLOCK_OFFSET;
+        if self.calculate_velocity().x < 0.0 && self.check_collision(world).is_some() {
+            self.position.x = x;
+            return false;
         }
+        
+        self.position.x = x + BLOCK_OFFSET;
+        if self.calculate_velocity().x > 0.0 && self.check_collision(world).is_some() {
+            self.position.x = x;
+            return false;
+        }
+
+        self.position.x = x; 
+        true
     }
 
-    //Move the player and handle collision
-    pub fn update(&mut self, dt: f32, world: &World) {
-        //Update jump cooldown
-        self.jump_cooldown -= dt;
+    fn can_move_in_z(&mut self, world: &World) -> bool {
+        let z = self.position.z;
 
-        //Check if the player was falling in the previous frame
-        let falling_prev = self.falling;
-        //Move in y direction
-        self.update_y(dt * 0.5, world);
-        if self.falling {
-            self.velocity_y -= dt * GRAVITY;
+        self.position.z = z - BLOCK_OFFSET;
+        if self.calculate_velocity().z < 0.0 && self.check_collision(world).is_some() {
+            self.position.z = z;
+            return false;
         }
-        self.update_y(dt * 0.5, world);
-        self.check_y_collision(world);
-
-        //Check if the player is no longer falling
-        if falling_prev && !self.falling {
-            //We landed on the ground, set the jump cooldown
-            self.jump_cooldown = JUMP_COOLDOWN;
+        
+        self.position.z = z + BLOCK_OFFSET;
+        if self.calculate_velocity().z > 0.0 && self.check_collision(world).is_some() {
+            self.position.z = z;
+            return false;
         }
 
+        self.position.z = z; 
+        true
+    }
+
+    //Translate player object, account for collisions with blocks
+    fn translate(&mut self, dt: f32, world: &World) {
         //Move in the xz plane
         let velocity = self.calculate_velocity();
-        let mut dx = velocity.x * dt;
-        let mut dz = velocity.z * dt;
-        let mut dist_remaining = (dx * dx + dz * dz).sqrt();
+        let mut dx = if !self.can_move_in_x(world) {
+            0.0
+        } else {
+            velocity.x * dt
+        };
+        let mut dy = dt * self.velocity_y;
+        let mut dz = if !self.can_move_in_z(world) {
+            0.0
+        } else {
+            velocity.z * dt
+        };
+        let mut dist_remaining = (dx * dx + dy * dy + dz * dz).sqrt();
         while dist_remaining > 0.0 {
             let d = dist_remaining.min(0.25);
 
-            let vx = if (d / dist_remaining * dx).abs() < BLOCK_OFFSET {
-                dx = 0.0;
-                0.0
-            } else {
-                d / dist_remaining * dx
-            };
+            let vx = d / dist_remaining * dx;
+            let vz = d / dist_remaining * dz;
+            let vy = d / dist_remaining * dy;
 
-            let vz = if (d / dist_remaining * dz).abs() < BLOCK_OFFSET {
-                dz = 0.0;
-                0.0
-            } else {
-                d / dist_remaining * dz
-            };
+            //Move in the y direction
+            self.position.y += dy;
+            self.check_y_collision(world);
 
             //Move in the x direction
             self.position.x += vx;
@@ -200,8 +210,32 @@ impl Player {
             }
 
             dx -= vx;
+            dy -= vy;
             dz -= vz;
-            dist_remaining = (dx * dx + dz * dz).sqrt();
+            dist_remaining = (dx * dx + dy * dy + dz * dz).sqrt();
+        }
+    }
+
+    //Move the player and handle collision
+    pub fn update(&mut self, dt: f32, world: &World) {
+        //Update jump cooldown
+        self.jump_cooldown -= dt;
+
+        //Check if the player was falling in the previous frame
+        let falling_prev = self.falling;
+        //Move in y direction
+        self.translate(dt * 0.5, world);
+        //Apply gravity
+        if self.falling {
+            self.velocity_y -= dt * GRAVITY;
+        }
+        self.translate(dt * 0.5, world);
+        self.check_y_collision(world);
+
+        //Check if the player is no longer falling
+        if falling_prev && !self.falling {
+            //We landed on the ground, set the jump cooldown
+            self.jump_cooldown = JUMP_COOLDOWN;
         }
     }
 

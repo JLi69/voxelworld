@@ -110,6 +110,30 @@ fn generate_heightmap(
     heightmap
 }
 
+fn add_to_heightmap(
+    chunkx: i32,
+    chunkz: i32,
+    heightmap: &mut HeightMap,
+    terrain_generator: &Fbm<Perlin>,
+) {
+    if heightmap.contains_key(&(chunkx, chunkz)) {
+        return;
+    }
+    let posx = chunkx * CHUNK_SIZE_I32;
+    let posz = chunkz * CHUNK_SIZE_I32;
+    let mut heights = vec![0; (CHUNK_SIZE_I32 * CHUNK_SIZE_I32) as usize];
+    for x in posx..(posx + CHUNK_SIZE_I32) {
+        for z in posz..(posz + CHUNK_SIZE_I32) {
+            let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
+            let point = [x as f64 / 192.0, z as f64 / 192.0];
+            let noise_height = terrain_generator.get(point);
+            let h = (noise_height * 47.0) as i32 + 16;
+            heights[index] = h;
+        }
+    }
+    heightmap.insert((chunkx, chunkz), heights);
+}
+
 impl World {
     //Generates a world
     pub fn gen_default(&mut self) {
@@ -145,8 +169,7 @@ impl World {
         self.delete_out_of_range(&out_of_range);
 
         //Generate height map
-        let positions = to_generate.iter().copied().collect();
-        let heightmap = generate_heightmap(&positions, &self.terrain_generator);
+        let mut heightmap = HeightMap::new();
 
         //Generate new chunks
         for (chunkx, chunky, chunkz) in &to_generate {
@@ -163,6 +186,7 @@ impl World {
                 continue;
             }
 
+            add_to_heightmap(*chunkx, *chunkz, &mut heightmap, &self.terrain_generator);
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             //Should always evaluate to true
             if let Some(heights) = heightmap.get(&(*chunkx, *chunkz)) {
