@@ -138,14 +138,14 @@ impl Player {
             self.position.x = x;
             return false;
         }
-        
+
         self.position.x = x + BLOCK_OFFSET;
         if self.calculate_velocity().x > 0.0 && self.check_collision(world).is_some() {
             self.position.x = x;
             return false;
         }
 
-        self.position.x = x; 
+        self.position.x = x;
         true
     }
 
@@ -157,14 +157,14 @@ impl Player {
             self.position.z = z;
             return false;
         }
-        
+
         self.position.z = z + BLOCK_OFFSET;
         if self.calculate_velocity().z > 0.0 && self.check_collision(world).is_some() {
             self.position.z = z;
             return false;
         }
 
-        self.position.z = z; 
+        self.position.z = z;
         true
     }
 

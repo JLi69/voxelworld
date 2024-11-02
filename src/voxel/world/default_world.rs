@@ -4,15 +4,16 @@
 
 use super::{
     gen_more::{find_in_range, get_chunks_to_generate, update_chunk_vao_table},
-    World,
+    World, WorldGenerator,
 };
-use crate::voxel::CHUNK_SIZE_I32;
+use crate::voxel::{CHUNK_SIZE_I32, EMPTY_BLOCK};
 use crate::{
     gfx::ChunkVaoTable,
     voxel::{Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE},
 };
 use cgmath::Vector3;
 use noise::{Fbm, NoiseFn, Perlin};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::collections::HashMap;
 
 //cave_y1 = cave lower y bound
@@ -35,7 +36,7 @@ fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
     cave_noise.get(xyz) < cave_perc(y, -59, -51, 48)
 }
 
-fn gen_chunk(chunk: &mut Chunk, heights: &[i32], cave_noise: &Perlin) {
+fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerator) {
     let chunkpos = chunk.get_chunk_pos();
     let posx = chunkpos.x * CHUNK_SIZE_I32;
     let posy = chunkpos.y * CHUNK_SIZE_I32;
@@ -61,7 +62,7 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], cave_noise: &Perlin) {
                 }
 
                 //Generate noise caves
-                if is_noise_cave(x, y, z, cave_noise) {
+                if is_noise_cave(x, y, z, &world_generator.noise_cave_generator) {
                     continue;
                 }
 
@@ -77,6 +78,109 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], cave_noise: &Perlin) {
                 }
             }
         }
+    }
+
+    //Generate trees
+    generate_trees(chunk, world_generator);
+}
+
+fn get_height(x: i32, z: i32, terrain_generator: &Fbm<Perlin>) -> i32 {
+    let point = [x as f64 / 192.0, z as f64 / 192.0];
+    let noise_height = terrain_generator.get(point);
+    (noise_height * 47.0) as i32 + 16
+}
+
+fn gen_tree_positions(
+    chunkx: i32,
+    chunkz: i32,
+    tree_noise: &Perlin,
+    positions: &mut Vec<(i32, i32)>,
+    heights: &mut Vec<i32>,
+) {
+    let xz = [chunkx as f64 * 64.0, 0.0, chunkz as f64 * 64.0];
+    let noise_val = (tree_noise.get(xz) + 1.0) / 2.0;
+    let tree_count = (noise_val * 32.0).floor() as u32;
+    let xu32 = chunkx as u32;
+    let zu32 = chunkz as u32;
+    let seed = ((xu32 as u64) << 32) | (zu32 as u64);
+    let mut tree_generator = StdRng::seed_from_u64(seed);
+    for _ in 0..tree_count {
+        let x = tree_generator.gen_range(0..32) + chunkx * CHUNK_SIZE_I32;
+        let z = tree_generator.gen_range(0..32) + chunkz * CHUNK_SIZE_I32;
+        let h = tree_generator.gen_range(4..=6);
+        positions.push((x, z));
+        heights.push(h);
+    }
+}
+
+fn place_leaves(chunk: &mut Chunk, x: i32, y: i32, z: i32) {
+    if chunk.get_block(x, y, z).id != EMPTY_BLOCK {
+        return;
+    }
+    chunk.set_block(x, y, z, Block::new_id(7));
+}
+
+fn generate_leaves(chunk: &mut Chunk, starty: i32, x: i32, y: i32, z: i32, height: i32) {
+    if y == starty + height {
+        place_leaves(chunk, x, y, z);
+        place_leaves(chunk, x - 1, y, z);
+        place_leaves(chunk, x + 1, y, z);
+        place_leaves(chunk, x, y, z - 1);
+        place_leaves(chunk, x, y, z + 1);
+    } else if y == starty + height - 1 {
+        for ix in (x - 1)..=(x + 1) {
+            for iz in (z - 1)..=(z + 1) {
+                place_leaves(chunk, ix, y, iz);
+            }
+        }
+    } else if y >= starty + height - 3 {
+        for ix in (x - 2)..=(x + 2) {
+            for iz in (z - 2)..=(z + 2) {
+                place_leaves(chunk, ix, y, iz);
+            }
+        }
+    }
+}
+
+fn generate_trees(chunk: &mut Chunk, world_generator: &WorldGenerator) {
+    let pos = chunk.get_chunk_pos();
+    let mut tree_positions = vec![];
+    let mut tree_heights = vec![];
+    for dx in -1..=1 {
+        for dz in -1..=1 {
+            gen_tree_positions(
+                pos.x + dx,
+                pos.z + dz,
+                &world_generator.tree_generator,
+                &mut tree_positions,
+                &mut tree_heights,
+            );
+        }
+    }
+
+    for (i, (x, z)) in tree_positions.iter().enumerate() {
+        let h = get_height(*x, *z, &world_generator.terrain_generator);
+
+        //Check to make sure we are not in a cave (an empty block)
+        if is_noise_cave(*x, h, *z, &world_generator.noise_cave_generator) {
+            continue;
+        }
+
+        for y in (h + 1)..(h + 1 + tree_heights[i]) {
+            //Generate trunk
+            chunk.set_block(*x, y, *z, Block::new_id(8));
+
+            //Generate leaves
+            generate_leaves(chunk, h + 1, *x, y, *z, tree_heights[i]);
+        }
+        generate_leaves(
+            chunk,
+            h + 1,
+            *x,
+            h + 1 + tree_heights[i],
+            *z,
+            tree_heights[i],
+        );
     }
 }
 
@@ -98,9 +202,7 @@ fn generate_heightmap(
         for x in posx..(posx + CHUNK_SIZE_I32) {
             for z in posz..(posz + CHUNK_SIZE_I32) {
                 let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-                let point = [x as f64 / 192.0, z as f64 / 192.0];
-                let noise_height = terrain_generator.get(point);
-                let h = (noise_height * 47.0) as i32 + 16;
+                let h = get_height(x, z, terrain_generator);
                 heights[index] = h;
             }
         }
@@ -125,9 +227,7 @@ fn add_to_heightmap(
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-            let point = [x as f64 / 192.0, z as f64 / 192.0];
-            let noise_height = terrain_generator.get(point);
-            let h = (noise_height * 47.0) as i32 + 16;
+            let h = get_height(x, z, terrain_generator);
             heights[index] = h;
         }
     }
@@ -139,13 +239,13 @@ impl World {
     pub fn gen_default(&mut self) {
         //Generate height map
         let positions = self.chunks.keys().copied().collect();
-        let heightmap = generate_heightmap(&positions, &self.terrain_generator);
+        let heightmap = generate_heightmap(&positions, &self.world_generator.terrain_generator);
 
         for chunk in &mut self.chunks.values_mut() {
             let pos = chunk.get_chunk_pos();
             let xz = (pos.x, pos.z);
             if let Some(heights) = heightmap.get(&xz) {
-                gen_chunk(chunk, heights, &self.noise_cave_generator);
+                gen_chunk(chunk, heights, &self.world_generator);
             }
         }
     }
@@ -186,11 +286,16 @@ impl World {
                 continue;
             }
 
-            add_to_heightmap(*chunkx, *chunkz, &mut heightmap, &self.terrain_generator);
+            add_to_heightmap(
+                *chunkx,
+                *chunkz,
+                &mut heightmap,
+                &self.world_generator.terrain_generator,
+            );
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             //Should always evaluate to true
             if let Some(heights) = heightmap.get(&(*chunkx, *chunkz)) {
-                gen_chunk(&mut new_chunk, heights, &self.noise_cave_generator);
+                gen_chunk(&mut new_chunk, heights, &self.world_generator);
             }
             self.chunks.insert(pos, new_chunk);
         }

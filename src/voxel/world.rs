@@ -12,6 +12,27 @@ use std::collections::HashMap;
 pub const OCTAVES: usize = 5;
 pub const PERSISTENCE: f64 = 0.47;
 
+//Struct that contains information for generating the world
+struct WorldGenerator {
+    pub terrain_generator: Fbm<Perlin>,
+    pub noise_cave_generator: Perlin,
+    pub tree_generator: Perlin,
+}
+
+impl WorldGenerator {
+    fn new(seed: u32) -> Self {
+        let mut terrain_noise = Fbm::new(seed);
+        terrain_noise.octaves = OCTAVES;
+        terrain_noise.persistence = PERSISTENCE;
+
+        Self {
+            terrain_generator: terrain_noise,
+            noise_cave_generator: Perlin::new(seed + 1),
+            tree_generator: Perlin::new(seed + 2),
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WorldGenType {
     DefaultGen,
@@ -31,8 +52,7 @@ pub struct World {
     //cache of chunks that have been unloaded
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
     clear_cache: bool,
-    terrain_generator: Fbm<Perlin>,
-    noise_cave_generator: Perlin,
+    world_generator: WorldGenerator,
     world_seed: u32,
     pub gen_type: WorldGenType,
     //World path
@@ -50,8 +70,7 @@ impl World {
             centerz: 0,
             chunk_cache: HashMap::new(),
             clear_cache: false,
-            terrain_generator: Fbm::new(0),
-            noise_cave_generator: Perlin::new(0),
+            world_generator: WorldGenerator::new(0),
             gen_type: WorldGenType::DefaultGen,
             world_seed: 0,
             path: String::new(),
@@ -70,10 +89,6 @@ impl World {
             }
         }
 
-        let mut terrain_noise = Fbm::new(seed);
-        terrain_noise.octaves = OCTAVES;
-        terrain_noise.persistence = PERSISTENCE;
-
         Self {
             chunks: chunklist,
             range: chunk_range,
@@ -82,8 +97,7 @@ impl World {
             centerz: 0,
             chunk_cache: HashMap::new(),
             clear_cache: false,
-            terrain_generator: terrain_noise,
-            noise_cave_generator: Perlin::new(seed + 1),
+            world_generator: WorldGenerator::new(seed),
             gen_type: generation,
             world_seed: seed,
             path: String::new(),
