@@ -126,8 +126,8 @@ impl Game {
     }
 
     pub fn reset(&mut self) {
-        self.cam = Camera::new(0.0, 0.0, 0.0);
-        self.player = Player::new(0.0, 0.0, 0.0);
+        self.cam = Camera::new(0.0, 1.7, 0.0);
+        self.player = Player::new(15.5, 0.0, 15.5);
         self.build_cooldown = 0.0;
         self.destroy_cooldown = 0.0;
     }
