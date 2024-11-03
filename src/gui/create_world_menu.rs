@@ -5,7 +5,6 @@ use crate::voxel::world::WorldGenType;
 use egui_backend::egui::{self, Color32};
 use egui_gl_glfw as egui_backend;
 use glfw::{Context, Glfw, PWindow};
-use rand::Rng;
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 //State for the create world menu
@@ -51,7 +50,7 @@ fn create_new_world(menu_state: &mut CreateWorldMenuState, gamestate: &mut Game)
     let seed = if !menu_state.seed.is_empty() {
         convert_string_to_seed(menu_state.seed.clone())
     } else {
-        rand::thread_rng().gen()
+        fastrand::u32(..)
     };
     gamestate.generate_world(seed, 3, menu_state.gen_type);
 }

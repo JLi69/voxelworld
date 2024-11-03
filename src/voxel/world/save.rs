@@ -3,7 +3,6 @@ use crate::{
     impfile::{self, Entry},
     voxel::Chunk,
 };
-use rand::Rng;
 use std::collections::HashMap;
 use std::{fs::File, io::Write};
 
@@ -84,7 +83,7 @@ impl World {
             return Self::empty();
         }
 
-        let rand_seed = rand::thread_rng().gen::<u32>();
+        let rand_seed = fastrand::u32(..);
         let seed = world_metadata_entries[0]
             .get_var("seed")
             .parse::<u32>()

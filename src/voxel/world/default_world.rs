@@ -13,7 +13,6 @@ use crate::{
 };
 use cgmath::Vector3;
 use noise::{Fbm, NoiseFn, Perlin};
-use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::collections::HashMap;
 
 //cave_y1 = cave lower y bound
@@ -96,18 +95,22 @@ fn gen_tree_positions(
     tree_noise: &Perlin,
     positions: &mut Vec<(i32, i32)>,
     heights: &mut Vec<i32>,
+    world_seed: u32,
 ) {
-    let xz = [chunkx as f64 * 64.0, 0.0, chunkz as f64 * 64.0];
+    let xz = [chunkx as f64 + 0.5, 0.0, chunkz as f64 + 0.5];
     let noise_val = (tree_noise.get(xz) + 1.0) / 2.0;
-    let tree_count = (noise_val * 32.0).floor() as u32;
+    let tree_count = (noise_val * 24.0).floor() as u32;
     let xu32 = chunkx as u32;
     let zu32 = chunkz as u32;
     let seed = ((xu32 as u64) << 32) | (zu32 as u64);
-    let mut tree_generator = StdRng::seed_from_u64(seed);
+    let mut tree_generator = fastrand::Rng::with_seed(seed);
+    let mut rng = fastrand::Rng::with_seed(seed + world_seed as u64);
     for _ in 0..tree_count {
-        let x = tree_generator.gen_range(0..32) + chunkx * CHUNK_SIZE_I32;
-        let z = tree_generator.gen_range(0..32) + chunkz * CHUNK_SIZE_I32;
-        let h = tree_generator.gen_range(4..=6);
+        let treex = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
+        let treez = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
+        let x = treex + chunkx * CHUNK_SIZE_I32;
+        let z = treez + chunkz * CHUNK_SIZE_I32;
+        let h = tree_generator.i32(4..=6);
         positions.push((x, z));
         heights.push(h);
     }
@@ -154,6 +157,7 @@ fn generate_trees(chunk: &mut Chunk, world_generator: &WorldGenerator) {
                 &world_generator.tree_generator,
                 &mut tree_positions,
                 &mut tree_heights,
+                world_generator.world_seed,
             );
         }
     }
