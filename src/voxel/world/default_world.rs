@@ -15,6 +15,9 @@ use cgmath::Vector3;
 use noise::{Fbm, NoiseFn, Perlin};
 use std::collections::HashMap;
 
+const SEA_LEVEL: i32 = 0;
+const SAND_LEVEL: i32 = SEA_LEVEL + 2;
+
 //cave_y1 = cave lower y bound
 //cave_y2 = middle
 //cave_y3 = cave upper y bound
@@ -62,6 +65,12 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
 
                 //Generate noise caves
                 if is_noise_cave(x, y, z, &world_generator.noise_cave_generator) {
+                    continue;
+                }
+
+                //Sand
+                if y > height - 4 && height <= SAND_LEVEL {
+                    chunk.set_block(x, y, z, Block::new_id(11));
                     continue;
                 }
 
@@ -164,6 +173,11 @@ fn generate_trees(chunk: &mut Chunk, world_generator: &WorldGenerator) {
 
     for (i, (x, z)) in tree_positions.iter().enumerate() {
         let h = get_height(*x, *z, &world_generator.terrain_generator);
+
+        //Below sea level
+        if h <= SAND_LEVEL {
+            continue;
+        }
 
         //Check to make sure we are not in a cave (an empty block)
         if is_noise_cave(*x, h, *z, &world_generator.noise_cave_generator) {
