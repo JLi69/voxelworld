@@ -17,6 +17,8 @@ use std::collections::HashMap;
 
 const SEA_LEVEL: i32 = 0;
 const SAND_LEVEL: i32 = SEA_LEVEL + 2;
+const LAVA_LEVEL: i32 = -50;
+const BOTTOM_OF_WORLD: i32 = -64;
 
 //cave_y1 = cave lower y bound
 //cave_y2 = middle
@@ -35,7 +37,7 @@ fn cave_perc(y: i32, cave_y1: i32, cave_y2: i32, cave_y3: i32) -> f64 {
 
 fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
     let xyz = [x as f64 / 8.0, y as f64 / 8.0, z as f64 / 8.0];
-    cave_noise.get(xyz) < cave_perc(y, -59, -51, 48)
+    cave_noise.get(xyz) < cave_perc(y, -64, -51, 48)
 }
 
 fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerator) {
@@ -57,10 +59,14 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
             }
 
             for y in posy..(posy + CHUNK_SIZE_I32).min(height + 1) {
-                if y == -64 {
+                if y == BOTTOM_OF_WORLD {
                     //Bottom of the world
                     chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
                     continue;
+                }
+
+                if y > BOTTOM_OF_WORLD && y <= LAVA_LEVEL {
+                    chunk.set_block(x, y, z, Block::new_id(13));
                 }
 
                 //Generate noise caves

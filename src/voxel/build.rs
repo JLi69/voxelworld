@@ -53,7 +53,9 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = convert_coord_to_voxel(current_pos.x, dir.x);
     let mut y = current_pos.y.floor() as i32;
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range && world.get_block(x, y, z).id == EMPTY_BLOCK {
+    while (current_pos - pos).magnitude() < range
+        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    {
         current_pos += diff;
         x = convert_coord_to_voxel(current_pos.x, dir.x);
         y = current_pos.y.floor() as i32;
@@ -83,7 +85,9 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = convert_coord_to_voxel(current_pos.y, dir.y);
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range && world.get_block(x, y, z).id == EMPTY_BLOCK {
+    while (current_pos - pos).magnitude() < range
+        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
         y = convert_coord_to_voxel(current_pos.y, dir.y);
@@ -113,7 +117,9 @@ fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = current_pos.y.floor() as i32;
     let mut z = convert_coord_to_voxel(current_pos.z, dir.z);
-    while (current_pos - pos).magnitude() < range && world.get_block(x, y, z).id == EMPTY_BLOCK {
+    while (current_pos - pos).magnitude() < range
+        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
         y = current_pos.y.floor() as i32;
@@ -158,12 +164,18 @@ pub fn destroy_block(
 ) -> Option<(i32, i32, i32)> {
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
     let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
-    let blockid = world.get_block(ix, iy, iz).id;
-    if blockid == INDESTRUCTIBLE {
+    let block = world.get_block(ix, iy, iz);
+    if block.id == INDESTRUCTIBLE {
         return None;
     }
+
+    //You cannot destroy fluids
+    if block.is_fluid() {
+        return None;
+    }
+
     world.set_block(ix, iy, iz, Block::new_id(0));
-    if blockid != EMPTY_BLOCK {
+    if block.id != EMPTY_BLOCK {
         return Some((ix, iy, iz));
     }
 
@@ -179,9 +191,14 @@ pub fn place_block(
     player: &Player,
 ) -> Option<(i32, i32, i32)> {
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
-    let blockid1 = {
+    let blockid = {
         let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
-        world.get_block(ix, iy, iz).id
+        let block = world.get_block(ix, iy, iz);
+        if block.is_fluid() {
+            EMPTY_BLOCK
+        } else {
+            block.id
+        }
     };
     let (mut ix, mut iy, mut iz) = get_raycast_voxel(x, y, z, dir, axis);
     let mut block = player.selected_block;
@@ -214,8 +231,8 @@ pub fn place_block(
             }
         }
     }
-    let blockid2 = world.get_block(ix, iy, iz).id;
-    if blockid2 == EMPTY_BLOCK && blockid1 != EMPTY_BLOCK {
+    let replace = world.get_block(ix, iy, iz); //Block that is being replaced
+    if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
         world.set_block(ix, iy, iz, block);
         let block_hitbox = Hitbox::from_block(ix, iy, iz);
         if player.get_hitbox().intersects(&block_hitbox) {

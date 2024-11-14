@@ -314,6 +314,11 @@ impl Player {
                     if world.get_block(x, y, z).id == EMPTY_BLOCK {
                         continue;
                     }
+
+                    if world.get_block(x, y, z).no_hitbox() {
+                        continue;
+                    }
+
                     let block_hitbox = Hitbox::from_block(x, y, z);
 
                     if !self.get_hitbox().intersects(&block_hitbox) {

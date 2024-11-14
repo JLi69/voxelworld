@@ -22,7 +22,9 @@ pub fn display_selected_outline(gamestate: &Game) {
     transform = transform * Matrix4::from_translation(selectedv);
     transform = transform * Matrix4::from_scale(1.001);
     outlineshader.uniform_matrix4f("transform", &transform);
-    if gamestate.world.get_block(ix, iy, iz).id != EMPTY_BLOCK {
+    if gamestate.world.get_block(ix, iy, iz).id != EMPTY_BLOCK
+        && !gamestate.world.get_block(ix, iy, iz).is_fluid()
+    {
         let cube = gamestate.models.bind("cube");
         draw_elements(cube);
     }

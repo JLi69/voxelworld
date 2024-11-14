@@ -6,7 +6,7 @@ pub mod world;
 
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
-use self::flags::{get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, TRANSPARENT_FLAG};
+use self::flags::{get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLUID, NO_HITBOX, TRANSPARENT_FLAG};
 pub use chunk::Chunk;
 pub use world::World;
 
@@ -77,5 +77,15 @@ impl Block {
     //Returns if the block can be rotated when placed
     pub fn can_rotate(&self) -> bool {
         get_flag(self.id) & CAN_ROTATE_FLAG != 0
+    }
+
+    //Returns if the voxel has no hitbox
+    pub fn no_hitbox(&self) -> bool {
+        get_flag(self.id) & NO_HITBOX != 0
+    }
+
+    //Returns if the voxel is a fluid
+    pub fn is_fluid(&self) -> bool {
+        get_flag(self.id) & FLUID != 0
     }
 }
