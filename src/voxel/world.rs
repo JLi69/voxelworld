@@ -4,7 +4,7 @@ mod gen_more;
 mod save;
 
 use super::{world_to_chunk_position, Block, Chunk};
-use crate::gfx::ChunkVaoTable;
+use crate::gfx::ChunkTables;
 use cgmath::Vector3;
 use noise::{Fbm, Perlin};
 use std::collections::HashMap;
@@ -199,10 +199,10 @@ impl World {
     }
 
     //Generate more world
-    pub fn generate_more(&mut self, pos: Vector3<f32>, chunktable: &mut ChunkVaoTable) {
+    pub fn generate_more(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
         match self.gen_type {
-            WorldGenType::DefaultGen => self.gen_more_default(pos, chunktable),
-            WorldGenType::Flat => self.gen_more_flat(pos, chunktable),
+            WorldGenType::DefaultGen => self.gen_more_default(pos, chunktables),
+            WorldGenType::Flat => self.gen_more_flat(pos, chunktables),
         }
     }
 

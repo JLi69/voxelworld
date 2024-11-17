@@ -1,6 +1,6 @@
 use super::player::CAMERA_OFFSET;
 use super::{Game, KeyState};
-use crate::gfx::{self, ChunkVaoTable};
+use crate::gfx::{self, ChunkTables};
 use crate::voxel::{destroy_block, place_block};
 use cgmath::Vector3;
 use glfw::{CursorMode, Key};
@@ -54,7 +54,7 @@ impl Game {
     }
 
     //Place and destroy blocks
-    pub fn build(&mut self, chunkvaos: &mut ChunkVaoTable) {
+    pub fn build(&mut self, chunktables: &mut ChunkTables) {
         //Destroy blocks
         let pos = self.cam.position;
         let dir = self.cam.forward();
@@ -64,7 +64,7 @@ impl Game {
 
         if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
             let destroyed = destroy_block(pos, dir, &mut self.world);
-            gfx::update_chunk_vaos(chunkvaos, destroyed, &self.world);
+            gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
             } else {
@@ -79,7 +79,7 @@ impl Game {
 
         if self.get_mouse_state(MouseButtonRight).is_held() && self.build_cooldown <= 0.0 {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
-            gfx::update_chunk_vaos(chunkvaos, placed, &self.world);
+            gfx::update_chunk_vaos(chunktables, placed, &self.world);
             if placed.is_some() {
                 self.build_cooldown = BUILD_COOLDOWN;
             } else {

@@ -4,7 +4,9 @@ use crate::voxel::{Chunk, CHUNK_SIZE_I32};
 use addvertices::add_block_vertices_trans;
 use addvertices::{add_block_vertices_default, add_block_vertices_grass, add_block_vertices_log};
 
-type Int3 = (i32, i32, i32);
+use self::addvertices::add_fluid_vertices;
+
+pub type Int3 = (i32, i32, i32);
 
 pub type ChunkData = Vec<u8>;
 
@@ -60,7 +62,31 @@ fn add_block_vertices_transparent(
         return;
     }
 
+    if chunk
+        .get_block_relative(x as usize, y as usize, z as usize)
+        .is_fluid()
+    {
+        return;
+    }
+
     add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data);
+}
+
+pub fn add_block_vertices_fluid(
+    chunk: &Chunk,
+    adj_chunks: [Option<&Chunk>; 6],
+    xyz: Int3,
+    vert_data: &mut ChunkData,
+) {
+    let (x, y, z) = xyz;
+    if !chunk
+        .get_block_relative(x as usize, y as usize, z as usize)
+        .is_fluid()
+    {
+        return;
+    }
+
+    add_fluid_vertices(chunk, adj_chunks, xyz, vert_data);
 }
 
 /*

@@ -1,4 +1,6 @@
 use super::{EventHandler, Game};
+use crate::gfx::buildchunk::generate_chunk_vertex_data;
+use crate::gfx::fluid::generate_fluid_vertex_data;
 use crate::gui;
 use crate::{game, gfx, gui::pause_menu::PauseMenuAction};
 use egui_backend::egui;
@@ -13,8 +15,15 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     }
 
     //Generate chunk vaos
-    let mut chunkvaos = gfx::ChunkVaoTable::new();
-    chunkvaos.generate_chunk_vaos(&gamestate.world);
+    let mut chunktables = gfx::ChunkTables::new();
+    chunktables
+        .chunk_vaos
+        .generate_chunk_vaos(&gamestate.world, generate_chunk_vertex_data);
+    chunktables
+        .lava_vaos
+        .generate_chunk_vaos(&gamestate.world, |chunk, adj_chunks| {
+            generate_fluid_vertex_data(chunk, adj_chunks, 13)
+        });
 
     //egui
     let font = gamestate.get_font();
@@ -47,8 +56,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gamestate.aspect = aspect;
 
         //Display chunks
-        let drawn = chunkvaos.display_chunks(gamestate);
-        chunks_drawn += drawn;
+        chunks_drawn += chunktables.chunk_vaos.display_chunks(gamestate);
+        chunks_drawn += chunktables.lava_vaos.display_with_backface(gamestate);
+
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);
 
@@ -81,7 +91,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             //Update gameobjects
             gamestate.update_player(dt, window.get_cursor_mode());
             //Destroy and place blocks
-            gamestate.build(&mut chunkvaos);
+            gamestate.build(&mut chunktables);
             gamestate.update_build_cooldown(dt);
         }
         //Generate new chunks
@@ -89,8 +99,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gamestate.world.clean_cache();
         gamestate
             .world
-            .generate_more(gamestate.player.position, &mut chunkvaos);
-        chunkvaos.update_chunks(&gamestate.world);
+            .generate_more(gamestate.player.position, &mut chunktables);
+        chunktables.update_tables(gamestate);
 
         //Handle save
         save_timer -= dt;
@@ -130,5 +140,5 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     gamestate.save_entire_world();
     gamestate.reset();
     //Clean up
-    chunkvaos.clear();
+    chunktables.clear();
 }

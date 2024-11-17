@@ -3,7 +3,7 @@ use super::{
     World,
 };
 use crate::{
-    gfx::ChunkVaoTable,
+    gfx::ChunkTables,
     voxel::{Block, Chunk, CHUNK_SIZE_F32, CHUNK_SIZE_I32, INDESTRUCTIBLE},
 };
 use cgmath::Vector3;
@@ -47,7 +47,7 @@ impl World {
     }
 
     //Generates new flat world chunks
-    pub fn gen_more_flat(&mut self, pos: Vector3<f32>, chunktable: &mut ChunkVaoTable) {
+    pub fn gen_more_flat(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
         //Check if the player is in the center chunk
         let x = (pos.x / CHUNK_SIZE_F32).floor() as i32;
         let y = (pos.y / CHUNK_SIZE_F32).floor() as i32;
@@ -90,7 +90,17 @@ impl World {
         self.centerz = z;
 
         update_chunk_vao_table(
-            chunktable,
+            &mut chunktables.chunk_vaos,
+            self.centerx,
+            self.centery,
+            self.centerz,
+            self.range,
+            &self.chunks,
+            &to_generate,
+        );
+
+        update_chunk_vao_table(
+            &mut chunktables.lava_vaos,
             self.centerx,
             self.centery,
             self.centerz,

@@ -6,10 +6,10 @@ use super::{
     gen_more::{find_in_range, get_chunks_to_generate, update_chunk_vao_table},
     World, WorldGenerator,
 };
-use crate::voxel::{CHUNK_SIZE_I32, EMPTY_BLOCK};
+use crate::voxel::{Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE};
 use crate::{
-    gfx::ChunkVaoTable,
-    voxel::{Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE},
+    gfx::ChunkTables,
+    voxel::{CHUNK_SIZE_I32, EMPTY_BLOCK},
 };
 use cgmath::Vector3;
 use noise::{Fbm, NoiseFn, Perlin};
@@ -275,7 +275,7 @@ impl World {
     }
 
     //Generates more chunks
-    pub fn gen_more_default(&mut self, pos: Vector3<f32>, chunktable: &mut ChunkVaoTable) {
+    pub fn gen_more_default(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
         //Check if the player is in the center chunk
         let x = (pos.x / CHUNK_SIZE_F32).floor() as i32;
         let y = (pos.y / CHUNK_SIZE_F32).floor() as i32;
@@ -330,7 +330,17 @@ impl World {
         self.centerz = z;
 
         update_chunk_vao_table(
-            chunktable,
+            &mut chunktables.chunk_vaos,
+            self.centerx,
+            self.centery,
+            self.centerz,
+            self.range,
+            &self.chunks,
+            &to_generate,
+        );
+
+        update_chunk_vao_table(
+            &mut chunktables.lava_vaos,
             self.centerx,
             self.centery,
             self.centerz,
