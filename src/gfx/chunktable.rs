@@ -400,12 +400,18 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
             .update_chunk_with_adj(x, y, z, world, |chunk, adj_chunks| {
                 generate_fluid_vertex_data(chunk, adj_chunks, 13)
             });
+        chunks
+            .water_vaos
+            .update_chunk_with_adj(x, y, z, world, |chunk, adj_chunks| {
+                generate_fluid_vertex_data(chunk, adj_chunks, 12)
+            });
     }
 }
 
 pub struct ChunkTables {
     pub chunk_vaos: ChunkVaoTable,
     pub lava_vaos: ChunkVaoTable,
+    pub water_vaos: ChunkVaoTable,
 }
 
 impl ChunkTables {
@@ -413,6 +419,7 @@ impl ChunkTables {
         Self {
             chunk_vaos: ChunkVaoTable::new(),
             lava_vaos: ChunkVaoTable::new(),
+            water_vaos: ChunkVaoTable::new(),
         }
     }
 
@@ -423,10 +430,15 @@ impl ChunkTables {
             .update_chunks(&gamestate.world, |chunk, adj_chunks| {
                 generate_fluid_vertex_data(chunk, adj_chunks, 13)
             });
+        self.water_vaos
+            .update_chunks(&gamestate.world, |chunk, adj_chunks| {
+                generate_fluid_vertex_data(chunk, adj_chunks, 12)
+            });
     }
 
     pub fn clear(&mut self) {
         self.chunk_vaos.clear();
         self.lava_vaos.clear();
+        self.water_vaos.clear();
     }
 }

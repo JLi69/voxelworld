@@ -8,10 +8,10 @@ use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
 use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK};
-pub use transparent::add_block_vertices_trans;
-pub use log::add_block_vertices_log;
-pub use grass::add_block_vertices_grass;
 pub use fluid::add_fluid_vertices;
+pub use grass::add_block_vertices_grass;
+pub use log::add_block_vertices_log;
+pub use transparent::add_block_vertices_trans;
 
 #[derive(Copy, Clone)]
 struct FaceInfo {

@@ -24,6 +24,11 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         .generate_chunk_vaos(&gamestate.world, |chunk, adj_chunks| {
             generate_fluid_vertex_data(chunk, adj_chunks, 13)
         });
+    chunktables
+        .water_vaos
+        .generate_chunk_vaos(&gamestate.world, |chunk, adj_chunks| {
+            generate_fluid_vertex_data(chunk, adj_chunks, 12)
+        });
 
     //egui
     let font = gamestate.get_font();
@@ -61,7 +66,12 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         let fluid_shader = gamestate.shaders.get("fluid");
         fluid_shader.use_program();
         fluid_shader.uniform_float("timepassed", time_passed);
-        chunks_drawn += chunktables.lava_vaos.display_with_backface(gamestate, "fluid");
+        chunks_drawn += chunktables
+            .lava_vaos
+            .display_with_backface(gamestate, "fluid");
+        chunks_drawn += chunktables
+            .water_vaos
+            .display_with_backface(gamestate, "fluid");
 
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);

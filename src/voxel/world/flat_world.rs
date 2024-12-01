@@ -108,5 +108,15 @@ impl World {
             &self.chunks,
             &to_generate,
         );
+
+        update_chunk_vao_table(
+            &mut chunktables.water_vaos,
+            self.centerx,
+            self.centery,
+            self.centerz,
+            self.range,
+            &self.chunks,
+            &to_generate,
+        );
     }
 }

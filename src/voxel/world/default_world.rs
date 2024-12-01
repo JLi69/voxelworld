@@ -16,7 +16,7 @@ use noise::{Fbm, NoiseFn, Perlin};
 use std::collections::HashMap;
 
 const SEA_LEVEL: i32 = 0;
-const SAND_LEVEL: i32 = SEA_LEVEL + 2;
+const SAND_LEVEL: i32 = SEA_LEVEL + 1;
 const LAVA_LEVEL: i32 = -50;
 const BOTTOM_OF_WORLD: i32 = -64;
 
@@ -58,7 +58,8 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
                 continue;
             }
 
-            for y in posy..(posy + CHUNK_SIZE_I32).min(height + 1) {
+            let h = (height + 1).max(SEA_LEVEL + 1);
+            for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
                 if y == BOTTOM_OF_WORLD {
                     //Bottom of the world
                     chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
@@ -67,16 +68,18 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
 
                 if y > BOTTOM_OF_WORLD && y <= LAVA_LEVEL {
                     chunk.set_block(x, y, z, Block::new_id(13));
+                } else if y <= SEA_LEVEL && y > height {
+                    chunk.set_block(x, y, z, Block::new_id(12));
+                }
+
+                //Sand
+                if y > height - 4 && y <= height && height <= SAND_LEVEL {
+                    chunk.set_block(x, y, z, Block::new_id(11));
+                    continue;
                 }
 
                 //Generate noise caves
                 if is_noise_cave(x, y, z, &world_generator.noise_cave_generator) {
-                    continue;
-                }
-
-                //Sand
-                if y > height - 4 && height <= SAND_LEVEL {
-                    chunk.set_block(x, y, z, Block::new_id(11));
                     continue;
                 }
 
@@ -341,6 +344,16 @@ impl World {
 
         update_chunk_vao_table(
             &mut chunktables.lava_vaos,
+            self.centerx,
+            self.centery,
+            self.centerz,
+            self.range,
+            &self.chunks,
+            &to_generate,
+        );
+
+        update_chunk_vao_table(
+            &mut chunktables.water_vaos,
             self.centerx,
             self.centery,
             self.centerz,

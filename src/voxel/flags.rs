@@ -18,6 +18,11 @@ pub fn init_voxel_flags() {
         //Glass
         VOXEL_FLAGS[9] |= TRANSPARENT_FLAG;
         VOXEL_FLAGS[9] |= CONNECT_FLAG;
+        //Water
+        VOXEL_FLAGS[12] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[12] |= CONNECT_FLAG;
+        VOXEL_FLAGS[12] |= NO_HITBOX;
+        VOXEL_FLAGS[12] |= FLUID;
         //Lava
         VOXEL_FLAGS[13] |= TRANSPARENT_FLAG;
         VOXEL_FLAGS[13] |= CONNECT_FLAG;
