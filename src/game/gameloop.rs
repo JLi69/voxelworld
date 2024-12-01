@@ -38,6 +38,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     let mut dt = 0.0f32;
     let mut fps_timer = 0.0;
     let mut save_timer = 0.0;
+    let mut time_passed = 0.0;
     let mut frames = 0;
     let mut chunks_drawn = 0;
     let mut quit = false;
@@ -56,8 +57,11 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gamestate.aspect = aspect;
 
         //Display chunks
-        chunks_drawn += chunktables.chunk_vaos.display_chunks(gamestate);
-        chunks_drawn += chunktables.lava_vaos.display_with_backface(gamestate);
+        chunks_drawn += chunktables.chunk_vaos.display_chunks(gamestate, "chunk");
+        let fluid_shader = gamestate.shaders.get("fluid");
+        fluid_shader.use_program();
+        fluid_shader.uniform_float("timepassed", time_passed);
+        chunks_drawn += chunktables.lava_vaos.display_with_backface(gamestate, "fluid");
 
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);
@@ -119,6 +123,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         } else {
             frames += 1;
         }
+
+        time_passed += dt;
 
         gfx::output_errors();
         window.swap_buffers();

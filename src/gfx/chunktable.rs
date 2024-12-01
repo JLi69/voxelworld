@@ -294,12 +294,12 @@ impl ChunkVaoTable {
     }
 
     //Displays all the chunk vaos
-    pub fn display_chunks(&self, gamestate: &Game) -> u32 {
+    pub fn display_chunks(&self, gamestate: &Game, shaderid: &str) -> u32 {
         gamestate.textures.bind("blocks");
         //Calculate view frustum
         let view_frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
 
-        let chunkshader = gamestate.shaders.use_program("chunk");
+        let chunkshader = gamestate.shaders.use_program(shaderid);
         let view = gamestate.cam.get_view();
         chunkshader.uniform_matrix4f("view", &view);
         chunkshader.uniform_matrix4f("persp", &gamestate.persp);
@@ -345,11 +345,11 @@ impl ChunkVaoTable {
         drawn_count
     }
 
-    pub fn display_with_backface(&mut self, gamestate: &Game) -> u32 {
+    pub fn display_with_backface(&mut self, gamestate: &Game, shaderid: &str) -> u32 {
         unsafe {
             gl::Disable(gl::CULL_FACE);
         }
-        let count = self.display_chunks(gamestate);
+        let count = self.display_chunks(gamestate, shaderid);
         unsafe {
             gl::Enable(gl::CULL_FACE);
         }
