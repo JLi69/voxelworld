@@ -66,9 +66,11 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         let fluid_shader = gamestate.shaders.get("fluid");
         fluid_shader.use_program();
         fluid_shader.uniform_float("timepassed", time_passed);
+        fluid_shader.uniform_float("flowspeed", 0.07);
         chunks_drawn += chunktables
             .lava_vaos
             .display_with_backface(gamestate, "fluid");
+        fluid_shader.uniform_float("flowspeed", 0.25);
         chunks_drawn += chunktables
             .water_vaos
             .display_with_backface(gamestate, "fluid");
@@ -134,7 +136,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             frames += 1;
         }
 
-        time_passed += dt;
+        if !gamestate.paused {
+            time_passed += dt;
+        }
 
         gfx::output_errors();
         window.swap_buffers();

@@ -13,6 +13,7 @@ uniform float fogdist;
 uniform float fogstrength;
 uniform vec4 fogcolor;
 uniform float timepassed;
+uniform float flowspeed;
 
 const float shading[] = float[](0.9, 1.0, 0.7);
 vec2 texturecoords[] = vec2[](
@@ -23,7 +24,7 @@ vec2 texturecoords[] = vec2[](
 const float TEX_FRAC = 1.0 / 16.0;
 
 vec2 transformTc(vec2 tc) {
-	vec2 timeoffset = timepassed * 0.1 * vec2(0.0, -1.0);
+	vec2 timeoffset = timepassed * flowspeed * vec2(0.0, -1.0);
 	float x = float(int(blockid) % 16) * TEX_FRAC;
 	float y = float(int(blockid) / 16) * TEX_FRAC;
 	float tcx = fract(tc.x + timeoffset.x) * TEX_FRAC * 0.98;

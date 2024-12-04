@@ -207,27 +207,27 @@ pub fn place_block(
             ix -= dir.x.signum() as i32;
             //Set orientation of the block
             if dir.x.signum() as i32 == -1 && block.can_rotate() {
-                block.orientation = 4;
+                block.set_orientation(4);
             } else if dir.x.signum() as i32 == 1 && block.can_rotate() {
-                block.orientation = 1;
+                block.set_orientation(1);
             }
         }
         Axis::Y => {
             iy -= dir.y.signum() as i32;
             //Set orientation of the block
             if dir.y.signum() as i32 == -1 && block.can_rotate() {
-                block.orientation = 3;
+                block.set_orientation(3);
             } else if dir.y.signum() as i32 == 1 && block.can_rotate() {
-                block.orientation = 0;
+                block.set_orientation(0);
             }
         }
         Axis::Z => {
             iz -= dir.z.signum() as i32;
             //Set orientation of the block
             if dir.z.signum() as i32 == -1 && block.can_rotate() {
-                block.orientation = 5;
+                block.set_orientation(5);
             } else if dir.z.signum() as i32 == 1 && block.can_rotate() {
-                block.orientation = 2;
+                block.set_orientation(2);
             }
         }
     }

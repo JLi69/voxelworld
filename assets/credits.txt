@@ -4,5 +4,6 @@ Title: Worldmap/Overworld tileset
 Author: Beast
 URL: https://opengameart.org/content/worldmapoverworld-tileset
 License: CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+Notes: used water.png for water texture
 
 Font used: Pixeloid Sans (License: SIL Open Font License)

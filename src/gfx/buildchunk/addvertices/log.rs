@@ -20,7 +20,7 @@ pub fn add_block_vertices_log(
         return;
     }
 
-    let (facex, facey, facez) = match block.orientation % 3 {
+    let (facex, facey, facez) = match block.orientation() % 3 {
         0 => (
             FaceInfo::new(block.id, 0),
             FaceInfo::new(faceytexture, 1),

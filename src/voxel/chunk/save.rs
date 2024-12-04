@@ -76,13 +76,13 @@ impl Chunk {
         let rle = self.rle_encode();
         let mut counts = Vec::<u8>::with_capacity(rle.len() * size_of::<u16>());
         let mut blockids = Vec::<u8>::with_capacity(rle.len());
-        let mut blockorientations = Vec::<u8>::with_capacity(rle.len());
+        let mut block_geometries = Vec::<u8>::with_capacity(rle.len());
         for (count, b) in rle {
             let count_bytes = count.to_be_bytes();
             counts.push(count_bytes[0]);
             counts.push(count_bytes[1]);
             blockids.push(b.id);
-            blockorientations.push(b.orientation);
+            block_geometries.push(b.geometry);
         }
 
         match File::create(&chunk_path) {
@@ -103,7 +103,7 @@ impl Chunk {
                     eprintln!("E: {msg}");
                     return Err(chunk_path);
                 }
-                if let Err(msg) = file.write_all(&blockorientations) {
+                if let Err(msg) = file.write_all(&block_geometries) {
                     eprintln!("Error when saving {}, {}, {}", self.ix, self.iy, self.iz);
                     eprintln!("E: {msg}");
                     return Err(chunk_path);

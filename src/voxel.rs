@@ -27,6 +27,8 @@ pub enum Axis {
 pub struct Block {
     //Block id
     pub id: u8,
+    //Represents geometry of the block
+    //For liquid: 7 = surface, 8 = under, 9 = flowing under
     //Orientation of the block
     //0 = up (normal)
     //1 = right
@@ -34,7 +36,7 @@ pub struct Block {
     //3 = down
     //4 = left
     //5 = back
-    pub orientation: u8,
+    pub geometry: u8,
 }
 
 impl Block {
@@ -42,7 +44,7 @@ impl Block {
     pub fn new() -> Self {
         Self {
             id: 0,
-            orientation: 0,
+            geometry: 0,
         }
     }
 
@@ -50,7 +52,7 @@ impl Block {
     pub fn new_id(blockid: u8) -> Self {
         Self {
             id: blockid,
-            orientation: 0,
+            geometry: 0,
         }
     }
 
@@ -58,8 +60,18 @@ impl Block {
     pub fn new_id_orientation(blockid: u8, block_orientation: u8) -> Self {
         Self {
             id: blockid,
-            orientation: block_orientation,
+            geometry: block_orientation,
         }
+    }
+
+    //Returns the orientation of the block
+    pub fn orientation(&self) -> u8 {
+        self.geometry & 7
+    }
+
+    pub fn set_orientation(&mut self, orientation: u8) {
+        self.geometry &= 0xff << 3;
+        self.geometry |= orientation
     }
 
     //Returns if the block is transparent
