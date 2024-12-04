@@ -1,6 +1,7 @@
 use super::fluid::generate_fluid_vertex_data;
 use super::frustum::Frustum;
 use super::{generate_chunk_vertex_data, ChunkData};
+use crate::assets::shader::ShaderProgram;
 use crate::game::physics::Hitbox;
 use crate::game::Game;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
@@ -9,6 +10,27 @@ use cgmath::Vector3;
 use std::collections::{HashMap, VecDeque};
 use std::mem::size_of;
 use std::os::raw::c_void;
+
+fn set_fog(gamestate: &Game, chunkshader: &ShaderProgram) {
+    if gamestate.player.head_intersection(&gamestate.world, 12) {
+        chunkshader.uniform_float("fogdist", -CHUNK_SIZE_F32 / 4.0);
+        chunkshader.uniform_float("fogstrength", 1.0 / (CHUNK_SIZE_F32 * 0.7));
+        chunkshader.uniform_vec4f("fogcolor", 0.16, 0.41, 0.51, 1.0);
+        return;
+    } else if gamestate.player.head_intersection(&gamestate.world, 13) {
+        chunkshader.uniform_float("fogdist", -1.8 / 8.0);
+        chunkshader.uniform_float("fogstrength", 1.0 / 1.8);
+        chunkshader.uniform_vec4f("fogcolor", 1.0, 0.3, 0.0, 1.0);
+        return;
+    }
+
+    //Set fog color
+    let range = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32;
+    let dist = range * 0.7;
+    chunkshader.uniform_float("fogdist", dist);
+    chunkshader.uniform_float("fogstrength", 1.0 / (range * 0.2));
+    chunkshader.uniform_vec4f("fogcolor", 0.4, 0.8, 1.0, 1.0);
+}
 
 const BUF_COUNT: usize = 2;
 
@@ -309,11 +331,9 @@ impl ChunkVaoTable {
             gamestate.cam.position.y,
             gamestate.cam.position.z,
         );
-        let range = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32;
-        let dist = range * 0.7;
-        chunkshader.uniform_float("fogdist", dist);
-        chunkshader.uniform_float("fogstrength", 1.0 / (range * 0.2));
-        chunkshader.uniform_vec4f("fogcolor", 0.4, 0.8, 1.0, 1.0);
+
+        //Set fog color
+        set_fog(gamestate, &chunkshader);
 
         let mut drawn_count = 0;
         for ((chunkx, chunky, chunkz), vao) in &self.vaos {

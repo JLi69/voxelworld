@@ -338,6 +338,38 @@ impl Player {
         hit
     }
 
+    pub fn head_intersection(&self, world: &World, block_id: u8) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=(iy + 2) {
+                for z in (iz - 2)..=(iz + 2) {
+                    if world.get_block(x, y, z).id != block_id {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block(x, y, z);
+                    let head_hitbox = Hitbox::new(
+                        self.position.x,
+                        self.position.y + PLAYER_HEIGHT / 2.0,
+                        self.position.z,
+                        PLAYER_SIZE,
+                        0.4,
+                        PLAYER_SIZE,
+                    );
+
+                    if block_hitbox.intersects(&head_hitbox) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
     pub fn to_entry(&self) -> impfile::Entry {
         let mut entry = impfile::Entry::new("player");
 

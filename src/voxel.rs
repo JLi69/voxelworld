@@ -42,10 +42,7 @@ pub struct Block {
 impl Block {
     //Create a new empty block
     pub fn new() -> Self {
-        Self {
-            id: 0,
-            geometry: 0,
-        }
+        Self { id: 0, geometry: 0 }
     }
 
     //Create a new block with an id
