@@ -82,6 +82,16 @@ impl Texture {
         }
     }
 
+    pub fn gen_texture(&mut self) {
+        unsafe {
+            gl::GenTextures(1, &mut self.id);
+        }
+    }
+
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
+
     pub fn bind(&self) {
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);

@@ -1,7 +1,10 @@
+use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
 use crate::voxel;
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
 use cgmath::{Matrix4, SquareMatrix, Vector3};
+
+use super::ChunkTables;
 
 pub fn display_selected_outline(gamestate: &Game) {
     let outlineshader = gamestate.shaders.use_program("outline");
@@ -27,5 +30,50 @@ pub fn display_selected_outline(gamestate: &Game) {
     {
         let cube = gamestate.models.bind("cube");
         draw_elements(cube);
+    }
+}
+
+pub fn display_water(
+    gamestate: &Game,
+    chunktables: &ChunkTables,
+    water_framebuffer: u32,
+    water_frame: &Texture,
+    w: i32,
+    h: i32,
+) {
+    let fluid_shader = gamestate.shaders.get("fluid");
+    unsafe {
+        gl::BindFramebuffer(gl::FRAMEBUFFER, water_framebuffer);
+        gl::ClearColor(0.0, 0.0, 0.0, 0.0);
+        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+
+        gl::BindFramebuffer(gl::READ_FRAMEBUFFER, 0);
+        gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, water_framebuffer);
+        gl::BlitFramebuffer(0, 0, w, h, 0, 0, w, h, gl::DEPTH_BUFFER_BIT, gl::NEAREST);
+
+        gl::BindFramebuffer(gl::FRAMEBUFFER, water_framebuffer);
+    }
+    fluid_shader.uniform_float("flowspeed", 0.25);
+    chunktables
+        .water_vaos
+        .display_with_backface(gamestate, "fluid");
+    unsafe {
+        gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+    }
+
+    //Display quad with water textured on
+    unsafe {
+        gl::Disable(gl::DEPTH_TEST);
+        gl::Disable(gl::CULL_FACE);
+    }
+    let quadshader = gamestate.shaders.get("quad");
+    quadshader.use_program();
+    water_frame.bind();
+    let quad = gamestate.models.bind("quad2d");
+    quadshader.uniform_float("alpha", 0.8);
+    draw_elements(quad);
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::CULL_FACE);
     }
 }

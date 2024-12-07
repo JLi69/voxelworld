@@ -353,7 +353,7 @@ impl Player {
                     let block_hitbox = Hitbox::from_block(x, y, z);
                     let head_hitbox = Hitbox::new(
                         self.position.x,
-                        self.position.y + PLAYER_HEIGHT / 2.0,
+                        self.position.y + PLAYER_HEIGHT / 2.0 - 0.2,
                         self.position.z,
                         PLAYER_SIZE,
                         0.4,

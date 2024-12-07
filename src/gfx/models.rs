@@ -41,6 +41,21 @@ const CUBE_INDICES: [u32; 36] = [
     5, 6, 7,
 ];
 
+//2D quad vertex data
+#[rustfmt::skip]
+const QUAD_2D: [f32; 8] = [
+    1.0, 1.0,
+    1.0, -1.0,
+    -1.0, -1.0,
+    -1.0, 1.0,
+];
+
+#[rustfmt::skip]
+const QUAD_2D_INDICES: [u32; 6] = [
+    0, 1, 2,
+    3, 0, 2,
+];
+
 #[derive(Clone)]
 pub struct Vao {
     vao_id: u32,
@@ -119,4 +134,46 @@ pub fn gen_cube_vao() -> Vao {
     cube_vao.vert_count = CUBE_INDICES.len() as i32;
 
     cube_vao
+}
+
+pub fn gen_quad2d_vao() -> Vao {
+    let mut quad_vao = Vao::new(2);
+
+    unsafe {
+        //Generate buffers
+        gl::GenVertexArrays(1, &mut quad_vao.vao_id);
+        gl::GenBuffers(2, &mut quad_vao.buffers[0]);
+
+        //Bind vao
+        gl::BindVertexArray(quad_vao.vao_id);
+        //Vertex data
+        gl::BindBuffer(gl::ARRAY_BUFFER, quad_vao.buffers[0]);
+        gl::BufferData(
+            gl::ARRAY_BUFFER,
+            (QUAD_2D.len() * size_of::<f32>()) as isize,
+            &QUAD_2D[0] as *const f32 as *const c_void,
+            gl::STATIC_DRAW,
+        );
+        gl::VertexAttribPointer(
+            0,
+            2,
+            gl::FLOAT,
+            gl::FALSE,
+            size_of::<f32>() as i32 * 2,
+            std::ptr::null::<f32>() as *const c_void,
+        );
+        gl::EnableVertexAttribArray(0);
+        //Indices
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, quad_vao.buffers[1]);
+        gl::BufferData(
+            gl::ELEMENT_ARRAY_BUFFER,
+            (QUAD_2D_INDICES.len() * size_of::<f32>()) as isize,
+            &QUAD_2D_INDICES[0] as *const u32 as *const c_void,
+            gl::STATIC_DRAW,
+        );
+    }
+
+    quad_vao.vert_count = QUAD_2D_INDICES.len() as i32;
+
+    quad_vao
 }

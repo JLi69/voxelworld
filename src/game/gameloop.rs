@@ -1,4 +1,5 @@
 use super::{EventHandler, Game};
+use crate::assets::Texture;
 use crate::gfx::buildchunk::generate_chunk_vertex_data;
 use crate::gfx::fluid::generate_fluid_vertex_data;
 use crate::gui;
@@ -29,6 +30,55 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         .generate_chunk_vaos(&gamestate.world, |chunk, adj_chunks| {
             generate_fluid_vertex_data(chunk, adj_chunks, 12)
         });
+    //water framebuffer
+    let mut water_framebuffer = 0u32;
+    let mut water_frame_color = Texture::new();
+    let mut depth_rbo = 0u32;
+    water_frame_color.gen_texture();
+    unsafe {
+        //Create render buffer
+        gl::GenRenderbuffers(1, &mut depth_rbo);
+        gl::BindRenderbuffer(gl::RENDERBUFFER, depth_rbo);
+        gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, 960, 640);
+
+        //Initialize frame buffer
+        gl::GenFramebuffers(1, &mut water_framebuffer);
+        gl::BindFramebuffer(gl::FRAMEBUFFER, water_framebuffer);
+        water_frame_color.bind();
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGBA as i32,
+            960,
+            640,
+            0,
+            gl::RGBA,
+            gl::UNSIGNED_BYTE,
+            std::ptr::null(),
+        );
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+        gl::FramebufferTexture2D(
+            gl::FRAMEBUFFER,
+            gl::COLOR_ATTACHMENT0,
+            gl::TEXTURE_2D,
+            water_frame_color.get_id(),
+            0,
+        );
+        gl::FramebufferRenderbuffer(
+            gl::FRAMEBUFFER,
+            gl::DEPTH_STENCIL_ATTACHMENT,
+            gl::RENDERBUFFER,
+            depth_rbo,
+        );
+
+        //Check framebuffer status
+        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
+            eprintln!("ERROR: framebuffer is not complete!");
+        }
+
+        gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+    }
 
     //egui
     let font = gamestate.get_font();
@@ -52,6 +102,27 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     while !window.should_close() && !quit {
         let start = std::time::Instant::now();
 
+        //Update render buffer and water frame dimensions
+        let (w, h) = window.get_size();
+        unsafe {
+            gl::BindRenderbuffer(gl::RENDERBUFFER, depth_rbo);
+            gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, w, h);
+            gl::BindRenderbuffer(gl::RENDERBUFFER, 0); //Unbind render buffer
+            water_frame_color.bind();
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                w,
+                h,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                std::ptr::null(),
+            );
+            gl::BindTexture(gl::TEXTURE_2D, 0); //Unbind texture
+        }
+
         //Display
         gfx::set_default_gl_state();
         gfx::clear();
@@ -67,13 +138,17 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         fluid_shader.use_program();
         fluid_shader.uniform_float("timepassed", time_passed);
         fluid_shader.uniform_float("flowspeed", 0.07);
-        chunks_drawn += chunktables
+        chunktables
             .lava_vaos
             .display_with_backface(gamestate, "fluid");
-        fluid_shader.uniform_float("flowspeed", 0.25);
-        chunks_drawn += chunktables
-            .water_vaos
-            .display_with_backface(gamestate, "fluid");
+        gfx::display::display_water(
+            gamestate,
+            &chunktables,
+            water_framebuffer,
+            &water_frame_color,
+            w,
+            h,
+        );
 
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);
@@ -157,6 +232,10 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         dt = (end - start).as_secs_f32().min(1.0);
     }
 
+    unsafe {
+        gl::DeleteFramebuffers(1, &water_framebuffer);
+        gl::DeleteRenderbuffers(1, &depth_rbo);
+    }
     gamestate.save_entire_world();
     gamestate.reset();
     //Clean up

@@ -365,7 +365,7 @@ impl ChunkVaoTable {
         drawn_count
     }
 
-    pub fn display_with_backface(&mut self, gamestate: &Game, shaderid: &str) -> u32 {
+    pub fn display_with_backface(&self, gamestate: &Game, shaderid: &str) -> u32 {
         unsafe {
             gl::Disable(gl::CULL_FACE);
         }

@@ -30,6 +30,9 @@ impl ModelManager {
         //Generate cube model
         let cube = gfx::models::gen_cube_vao();
         self.vaos.insert("cube".to_string(), cube);
+        //Generate 2d quad model
+        let quad2d = gfx::models::gen_quad2d_vao();
+        self.vaos.insert("quad2d".to_string(), quad2d);
     }
 }
 

@@ -17,3 +17,8 @@
 	"vert" = "assets/shaders/vert.glsl";
 	"frag" = "assets/shaders/outlinefrag.glsl";
 }
+
+"quad" {
+	"vert" = "assets/shaders/quadvert.glsl";
+	"frag" = "assets/shaders/quadfrag.glsl";
+}
