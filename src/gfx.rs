@@ -6,7 +6,7 @@ pub mod fluid;
 pub mod frustum;
 pub mod models;
 
-use crate::game::Camera;
+use crate::game::{Camera, Game};
 use buildchunk::{generate_chunk_vertex_data, ChunkData};
 use cgmath::Matrix4;
 pub use chunktable::{update_chunk_vaos, ChunkTables, ChunkVaoTable};
@@ -55,5 +55,17 @@ pub fn set_default_gl_state() {
         gl::Enable(gl::BLEND);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.4, 0.8, 1.0, 1.0);
+    }
+}
+
+pub fn set_nondefault_background_color(gamestate: &Game) {
+    if gamestate.player.head_intersection(&gamestate.world, 12) {
+        unsafe {
+            gl::ClearColor(0.16, 0.41, 0.51, 1.0);
+        }
+    } else if gamestate.player.head_intersection(&gamestate.world, 13) {
+        unsafe {
+            gl::ClearColor(1.0, 0.3, 0.0, 1.0);
+        }
     }
 }

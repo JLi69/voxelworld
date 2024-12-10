@@ -70,7 +70,7 @@ pub fn display_water(
     quadshader.use_program();
     water_frame.bind();
     let quad = gamestate.models.bind("quad2d");
-    quadshader.uniform_float("alpha", 0.8);
+    quadshader.uniform_float("alpha", 0.7);
     draw_elements(quad);
     unsafe {
         gl::Enable(gl::DEPTH_TEST);

@@ -26,10 +26,7 @@ fn add_face_transparent(
         let block = adj_chunk.get_block_relative(adj_x, adj_y, adj_z);
         let show_face = (block.transparent() && block.id != blockid)
             || (block.transparent() && block.id == blockid && !block.can_connect());
-        if out_of_bounds(x, y, z, offx, offy, offz)
-            && block.id != EMPTY_BLOCK
-            && (!show_face || block.is_fluid())
-        {
+        if out_of_bounds(x, y, z, offx, offy, offz) && block.id != EMPTY_BLOCK && !show_face {
             return;
         }
     }
@@ -44,9 +41,7 @@ fn add_face_transparent(
     let block = chunk.get_block_relative(adj_x, adj_y, adj_z);
     let show_face = (block.transparent() && block.id != blockid)
         || (block.transparent() && block.id == blockid && !block.can_connect());
-    if chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK
-        && (!show_face || block.is_fluid())
-    {
+    if chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK && !show_face {
         return;
     }
 

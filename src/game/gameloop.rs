@@ -125,6 +125,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
 
         //Display
         gfx::set_default_gl_state();
+        gfx::set_nondefault_background_color(gamestate);
         gfx::clear();
         //Update perspective matrix
         let persp = gfx::calculate_perspective(window, &gamestate.cam);

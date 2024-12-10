@@ -18,7 +18,11 @@ void main() {
 	float z = float(vertdata.z);
 	uint id = vertdata.w;
 
-	vec4 pos = vec4(x, y, z, 1.0) + vec4(chunkpos.xyz, 0.0);
+	vec4 pos = vec4(x, y, z, 0.0) + vec4(chunkpos.xyz, 1.0);
+	//This is just a quick hack to prevent z-fighting between the
+	//solid blocks and fluid blocks
+	//maybe change later?
+	pos += vec4(0.001, 0.001, 0.001, 0.0);
 	fragpos = pos.xyz;
 	chunkfragpos = vec3(x, y, z);
 	gl_Position = persp * view * pos;
