@@ -136,7 +136,7 @@ impl ChunkVaoTable {
 
                     let chunkdata = gen_verts(chunk, adj_chunks);
                     send_chunk_data_to_vao(&vao, &chunkdata);
-                    vao.vert_count = chunkdata.len() as i32 / 4;
+                    vao.vert_count = chunkdata.len() as i32 / 5;
                     self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), vao);
                 }
             }
@@ -221,7 +221,7 @@ impl ChunkVaoTable {
             let chunkvao = ChunkVao {
                 id: vaos[i],
                 buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
-                vert_count: chunkdata.len() as i32 / 4,
+                vert_count: chunkdata.len() as i32 / 5,
             };
             send_chunk_data_to_vao(&chunkvao, &chunkdata);
             self.vaos
@@ -250,7 +250,7 @@ impl ChunkVaoTable {
 
             let chunk = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
             if let Some(chunk) = chunk {
-                chunk.vert_count = chunkdata.len() as i32 / 4;
+                chunk.vert_count = chunkdata.len() as i32 / 5;
                 send_chunk_data_to_vao(chunk, &chunkdata);
             }
         }
