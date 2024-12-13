@@ -12,6 +12,7 @@ pub const PLAYER_SIZE: f32 = 0.6;
 pub const CAMERA_OFFSET: f32 = 0.7;
 pub const GRAVITY: f32 = 24.0;
 pub const JUMP_FORCE: f32 = 7.5;
+pub const SWIM_SPEED: f32 = JUMP_FORCE / 2.0;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
 pub const SPRINT_AMT: f32 = 1.33;
 const BLOCK_OFFSET: f32 = 0.01;
@@ -28,6 +29,8 @@ pub struct Player {
     //for now this can just function as the player's "selected" block id
     pub selected_block: Block,
     jump_cooldown: f32,
+    prev_swimming: bool,
+    swim_cooldown: f32,
 }
 
 impl Player {
@@ -43,6 +46,8 @@ impl Player {
             rotation: 0.0,
             selected_block: Block::new_id(1),
             jump_cooldown: 0.0,
+            prev_swimming: false,
+            swim_cooldown: 0.0,
         }
     }
 
@@ -54,13 +59,41 @@ impl Player {
 
     //Jump up in the y direction
     pub fn jump(&mut self, jump_key: KeyState) {
-        if self.falling || self.velocity_y != 0.0 || self.jump_cooldown > 0.0 {
+        if self.falling || self.jump_cooldown > 0.0 || self.velocity_y != 0.0 {
             return;
         }
 
         if jump_key == KeyState::Held {
             self.velocity_y = JUMP_FORCE;
             self.falling = true;
+        }
+    }
+
+    //Swim up in the y direction
+    pub fn swim(&mut self, swim_key: KeyState, world: &World) { 
+        let swimming = self.is_intersecting(world, 12) || self.is_intersecting(world, 13);
+        if (!self.can_move_in_x(world) || !self.can_move_in_z(world)) && swimming {
+            if swim_key == KeyState::Held && self.swim_cooldown < 0.0 {
+                self.velocity_y = self.velocity_y.max(0.0);
+                self.velocity_y = SWIM_SPEED;
+                return;
+            }
+        }
+
+        if !self.top_intersecting(world, 12, 0.9) && 
+            !self.top_intersecting(world, 13, 0.9) {
+            return;
+        }
+
+        self.jump_cooldown = JUMP_COOLDOWN; 
+
+        if self.swim_cooldown > 0.0 {
+            return;
+        }
+
+        if swim_key == KeyState::Held {
+            self.velocity_y = self.velocity_y.max(0.0);
+            self.velocity_y = SWIM_SPEED;
         }
     }
 
@@ -171,13 +204,31 @@ impl Player {
     //Translate player object, account for collisions with blocks
     fn translate(&mut self, dt: f32, world: &World) {
         //Move in the xz plane
-        let velocity = self.calculate_velocity();
+        let velocity = if self.is_intersecting(world, 13) { 
+            //Slow down in lava 
+            self.calculate_velocity() * 0.4
+        } else if self.is_intersecting(world, 12) {
+            //Slow down in water
+            self.calculate_velocity() * 0.6
+        } else {
+            self.calculate_velocity()
+        };
+
         let mut dx = if !self.can_move_in_x(world) {
             0.0
         } else {
             velocity.x * dt
         };
+        
         let mut dy = dt * self.velocity_y;
+        if self.is_intersecting(world, 13) { 
+            //Slow down in lava 
+            dy *= 0.4;
+        } else if self.is_intersecting(world, 12) {
+            //Slow down in water
+            dy *= 0.5;
+        }
+        
         let mut dz = if !self.can_move_in_z(world) {
             0.0
         } else {
@@ -220,6 +271,8 @@ impl Player {
     pub fn update(&mut self, dt: f32, world: &World) {
         //Update jump cooldown
         self.jump_cooldown -= dt;
+        //Update swim cooldown
+        self.swim_cooldown -= dt;
 
         //Check if the player was falling in the previous frame
         let falling_prev = self.falling;
@@ -237,6 +290,16 @@ impl Player {
             //We landed on the ground, set the jump cooldown
             self.jump_cooldown = JUMP_COOLDOWN;
         }
+
+        //Check if the player is no longer swimming
+        let swimming = self.top_intersecting(world, 12, 0.95) || 
+            self.top_intersecting(world, 13, 0.95);
+        if !swimming && self.prev_swimming {
+            self.swim_cooldown = 0.4;
+        } else if swimming && !self.prev_swimming {
+            self.swim_cooldown = 0.2;
+        }
+        self.prev_swimming = swimming;
     }
 
     //Calculates the hitbox for the object
@@ -338,7 +401,42 @@ impl Player {
         hit
     }
 
+    //Returns true if the head is intersecting a specified block
     pub fn head_intersection(&self, world: &World, block_id: u8) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        let head_hitbox = Hitbox::new(
+            self.position.x,
+            self.position.y + PLAYER_HEIGHT / 2.0 - 0.2,
+            self.position.z,
+            PLAYER_SIZE,
+            0.4,
+            PLAYER_SIZE,
+        );
+
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=(iy + 2) {
+                for z in (iz - 2)..=(iz + 2) {
+                    if world.get_block(x, y, z).id != block_id {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block(x, y, z); 
+
+                    if block_hitbox.intersects(&head_hitbox) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    //Returns true if the player is intersecting a specific block type
+    pub fn is_intersecting(&self, world: &World, block_id: u8) -> bool {
         let ix = self.position.x.floor() as i32;
         let iy = self.position.y.floor() as i32;
         let iz = self.position.z.floor() as i32;
@@ -350,17 +448,43 @@ impl Player {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z);
-                    let head_hitbox = Hitbox::new(
-                        self.position.x,
-                        self.position.y + PLAYER_HEIGHT / 2.0 - 0.2,
-                        self.position.z,
-                        PLAYER_SIZE,
-                        0.4,
-                        PLAYER_SIZE,
-                    );
+                    let block_hitbox = Hitbox::from_block(x, y, z); 
+                    let hitbox = self.get_hitbox();
 
-                    if block_hitbox.intersects(&head_hitbox) {
+                    if block_hitbox.intersects(&hitbox) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn top_intersecting(&self, world: &World, block_id: u8, fract: f32) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        let hitbox = Hitbox::new(
+            self.position.x,
+            self.position.y + PLAYER_HEIGHT * (1.0 - fract) / 2.0,
+            self.position.z,
+            PLAYER_SIZE,
+            PLAYER_HEIGHT * fract,
+            PLAYER_SIZE,
+        );
+
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=(iy + 2) {
+                for z in (iz - 2)..=(iz + 2) {
+                    if world.get_block(x, y, z).id != block_id {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block(x, y, z); 
+
+                    if block_hitbox.intersects(&hitbox) {
                         return true;
                     }
                 }
@@ -399,6 +523,8 @@ impl Player {
             rotation: entry.get_var("rotation").parse::<f32>().unwrap_or(0.0),
             selected_block: Block::new_id(blockid),
             jump_cooldown: 0.0,
+            prev_swimming: false,
+            swim_cooldown: 0.0,
         }
     }
 }

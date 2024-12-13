@@ -32,8 +32,10 @@ impl Game {
         let d = self.get_key_state(Key::D);
         self.player.strafe(a, d);
         self.player.move_forward(w, s);
-        //Jump
         let space = self.get_key_state(Key::Space);
+        //Swim
+        self.player.swim(space, &self.world); 
+        //Jump
         self.player.jump(space);
         //Select blocks
         self.player.select_block(self.get_key_state(Key::Num1), 1);
