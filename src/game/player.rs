@@ -70,7 +70,7 @@ impl Player {
     }
 
     //Swim up in the y direction
-    pub fn swim(&mut self, swim_key: KeyState, world: &World) { 
+    pub fn swim(&mut self, swim_key: KeyState, world: &World) {
         let swimming = self.is_intersecting(world, 12) || self.is_intersecting(world, 13);
         if (!self.can_move_in_x(world) || !self.can_move_in_z(world)) && swimming {
             if swim_key == KeyState::Held && self.swim_cooldown < 0.0 {
@@ -79,12 +79,11 @@ impl Player {
             }
         }
 
-        if !self.top_intersecting(world, 12, 0.9) && 
-            !self.top_intersecting(world, 13, 0.9) {
+        if !self.top_intersecting(world, 12, 0.9) && !self.top_intersecting(world, 13, 0.9) {
             return;
         }
 
-        self.jump_cooldown = JUMP_COOLDOWN; 
+        self.jump_cooldown = JUMP_COOLDOWN;
 
         if self.swim_cooldown > 0.0 {
             return;
@@ -150,8 +149,8 @@ impl Player {
     }
 
     fn check_y_collision(&mut self, world: &World) {
-        let swimming = self.top_intersecting(world, 12, 0.95) || 
-            self.top_intersecting(world, 13, 0.95);
+        let swimming =
+            self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
         //We lower the player's y position to check if we intersect with any blocks
         if !(swimming && self.velocity_y > 0.0) {
             self.position.y -= 0.02;
@@ -209,8 +208,8 @@ impl Player {
     //Translate player object, account for collisions with blocks
     fn translate(&mut self, dt: f32, world: &World) {
         //Move in the xz plane
-        let velocity = if self.is_intersecting(world, 13) { 
-            //Slow down in lava 
+        let velocity = if self.is_intersecting(world, 13) {
+            //Slow down in lava
             self.calculate_velocity() * 0.4
         } else if self.is_intersecting(world, 12) {
             //Slow down in water
@@ -224,16 +223,16 @@ impl Player {
         } else {
             velocity.x * dt
         };
-        
+
         let mut dy = dt * self.velocity_y;
-        if self.is_intersecting(world, 13) { 
-            //Slow down in lava 
+        if self.is_intersecting(world, 13) {
+            //Slow down in lava
             dy *= 0.4;
         } else if self.is_intersecting(world, 12) {
             //Slow down in water
             dy *= 0.5;
         }
-        
+
         let mut dz = if !self.can_move_in_z(world) {
             0.0
         } else {
@@ -297,8 +296,8 @@ impl Player {
         }
 
         //Check if the player is no longer swimming
-        let swimming = self.top_intersecting(world, 12, 0.95) || 
-            self.top_intersecting(world, 13, 0.95);
+        let swimming =
+            self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
         if !swimming && self.prev_swimming {
             self.swim_cooldown = 0.4;
         } else if swimming && !self.prev_swimming {
@@ -429,7 +428,7 @@ impl Player {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z); 
+                    let block_hitbox = Hitbox::from_block(x, y, z);
 
                     if block_hitbox.intersects(&head_hitbox) {
                         return true;
@@ -454,7 +453,7 @@ impl Player {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z); 
+                    let block_hitbox = Hitbox::from_block(x, y, z);
                     let hitbox = self.get_hitbox();
 
                     if block_hitbox.intersects(&hitbox) {
@@ -488,7 +487,7 @@ impl Player {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z); 
+                    let block_hitbox = Hitbox::from_block(x, y, z);
 
                     if block_hitbox.intersects(&hitbox) {
                         return true;

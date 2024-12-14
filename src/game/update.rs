@@ -32,11 +32,11 @@ impl Game {
         let d = self.get_key_state(Key::D);
         self.player.strafe(a, d);
         self.player.move_forward(w, s);
-        let space = self.get_key_state(Key::Space); 
+        let space = self.get_key_state(Key::Space);
         //Jump
         self.player.jump(space);
         //Swim
-        self.player.swim(space, &self.world); 
+        self.player.swim(space, &self.world);
         //Select blocks
         self.player.select_block(self.get_key_state(Key::Num1), 1);
         self.player.select_block(self.get_key_state(Key::Num2), 2);
