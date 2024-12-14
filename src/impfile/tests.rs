@@ -75,8 +75,8 @@ fn test_entry_to_string() {
         assert_eq!(e.get_name(), entry.get_name());
         for (name, value) in &entry.variables {
             assert!(entry.variables.contains_key(name));
-            assert_eq!(e.get_var(&name), *value);
-            assert_eq!(e.get_var(&name), entry.get_var(&name));
+            assert_eq!(e.get_var(name), *value);
+            assert_eq!(e.get_var(name), entry.get_var(name));
         }
     }
 }
