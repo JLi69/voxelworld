@@ -74,7 +74,6 @@ impl Player {
         let swimming = self.is_intersecting(world, 12) || self.is_intersecting(world, 13);
         if (!self.can_move_in_x(world) || !self.can_move_in_z(world)) && swimming {
             if swim_key == KeyState::Held && self.swim_cooldown < 0.0 {
-                self.velocity_y = self.velocity_y.max(0.0);
                 self.velocity_y = SWIM_SPEED;
                 return;
             }
@@ -151,15 +150,21 @@ impl Player {
     }
 
     fn check_y_collision(&mut self, world: &World) {
+        let swimming = self.top_intersecting(world, 12, 0.95) || 
+            self.top_intersecting(world, 13, 0.95);
         //We lower the player's y position to check if we intersect with any blocks
-        self.position.y -= 0.02;
+        if !(swimming && self.velocity_y > 0.0) {
+            self.position.y -= 0.02;
+        }
         let block_hitbox = self.check_collision(world);
         if let Some(block_hitbox) = block_hitbox {
             self.uncollide_y(&block_hitbox);
         } else {
             self.falling = true;
             //If we don't intersect with anything, reset the y position
-            self.position.y += 0.02;
+            if !(swimming && self.velocity_y > 0.0) {
+                self.position.y += 0.02;
+            }
         }
     }
 
@@ -243,7 +248,7 @@ impl Player {
             let vy = d / dist_remaining * dy;
 
             //Move in the y direction
-            self.position.y += dy;
+            self.position.y += vy;
             self.check_y_collision(world);
 
             //Move in the x direction
@@ -351,7 +356,8 @@ impl Player {
             self.position.y = hitbox.position.y - sy / 2.0;
             self.falling = true;
             self.velocity_y = 0.0;
-            self.position.y -= 0.01;
+            self.position.y -= BLOCK_OFFSET + 0.01;
+            self.swim_cooldown = 0.2;
         } else if self.position.y > hitbox.position.y {
             self.position.y = hitbox.position.y + sy / 2.0;
             //Increase the y position so that we are slightly hovering over
