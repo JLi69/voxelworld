@@ -18,7 +18,10 @@ void main() {
 	float z = float(vertdata.z);
 	uint id = vertdata.w;
 
+	uint level = (data & (7u << 2)) >> 2;
+
 	vec4 pos = vec4(x, y, z, 0.0) + vec4(chunkpos.xyz, 1.0);
+	pos.y -= 1.0 / 8.0 * float(level);
 	//This is just a quick hack to prevent z-fighting between the
 	//solid blocks and fluid blocks
 	//maybe change later?

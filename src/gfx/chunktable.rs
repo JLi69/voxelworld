@@ -103,7 +103,7 @@ impl ChunkVaoTable {
     fn update_chunk(
         &mut self,
         world: &World,
-        gen_verts: fn(&Chunk, [Option<&Chunk>; 6]) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
         let top = self.to_update.pop_front();
         if let Some(pos) = top {
@@ -125,16 +125,7 @@ impl ChunkVaoTable {
 
                 if let Some(chunk) = world.get_chunk(x, y, z) {
                     let chunkpos = chunk.get_chunk_pos();
-                    let adj_chunks = [
-                        world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
-                        world.get_chunk(chunkpos.x, chunkpos.y - 1, chunkpos.z),
-                        world.get_chunk(chunkpos.x - 1, chunkpos.y, chunkpos.z),
-                        world.get_chunk(chunkpos.x + 1, chunkpos.y, chunkpos.z),
-                        world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z - 1),
-                        world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
-                    ];
-
-                    let chunkdata = gen_verts(chunk, adj_chunks);
+                    let chunkdata = gen_verts(chunk, world);
                     send_chunk_data_to_vao(&vao, &chunkdata);
                     vao.vert_count = chunkdata.len() as i32 / 5;
                     self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), vao);
@@ -146,11 +137,11 @@ impl ChunkVaoTable {
     pub fn update_chunks(
         &mut self,
         world: &World,
-        gen_verts: fn(&Chunk, [Option<&Chunk>; 6]) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
         let start = std::time::Instant::now();
         let mut total_time = 0.0;
-        while total_time < 0.01 && !self.to_update.is_empty() {
+        while total_time < 0.002 && !self.to_update.is_empty() {
             self.update_chunk(world, gen_verts);
             let now = std::time::Instant::now();
             total_time = (now - start).as_secs_f32();
@@ -196,7 +187,7 @@ impl ChunkVaoTable {
     pub fn generate_chunk_vaos(
         &mut self,
         world: &World,
-        gen_verts: fn(&Chunk, [Option<&Chunk>; 6]) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
         let mut vaos = vec![0; world.chunks.len()];
         let mut buffers = vec![0; world.chunks.len() * BUF_COUNT];
@@ -208,16 +199,7 @@ impl ChunkVaoTable {
 
         for (i, chunk) in world.chunks.values().enumerate() {
             let chunkpos = chunk.get_chunk_pos();
-            let adj_chunks = [
-                world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
-                world.get_chunk(chunkpos.x, chunkpos.y - 1, chunkpos.z),
-                world.get_chunk(chunkpos.x - 1, chunkpos.y, chunkpos.z),
-                world.get_chunk(chunkpos.x + 1, chunkpos.y, chunkpos.z),
-                world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z - 1),
-                world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
-            ];
-
-            let chunkdata = gen_verts(chunk, adj_chunks);
+            let chunkdata = gen_verts(chunk, world);
             let chunkvao = ChunkVao {
                 id: vaos[i],
                 buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
@@ -234,20 +216,11 @@ impl ChunkVaoTable {
         &mut self,
         chunk: Option<&Chunk>,
         world: &World,
-        gen_verts: fn(&Chunk, [Option<&Chunk>; 6]) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
         if let Some(chunk) = chunk {
             let chunkpos = chunk.get_chunk_pos();
-            let adj_chunks = [
-                world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
-                world.get_chunk(chunkpos.x, chunkpos.y - 1, chunkpos.z),
-                world.get_chunk(chunkpos.x - 1, chunkpos.y, chunkpos.z),
-                world.get_chunk(chunkpos.x + 1, chunkpos.y, chunkpos.z),
-                world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z - 1),
-                world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
-            ];
-            let chunkdata = gen_verts(chunk, adj_chunks);
-
+            let chunkdata = gen_verts(chunk, world);
             let chunk = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
             if let Some(chunk) = chunk {
                 chunk.vert_count = chunkdata.len() as i32 / 5;
@@ -264,7 +237,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, [Option<&Chunk>; 6]) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
         let x = wrap_coord(x % CHUNK_SIZE_I32);
         let y = wrap_coord(y % CHUNK_SIZE_I32);
@@ -296,7 +269,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, [Option<&Chunk>; 6]) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let chunk = world.get_chunk(chunkx, chunky, chunkz);
@@ -415,16 +388,18 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
     if let Some((x, y, z)) = pos {
         chunks
             .chunk_vaos
-            .update_chunk_with_adj(x, y, z, world, generate_chunk_vertex_data);
+            .update_chunk_with_adj(x, y, z, world, |chunk, world| {
+                generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
+            });
         chunks
             .lava_vaos
-            .update_chunk_with_adj(x, y, z, world, |chunk, adj_chunks| {
-                generate_fluid_vertex_data(chunk, adj_chunks, 13)
+            .update_chunk_with_adj(x, y, z, world, |chunk, world| {
+                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
             });
         chunks
             .water_vaos
-            .update_chunk_with_adj(x, y, z, world, |chunk, adj_chunks| {
-                generate_fluid_vertex_data(chunk, adj_chunks, 12)
+            .update_chunk_with_adj(x, y, z, world, |chunk, world| {
+                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
     }
 }
@@ -446,14 +421,16 @@ impl ChunkTables {
 
     pub fn update_tables(&mut self, gamestate: &Game) {
         self.chunk_vaos
-            .update_chunks(&gamestate.world, generate_chunk_vertex_data);
+            .update_chunks(&gamestate.world, |chunk, world| { 
+                generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
+            });
         self.lava_vaos
-            .update_chunks(&gamestate.world, |chunk, adj_chunks| {
-                generate_fluid_vertex_data(chunk, adj_chunks, 13)
+            .update_chunks(&gamestate.world, |chunk, world| {
+                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
             });
         self.water_vaos
-            .update_chunks(&gamestate.world, |chunk, adj_chunks| {
-                generate_fluid_vertex_data(chunk, adj_chunks, 12)
+            .update_chunks(&gamestate.world, |chunk, world| { 
+                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
     }
 

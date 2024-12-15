@@ -17,8 +17,12 @@ fn convert_bytes_to_blocks(block_counts_bytes: &[u8], block_bytes: &[u8]) -> Vec
         let count =
             ((block_counts_bytes[index] as u16) << 8) | block_counts_bytes[index + 1] as u16;
         let id = block_bytes[i];
-        let orientation = block_bytes[i + len];
-        blocks.push((count, Block::new_id_orientation(id, orientation)));
+        let geometry = block_bytes[i + len];
+        let mut block = Block::new_id_orientation(id, geometry);
+        if block.is_fluid() && block.geometry == 0 {
+            block.geometry = 7;
+        }
+        blocks.push((count, block));
     }
 
     blocks

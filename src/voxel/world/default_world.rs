@@ -67,9 +67,9 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
                 }
 
                 if y > BOTTOM_OF_WORLD && y <= LAVA_LEVEL {
-                    chunk.set_block(x, y, z, Block::new_id(13));
+                    chunk.set_block(x, y, z, Block::new_fluid(13));
                 } else if y <= SEA_LEVEL && y > height {
-                    chunk.set_block(x, y, z, Block::new_id(12));
+                    chunk.set_block(x, y, z, Block::new_fluid(12));
                 }
 
                 //Sand

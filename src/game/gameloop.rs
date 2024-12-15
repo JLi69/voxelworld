@@ -19,16 +19,18 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     let mut chunktables = gfx::ChunkTables::new();
     chunktables
         .chunk_vaos
-        .generate_chunk_vaos(&gamestate.world, generate_chunk_vertex_data);
+        .generate_chunk_vaos(&gamestate.world, |chunk, world| {
+            generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
+        });
     chunktables
         .lava_vaos
-        .generate_chunk_vaos(&gamestate.world, |chunk, adj_chunks| {
-            generate_fluid_vertex_data(chunk, adj_chunks, 13)
+        .generate_chunk_vaos(&gamestate.world, |chunk, world| {
+            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
         });
     chunktables
         .water_vaos
-        .generate_chunk_vaos(&gamestate.world, |chunk, adj_chunks| {
-            generate_fluid_vertex_data(chunk, adj_chunks, 12)
+        .generate_chunk_vaos(&gamestate.world, |chunk, world| {
+            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
         });
     //water framebuffer
     let mut water_framebuffer = 0u32;

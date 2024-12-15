@@ -1,6 +1,6 @@
 use super::{ChunkData, Face, FaceInfo, Int3};
 use crate::gfx::face_data::{BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE};
-use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK};
+use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK, CHUNK_SIZE};
 
 fn add_face_fluid(
     chunk: &Chunk,
@@ -10,6 +10,7 @@ fn add_face_fluid(
     vert_data: &mut ChunkData,
     face: &Face,
     face_info: FaceInfo,
+    heights: &[u8],
 ) {
     let (x, y, z) = xyz;
     let (offx, offy, offz) = offset;
@@ -23,11 +24,15 @@ fn add_face_fluid(
     if let Some(adj_chunk) = adj_chunk {
         let block = adj_chunk.get_block_relative(adj_x, adj_y, adj_z);
         let show_face = (block.transparent() && block.id != blockid)
-            || (block.transparent() && block.id == blockid && !block.can_connect());
-        if out_of_bounds(x, y, z, offx, offy, offz) && block.id != EMPTY_BLOCK && !show_face {
+            || (block.transparent() && block.id == blockid && !block.can_connect())
+            || (offy > 0 && block.id != blockid);
+        if out_of_bounds(x, y, z, offx, offy, offz) 
+            && block.id != EMPTY_BLOCK 
+            && !show_face 
+        {
             return;
         }
-    }
+    } 
 
     if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
         return;
@@ -38,7 +43,8 @@ fn add_face_fluid(
     let adj_z = (z + offz) as usize;
     let block = chunk.get_block_relative(adj_x, adj_y, adj_z);
     let show_face = (block.transparent() && block.id != blockid)
-        || (block.transparent() && block.id == blockid && !block.can_connect());
+        || (block.transparent() && block.id == blockid && !block.can_connect())
+        || (offy > 0 && block.id != blockid);
     if block.id != EMPTY_BLOCK && !show_face {
         return;
     }
@@ -51,7 +57,14 @@ fn add_face_fluid(
         vert_data.push(y);
         vert_data.push(z);
         vert_data.push(face_info.block_texture_id);
-        vert_data.push(face_info.face_id);
+        let mut data = face_info.face_id;
+        if face[i * 3 + 1] == 1 {
+            let sz = CHUNK_SIZE + 1;
+            let (ux, uy, uz) = (x as usize, y as usize, z as usize);
+            let level = heights[ux * sz * sz + uy * sz + uz];
+            data |= (8 - level) << 2;
+        }
+        vert_data.push(data);
     }
 }
 
@@ -61,6 +74,7 @@ pub fn add_fluid_vertices(
     adj_chunks: [Option<&Chunk>; 6],
     xyz: Int3,
     vert_data: &mut ChunkData,
+    heights: &[u8],
 ) {
     let (x, y, z) = xyz;
     let blockid = chunk
@@ -75,15 +89,15 @@ pub fn add_fluid_vertices(
     let facez = FaceInfo::new(blockid, 2);
 
     #[rustfmt::skip]
-    add_face_fluid(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey);
+    add_face_fluid(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey, heights);
     #[rustfmt::skip]
-    add_face_fluid(chunk, adj_chunks[1], xyz, (0, -1, 0), vert_data, &BOTTOM_FACE, facey);
+    add_face_fluid(chunk, adj_chunks[1], xyz, (0, -1, 0), vert_data, &BOTTOM_FACE, facey, heights);
     #[rustfmt::skip]
-    add_face_fluid(chunk, adj_chunks[2], xyz, (-1, 0, 0), vert_data, &LEFT_FACE, facex);
+    add_face_fluid(chunk, adj_chunks[2], xyz, (-1, 0, 0), vert_data, &LEFT_FACE, facex, heights);
     #[rustfmt::skip]
-    add_face_fluid(chunk, adj_chunks[3], xyz, (1, 0, 0), vert_data, &RIGHT_FACE, facex);
+    add_face_fluid(chunk, adj_chunks[3], xyz, (1, 0, 0), vert_data, &RIGHT_FACE, facex, heights);
     #[rustfmt::skip]
-    add_face_fluid(chunk, adj_chunks[4], xyz, (0, 0, -1), vert_data, &FRONT_FACE, facez);
+    add_face_fluid(chunk, adj_chunks[4], xyz, (0, 0, -1), vert_data, &FRONT_FACE, facez, heights);
     #[rustfmt::skip]
-    add_face_fluid(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez);
+    add_face_fluid(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez, heights);
 }

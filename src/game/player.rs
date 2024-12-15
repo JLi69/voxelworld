@@ -54,6 +54,9 @@ impl Player {
     pub fn select_block(&mut self, keystate: KeyState, block_id: u8) {
         if keystate.is_held() {
             self.selected_block = Block::new_id(block_id);
+            if self.selected_block.is_fluid() {
+                self.selected_block = Block::new_fluid(block_id);
+            }
         }
     }
 
@@ -520,6 +523,12 @@ impl Player {
         let y = entry.get_var("y").parse::<f32>().unwrap_or(0.0);
         let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0);
         let blockid = entry.get_var("selected_block").parse::<u8>().unwrap_or(0);
+
+        let mut selected = Block::new_id(blockid);
+        if selected.is_fluid() {
+            selected = Block::new_fluid(blockid);
+        }
+
         Self {
             position: Vector3::new(x, y, z),
             dimensions: Vector3::new(PLAYER_SIZE, PLAYER_HEIGHT, PLAYER_SIZE),
@@ -528,7 +537,7 @@ impl Player {
             velocity_y: entry.get_var("velocity_y").parse::<f32>().unwrap_or(0.0),
             speed: DEFAULT_PLAYER_SPEED,
             rotation: entry.get_var("rotation").parse::<f32>().unwrap_or(0.0),
-            selected_block: Block::new_id(blockid),
+            selected_block: selected,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,

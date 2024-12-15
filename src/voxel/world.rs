@@ -210,4 +210,17 @@ impl World {
     pub fn get_seed(&self) -> u32 {
         self.world_seed
     }
+
+    //Returns adjacent chunks
+    pub fn get_adjacent(&self, chunk: &Chunk) -> [Option<&Chunk>; 6] {
+        let pos = chunk.get_chunk_pos();
+        [
+            self.get_chunk(pos.x, pos.y + 1, pos.z),
+            self.get_chunk(pos.x, pos.y - 1, pos.z),
+            self.get_chunk(pos.x - 1, pos.y, pos.z),
+            self.get_chunk(pos.x + 1, pos.y, pos.z),
+            self.get_chunk(pos.x, pos.y, pos.z - 1),
+            self.get_chunk(pos.x, pos.y, pos.z + 1),
+        ]
+    }
 }

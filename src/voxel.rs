@@ -28,7 +28,7 @@ pub struct Block {
     //Block id
     pub id: u8,
     //Represents geometry of the block
-    //For liquid: 7 = surface, 8 = under, 9 = flowing under
+    //For liquid: 7 = still, 8 = flowing under
     //Orientation of the block
     //0 = up (normal)
     //1 = right
@@ -50,6 +50,14 @@ impl Block {
         Self {
             id: blockid,
             geometry: 0,
+        }
+    }
+
+    //Create a new fluid block
+    pub fn new_fluid(blockid: u8) -> Self {
+        Self {
+            id: blockid,
+            geometry: 7,
         }
     }
 

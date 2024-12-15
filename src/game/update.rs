@@ -48,6 +48,8 @@ impl Game {
         self.player.select_block(self.get_key_state(Key::Num8), 9);
         self.player.select_block(self.get_key_state(Key::Num9), 10);
         self.player.select_block(self.get_key_state(Key::Num0), 11);
+        //Temporary, DELETE LATER!
+        self.player.select_block(self.get_key_state(Key::GraveAccent), 12);
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {
