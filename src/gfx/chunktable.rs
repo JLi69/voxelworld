@@ -100,11 +100,7 @@ impl ChunkVaoTable {
         self.to_update.push_back((x, y, z));
     }
 
-    fn update_chunk(
-        &mut self,
-        world: &World,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
-    ) {
+    fn update_chunk(&mut self, world: &World, gen_verts: fn(&Chunk, &World) -> ChunkData) {
         let top = self.to_update.pop_front();
         if let Some(pos) = top {
             let (x, y, z) = pos;
@@ -134,11 +130,7 @@ impl ChunkVaoTable {
         }
     }
 
-    pub fn update_chunks(
-        &mut self,
-        world: &World,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
-    ) {
+    pub fn update_chunks(&mut self, world: &World, gen_verts: fn(&Chunk, &World) -> ChunkData) {
         let start = std::time::Instant::now();
         let mut total_time = 0.0;
         while total_time < 0.002 && !self.to_update.is_empty() {
@@ -421,7 +413,7 @@ impl ChunkTables {
 
     pub fn update_tables(&mut self, gamestate: &Game) {
         self.chunk_vaos
-            .update_chunks(&gamestate.world, |chunk, world| { 
+            .update_chunks(&gamestate.world, |chunk, world| {
                 generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
             });
         self.lava_vaos
@@ -429,7 +421,7 @@ impl ChunkTables {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
             });
         self.water_vaos
-            .update_chunks(&gamestate.world, |chunk, world| { 
+            .update_chunks(&gamestate.world, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
     }

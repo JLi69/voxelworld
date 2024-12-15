@@ -1,12 +1,9 @@
 use super::{buildchunk::add_block_vertices_fluid, ChunkData};
-use crate::voxel::{Chunk, CHUNK_SIZE_I32, World, CHUNK_SIZE, Block, world_to_chunk_position, ChunkPos};
+use crate::voxel::{
+    world_to_chunk_position, Block, Chunk, ChunkPos, World, CHUNK_SIZE, CHUNK_SIZE_I32,
+};
 
-const OFFSETS: [(i32, i32, i32); 4] = [ 
-    (0, -1, 0),
-    (-1, -1, 0),
-    (0, -1, -1),
-    (-1, -1, -1) 
-];
+const OFFSETS: [(i32, i32, i32); 4] = [(0, -1, 0), (-1, -1, 0), (0, -1, -1), (-1, -1, -1)];
 
 fn get_block(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>]) -> Block {
     let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
@@ -18,7 +15,7 @@ fn get_block(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>]) -> Block {
     let translated = ChunkPos::new(
         chunkx - center.x + 1,
         chunky - center.y + 1,
-        chunkz - center.z + 1
+        chunkz - center.z + 1,
     );
     let index = translated.x * 9 + translated.y * 3 + translated.z;
     if index < 0 || index >= chunks.len() as i32 {
@@ -36,7 +33,7 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
     let mut total = 0;
     let mut count = 0;
 
-    for offset in OFFSETS { 
+    for offset in OFFSETS {
         let (dx, dy, dz) = offset;
         let block = get_block(x + dx, y + dy + 1, z + dz, chunks);
         if block.id == voxel_id {
@@ -49,7 +46,7 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
         let block = get_block(x + dx, y + dy, z + dz, chunks);
         if block.id != voxel_id {
             continue;
-        }  
+        }
         if block.geometry == 7 {
             return 7;
         }
@@ -65,13 +62,9 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
 }
 
 //Get vertex level offsets
-fn generate_vertex_heights(
-    chunk: &Chunk,
-    world: &World,
-    voxel_id: u8
-) -> Vec<u8> {
+fn generate_vertex_heights(chunk: &Chunk, world: &World, voxel_id: u8) -> Vec<u8> {
     let pos = chunk.get_chunk_pos();
-    let mut chunks = [ None; 27 ];
+    let mut chunks = [None; 27];
     for i in 0..27i32 {
         let x = i / 9 - 1;
         let y = (i / 3) % 3 - 1;

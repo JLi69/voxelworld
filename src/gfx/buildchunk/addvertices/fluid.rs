@@ -1,6 +1,6 @@
 use super::{ChunkData, Face, FaceInfo, Int3};
 use crate::gfx::face_data::{BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE};
-use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK, CHUNK_SIZE};
+use crate::voxel::{out_of_bounds, wrap_coord, Chunk, CHUNK_SIZE, EMPTY_BLOCK};
 
 fn add_face_fluid(
     chunk: &Chunk,
@@ -26,13 +26,10 @@ fn add_face_fluid(
         let show_face = (block.transparent() && block.id != blockid)
             || (block.transparent() && block.id == blockid && !block.can_connect())
             || (offy > 0 && block.id != blockid);
-        if out_of_bounds(x, y, z, offx, offy, offz) 
-            && block.id != EMPTY_BLOCK 
-            && !show_face 
-        {
+        if out_of_bounds(x, y, z, offx, offy, offz) && block.id != EMPTY_BLOCK && !show_face {
             return;
         }
-    } 
+    }
 
     if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
         return;

@@ -1,9 +1,9 @@
 mod addvertices;
 
+use self::addvertices::add_fluid_vertices;
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
 use addvertices::add_block_vertices_trans;
 use addvertices::{add_block_vertices_default, add_block_vertices_grass, add_block_vertices_log};
-use self::addvertices::add_fluid_vertices;
 
 pub type Int3 = (i32, i32, i32);
 
@@ -76,7 +76,7 @@ pub fn add_block_vertices_fluid(
     adj_chunks: [Option<&Chunk>; 6],
     xyz: Int3,
     vert_data: &mut ChunkData,
-    heights: &[u8]
+    heights: &[u8],
 ) {
     let (x, y, z) = xyz;
     if !chunk
@@ -88,7 +88,6 @@ pub fn add_block_vertices_fluid(
 
     add_fluid_vertices(chunk, adj_chunks, xyz, vert_data, heights);
 }
-
 
 /*
  * Each vertex is formatted the following way:
