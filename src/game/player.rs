@@ -157,16 +157,15 @@ impl Player {
         let swimming =
             self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
         //We lower the player's y position to check if we intersect with any blocks
-        if !(swimming && self.velocity_y > 0.0) {
+        if !(swimming && self.velocity_y > 0.0) || self.velocity_y > 0.0 {
             self.position.y -= 0.02;
         }
-        let block_hitbox = self.check_collision(world);
-        if let Some(block_hitbox) = block_hitbox {
+        if let Some(block_hitbox) = self.check_collision(world) {
             self.uncollide_y(&block_hitbox);
         } else {
             self.falling = true;
             //If we don't intersect with anything, reset the y position
-            if !(swimming && self.velocity_y > 0.0) {
+            if !(swimming && self.velocity_y > 0.0) || self.velocity_y > 0.0 {
                 self.position.y += 0.02;
             }
         }
@@ -254,6 +253,9 @@ impl Player {
             //Move in the y direction
             self.position.y += vy;
             self.check_y_collision(world);
+            while let Some(hitbox) = self.check_collision(world) {
+                self.uncollide_y(&hitbox);
+            }
 
             //Move in the x direction
             self.position.x += vx;
@@ -360,7 +362,7 @@ impl Player {
             self.position.y = hitbox.position.y - sy / 2.0;
             self.falling = true;
             self.velocity_y = 0.0;
-            self.position.y -= BLOCK_OFFSET + 0.01;
+            self.position.y -= 0.01;
             self.swim_cooldown = 0.2;
         } else if self.position.y > hitbox.position.y {
             self.position.y = hitbox.position.y + sy / 2.0;
