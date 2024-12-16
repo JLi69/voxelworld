@@ -241,21 +241,15 @@ impl ChunkVaoTable {
                         continue;
                     }
 
-                    if dx == -1 && x != 0 {
-                        continue;
-                    } else if dx == 1 && x != CHUNK_SIZE_I32 - 1 {
+                    if (dx == -1 && x != 0) || (dx == 1 && x != CHUNK_SIZE_I32 - 1) {
                         continue;
                     }
 
-                    if dy == -1 && y != 0 {
-                        continue;
-                    } else if dy == 1 && y != CHUNK_SIZE_I32 - 1 {
+                    if (dy == -1 && y != 0) || (dy == 1 && y != CHUNK_SIZE_I32 - 1) {
                         continue;
                     }
 
-                    if dz == -1 && z != 0 {
-                        continue;
-                    } else if dz == 1 && z != CHUNK_SIZE_I32 - 1 {
+                    if (dz == -1 && z != 0) || (dz == 1 && z != CHUNK_SIZE_I32 - 1) {
                         continue;
                     }
 
