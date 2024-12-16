@@ -224,33 +224,45 @@ impl ChunkVaoTable {
     //Update any adjacent chunks that might also be affected by a block update
     fn update_adjacent(
         &mut self,
-        adj_chunks: &[Option<&Chunk>; 6],
         x: i32,
         y: i32,
         z: i32,
         world: &World,
         gen_verts: fn(&Chunk, &World) -> ChunkData,
     ) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let x = wrap_coord(x % CHUNK_SIZE_I32);
         let y = wrap_coord(y % CHUNK_SIZE_I32);
         let z = wrap_coord(z % CHUNK_SIZE_I32);
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    if dx == 0 && dy == 0 && dz == 0 {
+                        continue;
+                    }
 
-        if x == CHUNK_SIZE_I32 - 1 {
-            self.update_chunk_vao(adj_chunks[3], world, gen_verts);
-        } else if x == 0 {
-            self.update_chunk_vao(adj_chunks[2], world, gen_verts);
-        }
+                    if dx == -1 && x != 0 {
+                        continue;
+                    } else if dx == 1 && x != CHUNK_SIZE_I32 - 1 {
+                        continue;
+                    }
 
-        if y == CHUNK_SIZE_I32 - 1 {
-            self.update_chunk_vao(adj_chunks[0], world, gen_verts);
-        } else if y == 0 {
-            self.update_chunk_vao(adj_chunks[1], world, gen_verts);
-        }
+                    if dy == -1 && y != 0 {
+                        continue;
+                    } else if dy == 1 && y != CHUNK_SIZE_I32 - 1 {
+                        continue;
+                    }
 
-        if z == CHUNK_SIZE_I32 - 1 {
-            self.update_chunk_vao(adj_chunks[5], world, gen_verts);
-        } else if z == 0 {
-            self.update_chunk_vao(adj_chunks[4], world, gen_verts);
+                    if dz == -1 && z != 0 {
+                        continue;
+                    } else if dz == 1 && z != CHUNK_SIZE_I32 - 1 {
+                        continue;
+                    }
+
+                    let chunk = world.get_chunk(chunkx + dx, chunky + dy, chunkz + dz);
+                    self.update_chunk_vao(chunk, world, gen_verts);
+                }
+            }
         }
     }
 
@@ -265,19 +277,9 @@ impl ChunkVaoTable {
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let chunk = world.get_chunk(chunkx, chunky, chunkz);
-        if let Some(chunk) = chunk {
-            let chunkpos = chunk.get_chunk_pos();
-            let adj_chunks = [
-                world.get_chunk(chunkpos.x, chunkpos.y + 1, chunkpos.z),
-                world.get_chunk(chunkpos.x, chunkpos.y - 1, chunkpos.z),
-                world.get_chunk(chunkpos.x - 1, chunkpos.y, chunkpos.z),
-                world.get_chunk(chunkpos.x + 1, chunkpos.y, chunkpos.z),
-                world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z - 1),
-                world.get_chunk(chunkpos.x, chunkpos.y, chunkpos.z + 1),
-            ];
-
-            self.update_chunk_vao(world.get_chunk(chunkx, chunky, chunkz), world, gen_verts);
-            self.update_adjacent(&adj_chunks, x, y, z, world, gen_verts);
+        self.update_chunk_vao(chunk, world, gen_verts);
+        if chunk.is_some() {
+            self.update_adjacent(x, y, z, world, gen_verts);
         }
     }
 
