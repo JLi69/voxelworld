@@ -36,7 +36,8 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
     for offset in OFFSETS {
         let (dx, dy, dz) = offset;
         let block = get_block(x + dx, y + dy + 1, z + dz, chunks);
-        if block.id == voxel_id {
+        let underblock = get_block(x + dx, y + dy, z + dz, chunks);
+        if block.id == voxel_id && underblock.id == block.id {
             return 8;
         }
     }

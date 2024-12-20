@@ -12,7 +12,7 @@ fn add_water_tile(
     z: i32,
     level: u8,
     to_update: &mut UpdateList,
-    world: &mut World,
+    world: &World,
 ) {
     let mut water = Block::new_fluid(12);
     water.geometry = level;
@@ -44,7 +44,7 @@ fn add_water_tile(
 }
 
 //Returns true if updated
-fn update_fluid(world: &mut World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
     const ADJ: [(i32, i32, i32); 4] = [ 
         (1, 0, 0),
         (0, 0, 1),
@@ -53,6 +53,7 @@ fn update_fluid(world: &mut World, x: i32, y: i32, z: i32, to_update: &mut Updat
     ];
 
     let block = world.get_block(x, y, z);
+    let below = world.get_block(x, y - 1, z);
     let level = block.geometry.min(7);
 
     //Check for adjacent tiles and see if they allow for this block to exist
@@ -84,7 +85,9 @@ fn update_fluid(world: &mut World, x: i32, y: i32, z: i32, to_update: &mut Updat
             }
         }
 
-        if maxval == 7 && count > 1 { 
+        if maxval > 1 && (below.id == EMPTY_BLOCK || below.id == block.id) { 
+            add_water_tile(x, y, z, 1, to_update, world);
+        } else if maxval == 7 && count > 1 { 
             add_water_tile(x, y, z, 7, to_update, world);
             return;
         } else if next_to_fall && maxval < 7 {
@@ -103,7 +106,6 @@ fn update_fluid(world: &mut World, x: i32, y: i32, z: i32, to_update: &mut Updat
     }
 
     //Flow down
-    let below = world.get_block(x, y - 1, z);
     if (below.id == EMPTY_BLOCK || below.id == block.id) && level > 0 {
         if below.geometry != 7 {
             add_water_tile(x, y - 1, z, 8, to_update, world);
