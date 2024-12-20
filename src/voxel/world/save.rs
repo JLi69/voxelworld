@@ -113,6 +113,7 @@ impl World {
             world_seed: seed,
             gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")),
             path: world_dir_path.to_string(),
+            block_update_timer: 0.0,
         }
     }
 

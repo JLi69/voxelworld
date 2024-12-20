@@ -74,29 +74,19 @@ pub fn update_chunk_vao_table(
     for (chunkx, chunky, chunkz) in to_generate {
         let (x, y, z) = (*chunkx, *chunky, *chunkz);
 
-        if chunks.contains_key(&(x + 1, y, z)) {
-            chunktable.add_to_update(x + 1, y, z);
-        }
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    if dx == 0 && dy == 0 && dz == 0 {
+                        continue;
+                    }
 
-        if chunks.contains_key(&(x - 1, y, z)) {
-            chunktable.add_to_update(x - 1, y, z);
-        }
-
-        if chunks.contains_key(&(x, y + 1, z)) {
-            chunktable.add_to_update(x, y + 1, z);
-        }
-
-        if chunks.contains_key(&(x, y - 1, z)) {
-            chunktable.add_to_update(x, y - 1, z);
-        }
-
-        if chunks.contains_key(&(x, y, z + 1)) {
-            chunktable.add_to_update(x, y, z + 1);
-        }
-
-        if chunks.contains_key(&(x, y, z - 1)) {
-            chunktable.add_to_update(x, y, z - 1);
-        }
+                    if chunks.contains_key(&(x + dx, y + dy, z + dz)) {
+                        chunktable.add_to_update(x + dx, y + dy, z + dz);
+                    }
+                }
+            }
+        } 
     }
 }
 

@@ -233,10 +233,11 @@ pub fn place_block(
     }
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
     if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
+        let prev_block = world.get_block(ix, iy, iz);
         world.set_block(ix, iy, iz, block);
         let block_hitbox = Hitbox::from_block(ix, iy, iz);
-        if player.get_hitbox().intersects(&block_hitbox) {
-            world.set_block(ix, iy, iz, Block::new_id(0));
+        if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
+            world.set_block(ix, iy, iz, prev_block);
             return None;
         }
         return Some((ix, iy, iz));

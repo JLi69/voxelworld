@@ -2,6 +2,7 @@ mod default_world;
 mod flat_world;
 mod gen_more;
 mod save;
+mod block_update;
 
 use super::{world_to_chunk_position, Block, Chunk};
 use crate::gfx::ChunkTables;
@@ -59,6 +60,8 @@ pub struct World {
     pub gen_type: WorldGenType,
     //World path
     pub path: String,
+    //Block update timer
+    block_update_timer: f32,
 }
 
 impl World {
@@ -76,6 +79,7 @@ impl World {
             gen_type: WorldGenType::DefaultGen,
             world_seed: 0,
             path: String::new(),
+            block_update_timer: 0.0,
         }
     }
 
@@ -103,6 +107,7 @@ impl World {
             gen_type: generation,
             world_seed: seed,
             path: String::new(),
+            block_update_timer: 0.0,
         }
     }
 

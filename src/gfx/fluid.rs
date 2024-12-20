@@ -1,6 +1,6 @@
 use super::{buildchunk::add_block_vertices_fluid, ChunkData};
 use crate::voxel::{
-    world_to_chunk_position, Block, Chunk, ChunkPos, World, CHUNK_SIZE, CHUNK_SIZE_I32,
+    world_to_chunk_position, Block, Chunk, ChunkPos, World, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 
 const OFFSETS: [(i32, i32, i32); 4] = [(0, -1, 0), (-1, -1, 0), (0, -1, -1), (-1, -1, -1)];
@@ -44,7 +44,7 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
     for offset in OFFSETS {
         let (dx, dy, dz) = offset;
         let block = get_block(x + dx, y + dy, z + dz, chunks);
-        if block.id != voxel_id {
+        if block.id != voxel_id && block.id != EMPTY_BLOCK {
             continue;
         }
         if block.geometry == 7 {
@@ -58,7 +58,7 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
         return 0;
     }
 
-    (total / count + 1).min(7)
+    (total / count).clamp(1, 7)
 }
 
 //Get vertex level offsets

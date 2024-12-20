@@ -187,6 +187,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             //Destroy and place blocks
             gamestate.build(&mut chunktables);
             gamestate.update_build_cooldown(dt);
+            //Update blocks
+            gamestate.world.update_blocks(dt, &mut chunktables, 1);
         }
         //Generate new chunks
         gamestate.world.check_for_cache_clear();

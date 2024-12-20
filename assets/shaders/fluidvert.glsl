@@ -28,6 +28,7 @@ void main() {
 	pos += vec4(0.001, 0.001, 0.001, 0.0);
 	fragpos = pos.xyz;
 	chunkfragpos = vec3(x, y, z);
+	chunkfragpos.y -= 1.0 / 8.0 * float(level);
 	gl_Position = persp * view * pos;
 	blockid = id;
 	faceid = data & 3u;
