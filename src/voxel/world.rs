@@ -1,8 +1,8 @@
+mod block_update;
 mod default_world;
 mod flat_world;
 mod gen_more;
 mod save;
-mod block_update;
 
 use super::{world_to_chunk_position, Block, Chunk};
 use crate::gfx::ChunkTables;

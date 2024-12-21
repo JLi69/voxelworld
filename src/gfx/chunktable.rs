@@ -423,15 +423,18 @@ impl ChunkTables {
     }
 
     pub fn update_table(&mut self, world: &World, x: i32, y: i32, z: i32) {
-        self.chunk_vaos.update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
-            generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
-        });
-        self.lava_vaos.update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
-            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
-        });
-        self.water_vaos.update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
-            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
-        });
+        self.chunk_vaos
+            .update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
+                generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
+            });
+        self.lava_vaos
+            .update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
+                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
+            });
+        self.water_vaos
+            .update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
+                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
+            });
     }
 
     pub fn clear(&mut self) {

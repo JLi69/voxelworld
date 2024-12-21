@@ -86,7 +86,7 @@ pub fn update_chunk_vao_table(
                     }
                 }
             }
-        } 
+        }
     }
 }
 
