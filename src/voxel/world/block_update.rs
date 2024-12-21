@@ -87,11 +87,9 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
             add_water_tile(x, y, z, maxval - 1, to_update);
             return;
         }
-    } else if block.geometry == 8 {
-        if world.get_block(x, y + 1, z).id != block.id {
-            add_water_tile(x, y, z, 6, to_update);
-            return;
-        }
+    } else if block.geometry == 8 && world.get_block(x, y + 1, z).id != block.id {
+        add_water_tile(x, y, z, 6, to_update);
+        return;
     }
 
     //Flow down

@@ -33,13 +33,23 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
     let mut total = 0;
     let mut count = 0;
 
+    let mut water_adjacent = false;
     for offset in OFFSETS {
         let (dx, dy, dz) = offset;
         let block = get_block(x + dx, y + dy + 1, z + dz, chunks);
         let underblock = get_block(x + dx, y + dy, z + dz, chunks);
+
+        if underblock.id == voxel_id || underblock.id == 0 {
+            water_adjacent = true;
+        }
+
         if block.id == voxel_id && underblock.id == block.id {
             return 8;
         }
+    }
+
+    if !water_adjacent {
+        return 0;
     }
 
     for offset in OFFSETS {
@@ -64,6 +74,11 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
 
 //Get vertex level offsets
 fn generate_vertex_heights(chunk: &Chunk, world: &World, voxel_id: u8) -> Vec<u8> {
+    let sz = CHUNK_SIZE + 1;
+    if chunk.is_empty() {
+        return vec![0; sz * sz * sz];
+    }
+
     let pos = chunk.get_chunk_pos();
     let mut chunks = [None; 27];
     for i in 0..27i32 {
@@ -72,13 +87,12 @@ fn generate_vertex_heights(chunk: &Chunk, world: &World, voxel_id: u8) -> Vec<u8
         let z = i % 3 - 1;
         chunks[i as usize] = world.get_chunk(x + pos.x, y + pos.y, z + pos.z);
     }
-
-    let sz = CHUNK_SIZE + 1;
+ 
+    let chunkpos = chunk.get_chunk_pos();
     let mut vertex_heights = Vec::with_capacity(sz * sz * sz);
     for x in 0..=CHUNK_SIZE_I32 {
         for y in 0..=CHUNK_SIZE_I32 {
             for z in 0..=CHUNK_SIZE_I32 {
-                let chunkpos = chunk.get_chunk_pos();
                 let ix = x + chunkpos.x * CHUNK_SIZE_I32;
                 let iy = y + chunkpos.y * CHUNK_SIZE_I32;
                 let iz = z + chunkpos.z * CHUNK_SIZE_I32;
