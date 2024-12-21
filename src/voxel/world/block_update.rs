@@ -12,7 +12,6 @@ fn add_water_tile(
     z: i32,
     level: u8,
     to_update: &mut UpdateList,
-    world: &World,
 ) {
     let mut water = Block::new_fluid(12);
     water.geometry = level;
@@ -34,12 +33,6 @@ fn add_water_tile(
             to_update.insert((x, y, z), Block::new()); 
         }
         to_update.insert((x, y, z), water);
-    }
-
-    if let Some(tile) = to_update.get(&(x, y, z)) {
-        if world.get_block(x, y, z) == *tile {
-            to_update.remove(&(x, y, z));
-        }
     }
 }
 
@@ -68,11 +61,12 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
                 continue;
             }
 
-            if block2.geometry == 8 {
-                let underblock = world.get_block(posx, posy - 1, posz);
-                if underblock.id == EMPTY_BLOCK || underblock.id == block.id {
-                    continue;
-                }
+            let underblock = world.get_block(posx, posy - 1, posz);
+            if (underblock.id == EMPTY_BLOCK || underblock.id == block.id) && block2.geometry != 7 {
+                continue;
+            }
+
+            if block2.geometry == 8 { 
                 next_to_fall = true;
                 continue;
             }
@@ -86,21 +80,24 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
         }
 
         if maxval > 1 && (below.id == EMPTY_BLOCK || below.id == block.id) { 
-            add_water_tile(x, y, z, 1, to_update, world);
+            add_water_tile(x, y, z, 1, to_update);
+            add_water_tile(x, y - 1, z, 8, to_update);
+            return;
         } else if maxval == 7 && count > 1 { 
-            add_water_tile(x, y, z, 7, to_update, world);
+            add_water_tile(x, y, z, 7, to_update);
             return;
         } else if next_to_fall && maxval < 7 {
-            add_water_tile(x, y, z, 6, to_update, world);
-        } else if maxval == 0 {
-            add_water_tile(x, y, z, 0, to_update, world);
+            add_water_tile(x, y, z, 6, to_update);
+        } else if maxval <= 1 {
+            add_water_tile(x, y, z, 0, to_update);
+            return;
         } else if maxval <= level {
-            add_water_tile(x, y, z, maxval - 1, to_update, world);
+            add_water_tile(x, y, z, maxval - 1, to_update);
             return;
         } 
     } else if block.geometry == 8 {
         if world.get_block(x, y + 1, z).id != block.id { 
-            add_water_tile(x, y, z, 0, to_update, world);
+            add_water_tile(x, y, z, 6, to_update);
             return;
         }
     }
@@ -108,9 +105,9 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     //Flow down
     if (below.id == EMPTY_BLOCK || below.id == block.id) && level > 0 {
         if below.geometry != 7 {
-            add_water_tile(x, y - 1, z, 8, to_update, world);
+            add_water_tile(x, y - 1, z, 8, to_update);
         }
-        if block.geometry == 8 || block.geometry < 7 {
+        if block.geometry != 7 {
             return;
         }
     }
@@ -125,7 +122,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
         let adjacent = world.get_block(posx, posy, posz);
         if adjacent.id == EMPTY_BLOCK  || (adjacent.id == block.id && adjacent.geometry < block.geometry - 1) {
             let underblock = world.get_block(posx, posy - 1, posz); 
-            let level = if underblock.id == block.id || underblock.id == EMPTY_BLOCK {
+            let blocklevel = if underblock.id == block.id || underblock.id == EMPTY_BLOCK {
                 1.min(level)
             } else if level <= 7 {
                 level - 1
@@ -137,7 +134,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
                 continue;
             }
 
-            add_water_tile(posx, posy, posz, level, to_update, world);
+            add_water_tile(posx, posy, posz, blocklevel, to_update);
         }
     } 
 }
@@ -187,6 +184,10 @@ impl World {
         }
 
         for ((x, y, z), block) in to_update {
+            if self.get_block(x, y, z) == block {
+                continue;
+            }
+
             let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
             let ix = wrap_coord(x);
             let iy = wrap_coord(y);
