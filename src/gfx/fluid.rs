@@ -72,38 +72,6 @@ fn get_vertex_height(x: i32, y: i32, z: i32, chunks: &[Option<&Chunk>], voxel_id
     (total / count).clamp(1, 7)
 }
 
-//Get vertex level offsets
-fn generate_vertex_heights(chunk: &Chunk, world: &World, voxel_id: u8) -> Vec<u8> {
-    let sz = CHUNK_SIZE + 1;
-    if chunk.is_empty() {
-        return vec![0; sz * sz * sz];
-    }
-
-    let pos = chunk.get_chunk_pos();
-    let mut chunks = [None; 27];
-    for i in 0..27i32 {
-        let x = i / 9 - 1;
-        let y = (i / 3) % 3 - 1;
-        let z = i % 3 - 1;
-        chunks[i as usize] = world.get_chunk(x + pos.x, y + pos.y, z + pos.z);
-    }
- 
-    let chunkpos = chunk.get_chunk_pos();
-    let mut vertex_heights = Vec::with_capacity(sz * sz * sz);
-    for x in 0..=CHUNK_SIZE_I32 {
-        for y in 0..=CHUNK_SIZE_I32 {
-            for z in 0..=CHUNK_SIZE_I32 {
-                let ix = x + chunkpos.x * CHUNK_SIZE_I32;
-                let iy = y + chunkpos.y * CHUNK_SIZE_I32;
-                let iz = z + chunkpos.z * CHUNK_SIZE_I32;
-                let height = get_vertex_height(ix, iy, iz, &chunks, voxel_id);
-                vertex_heights.push(height)
-            }
-        }
-    }
-    vertex_heights
-}
-
 //Create mesh for fluids (water, lava)
 pub fn generate_fluid_vertex_data(
     chunk: &Chunk,
@@ -112,7 +80,6 @@ pub fn generate_fluid_vertex_data(
     voxel_id: u8,
 ) -> ChunkData {
     let mut chunk_vert_data = vec![];
-    let heights = generate_vertex_heights(chunk, world, voxel_id);
 
     for x in 0..CHUNK_SIZE_I32 {
         for y in 0..CHUNK_SIZE_I32 {
@@ -123,7 +90,41 @@ pub fn generate_fluid_vertex_data(
                 }
 
                 let pos = (x, y, z);
-                add_block_vertices_fluid(chunk, adj_chunks, pos, &mut chunk_vert_data, &heights);
+                add_block_vertices_fluid(chunk, adj_chunks, pos, &mut chunk_vert_data);
+            }
+        }
+    }
+
+    let pos = chunk.get_chunk_pos();
+    let mut chunks = [None; 27];
+    for i in 0..27i32 {
+        let x = i / 9 - 1;
+        let y = (i / 3) % 3 - 1;
+        let z = i % 3 - 1;
+        chunks[i as usize] = world.get_chunk(x + pos.x, y + pos.y, z + pos.z);
+    }
+
+    //Generate heights
+    const SZ: usize = CHUNK_SIZE + 1;
+    let mut heights = [0u8; SZ * SZ * SZ];
+    for i in 0..(chunk_vert_data.len() / 5) {
+        let index = i * 5;
+        let data = chunk_vert_data[index + 4];
+        if (data & (7 << 2)) != 0 {
+            let x = chunk_vert_data[index] as i32 + pos.x * CHUNK_SIZE_I32;
+            let y = chunk_vert_data[index + 1] as i32 + pos.y * CHUNK_SIZE_I32;
+            let z = chunk_vert_data[index + 2] as i32 + pos.z * CHUNK_SIZE_I32;
+            let ux = chunk_vert_data[index] as usize;
+            let uy = chunk_vert_data[index + 1] as usize;
+            let uz = chunk_vert_data[index + 2] as usize;
+            let height_index = ux * SZ * SZ + uy * SZ + uz;
+            if heights[height_index] == 0 {
+                heights[height_index] = get_vertex_height(x, y, z, &chunks, voxel_id);
+                chunk_vert_data[index + 4] &= !(7 << 2);
+                chunk_vert_data[index + 4] |= (8 - heights[height_index]) << 2;
+            } else {
+                chunk_vert_data[index + 4] &= !(7 << 2);
+                chunk_vert_data[index + 4] |= (8 - heights[height_index]) << 2;
             }
         }
     }
