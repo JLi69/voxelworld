@@ -91,6 +91,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     //Initialize egui input state
     let mut input_state = gui::init_egui_input_state(window);
 
+    gamestate.world.update_all_chunks();
     //Main loop
     let mut dt = 0.0f32;
     let mut fps_timer = 0.0;

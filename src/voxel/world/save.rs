@@ -3,7 +3,7 @@ use crate::{
     impfile::{self, Entry},
     voxel::Chunk,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::{fs::File, io::Write};
 
 fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
@@ -114,6 +114,7 @@ impl World {
             gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")),
             path: world_dir_path.to_string(),
             block_update_timer: 0.0,
+            updating: HashSet::new(),
         }
     }
 

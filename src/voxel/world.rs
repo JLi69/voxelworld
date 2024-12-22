@@ -4,11 +4,11 @@ mod flat_world;
 mod gen_more;
 mod save;
 
-use super::{world_to_chunk_position, Block, Chunk};
+use super::{world_to_chunk_position, Block, Chunk, wrap_coord, CHUNK_SIZE_I32};
 use crate::gfx::ChunkTables;
 use cgmath::Vector3;
 use noise::{Fbm, Perlin};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub const OCTAVES: usize = 5;
 pub const PERSISTENCE: f64 = 0.47;
@@ -62,6 +62,8 @@ pub struct World {
     pub path: String,
     //Block update timer
     block_update_timer: f32,
+    //Updating chunks
+    updating: HashSet<(i32, i32, i32)>,
 }
 
 impl World {
@@ -80,6 +82,7 @@ impl World {
             world_seed: 0,
             path: String::new(),
             block_update_timer: 0.0,
+            updating: HashSet::new(),
         }
     }
 
@@ -108,6 +111,7 @@ impl World {
             world_seed: seed,
             path: String::new(),
             block_update_timer: 0.0,
+            updating: HashSet::new(),
         }
     }
 
@@ -130,6 +134,30 @@ impl World {
     //does nothing if the position is out of range for the world
     pub fn set_block(&mut self, x: i32, y: i32, z: i32, block: Block) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+
+        let ix = wrap_coord(x);
+        let iy = wrap_coord(y);
+        let iz = wrap_coord(z);
+        for dx in -1..=1 {
+            for dy in -1..=1 {
+                for dz in -1..=1 {
+                    if (dx == -1 && ix != 0) || (dx == 1 && ix != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    if (dy == -1 && iy != 0) || (dy == 1 && iy != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    if (dz == -1 && iz != 0) || (dz == 1 && iz != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    self.updating.insert((chunkx + dx, chunky + dy, chunkz + dz));
+                }
+            }
+        }
+
         let chunk = self.get_mut_chunk(chunkx, chunky, chunkz);
         if let Some(chunk) = chunk {
             chunk.set_block(x, y, z, block);

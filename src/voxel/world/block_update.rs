@@ -164,10 +164,16 @@ impl World {
         for x in (self.centerx - chunk_sim_dist)..=(self.centerx + chunk_sim_dist) {
             for y in (self.centery - chunk_sim_dist)..=(self.centery + chunk_sim_dist) {
                 for z in (self.centerz - chunk_sim_dist)..=(self.centerz + chunk_sim_dist) {
+                    if !self.updating.contains(&(x, y, z)) {
+                        continue;
+                    }
+
                     self.update_chunk(x, y, z, &mut to_update);
                 }
             }
         }
+
+        self.updating.clear();
 
         for ((x, y, z), block) in to_update {
             if self.get_block(x, y, z) == block {
@@ -202,6 +208,13 @@ impl World {
 
         for (x, y, z) in update_mesh {
             chunktables.update_table(self, x, y, z);
+        }
+    }
+
+    //Add all chunks to the updating list
+    pub fn update_all_chunks(&mut self) {
+        for chunkpos in self.chunks.keys() {
+            self.updating.insert(*chunkpos);
         }
     }
 }
