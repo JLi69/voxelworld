@@ -10,8 +10,8 @@ const ADJ: [(i32, i32, i32); 4] = [(1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, 0, -1)]
 
 type UpdateList = HashMap<(i32, i32, i32), Block>;
 
-fn add_water_tile(x: i32, y: i32, z: i32, level: u8, to_update: &mut UpdateList) {
-    let mut water = Block::new_fluid(12);
+fn add_water_tile(x: i32, y: i32, z: i32, level: u8, id: u8, to_update: &mut UpdateList) {
+    let mut water = Block::new_fluid(id);
     water.geometry = level;
 
     if water.geometry == 0 || water.geometry > 8 {
@@ -35,7 +35,7 @@ fn add_water_tile(x: i32, y: i32, z: i32, level: u8, to_update: &mut UpdateList)
 }
 
 //Returns true if updated
-fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList, decrease: u8) {
     let block = world.get_block(x, y, z);
     let below = world.get_block(x, y - 1, z);
     let level = block.geometry.min(7);
@@ -71,37 +71,37 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
         }
 
         if maxval > 1 && (below.id == EMPTY_BLOCK || below.id == block.id) {
-            add_water_tile(x, y, z, 1, to_update);
-            add_water_tile(x, y - 1, z, 8, to_update);
+            add_water_tile(x, y, z, 1, block.id, to_update);
+            add_water_tile(x, y - 1, z, 8, block.id, to_update);
             return;
-        } else if maxval == 7 && count > 1 {
-            add_water_tile(x, y, z, 7, to_update);
+        } else if maxval == 7 && count > 1 && decrease == 1 {
+            add_water_tile(x, y, z, 7, block.id, to_update);
             return;
         } else if next_to_fall && maxval < 7 {
-            add_water_tile(x, y, z, 6, to_update);
+            add_water_tile(x, y, z, 7 - decrease, block.id, to_update);
         } else if maxval <= 1 {
-            add_water_tile(x, y, z, 0, to_update);
+            add_water_tile(x, y, z, 0, block.id, to_update);
             return;
         } else if maxval <= level {
-            add_water_tile(x, y, z, maxval - 1, to_update);
+            add_water_tile(x, y, z, maxval - decrease, block.id, to_update);
             return;
         }
     } else if block.geometry == 8 && world.get_block(x, y + 1, z).id != block.id {
-        add_water_tile(x, y, z, 6, to_update);
+        add_water_tile(x, y, z, 7 - decrease, block.id, to_update);
         return;
     }
 
     //Flow down
     if (below.id == EMPTY_BLOCK || below.id == block.id) && level > 0 {
         if below.geometry != 7 {
-            add_water_tile(x, y - 1, z, 8, to_update);
+            add_water_tile(x, y - 1, z, 8, block.id, to_update);
         }
         if block.geometry != 7 {
             return;
         }
     }
 
-    if level <= 1 {
+    if level <= decrease {
         return;
     }
 
@@ -116,7 +116,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
             let blocklevel = if underblock.id == block.id || underblock.id == EMPTY_BLOCK {
                 1.min(level)
             } else if level <= 7 {
-                level - 1
+                level - decrease
             } else {
                 0
             };
@@ -125,7 +125,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
                 continue;
             }
 
-            add_water_tile(posx, posy, posz, blocklevel, to_update);
+            add_water_tile(posx, posy, posz, blocklevel, block.id, to_update);
         }
     }
 }
@@ -143,7 +143,9 @@ impl World {
                     let block = self.get_block(x, y, z);
                     //Water
                     if block.id == 12 {
-                        update_fluid(self, x, y, z, to_update);
+                        update_fluid(self, x, y, z, to_update, 1);
+                    } else if block.id == 13 {
+                        update_fluid(self, x, y, z, to_update, 2);
                     }
                 }
             }
