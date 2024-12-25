@@ -1,9 +1,11 @@
+mod movement;
+mod intersection;
+
 use super::Hitbox;
 use super::KeyState;
 use crate::impfile;
 use crate::voxel::Block;
 use crate::voxel::World;
-use crate::voxel::EMPTY_BLOCK;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
@@ -11,10 +13,7 @@ pub const PLAYER_HEIGHT: f32 = 1.8;
 pub const PLAYER_SIZE: f32 = 0.6;
 pub const CAMERA_OFFSET: f32 = 0.7;
 pub const GRAVITY: f32 = 24.0;
-pub const JUMP_FORCE: f32 = 7.5;
-pub const SWIM_SPEED: f32 = JUMP_FORCE / 2.0;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
-pub const SPRINT_AMT: f32 = 1.33;
 const BLOCK_OFFSET: f32 = 0.01;
 
 pub struct Player {
@@ -58,56 +57,7 @@ impl Player {
                 self.selected_block = Block::new_fluid(block_id);
             }
         }
-    }
-
-    //Jump up in the y direction
-    pub fn jump(&mut self, jump_key: KeyState) {
-        if self.falling || self.jump_cooldown > 0.0 || self.velocity_y != 0.0 {
-            return;
-        }
-
-        if jump_key == KeyState::Held {
-            self.velocity_y = JUMP_FORCE;
-            self.falling = true;
-        }
-    }
-
-    //Swim up in the y direction
-    pub fn swim(&mut self, swim_key: KeyState, world: &World) {
-        let swimming = self.is_intersecting(world, 12) || self.is_intersecting(world, 13);
-        if (!self.can_move_in_x(world) || !self.can_move_in_z(world))
-            && swimming
-            && swim_key == KeyState::Held
-            && self.swim_cooldown < 0.0
-        {
-            self.velocity_y = SWIM_SPEED;
-            return;
-        }
-
-        if !self.top_intersecting(world, 12, 0.9) && !self.top_intersecting(world, 13, 0.9) {
-            return;
-        }
-
-        self.jump_cooldown = JUMP_COOLDOWN;
-
-        if self.swim_cooldown > 0.0 {
-            return;
-        }
-
-        if swim_key == KeyState::Held {
-            self.velocity_y = self.velocity_y.max(0.0);
-            self.velocity_y = SWIM_SPEED;
-        }
-    }
-
-    //Sprint when a key is pressed
-    pub fn sprint(&mut self, sprint_key: KeyState) {
-        if sprint_key.is_held() {
-            self.speed = DEFAULT_PLAYER_SPEED * SPRINT_AMT;
-        } else {
-            self.speed = DEFAULT_PLAYER_SPEED;
-        }
-    }
+    } 
 
     //Set direction for strafe camera left and right (x direction)
     pub fn strafe(&mut self, left: KeyState, right: KeyState) {
@@ -372,138 +322,6 @@ impl Player {
             self.falling = false;
             self.velocity_y = 0.0;
         }
-    }
-
-    //Returns an optional hitbox of a block that the player is coliding with
-    //Returns none if no block is found
-    pub fn check_collision(&self, world: &World) -> Option<Hitbox> {
-        let ix = self.position.x.floor() as i32;
-        let iy = self.position.y.floor() as i32;
-        let iz = self.position.z.floor() as i32;
-
-        let mut hit: Option<Hitbox> = None;
-        let mut min_dist = 999.0;
-        for x in (ix - 2)..=(ix + 2) {
-            for y in (iy - 2)..=(iy + 2) {
-                for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id == EMPTY_BLOCK {
-                        continue;
-                    }
-
-                    if world.get_block(x, y, z).no_hitbox() {
-                        continue;
-                    }
-
-                    let block_hitbox = Hitbox::from_block(x, y, z);
-
-                    if !self.get_hitbox().intersects(&block_hitbox) {
-                        continue;
-                    }
-
-                    if (block_hitbox.position - self.position).magnitude() > min_dist {
-                        continue;
-                    }
-
-                    min_dist = (block_hitbox.position - self.position).magnitude();
-                    hit = Some(block_hitbox);
-                }
-            }
-        }
-
-        hit
-    }
-
-    //Returns true if the head is intersecting a specified block
-    pub fn head_intersection(&self, world: &World, block_id: u8) -> bool {
-        let ix = self.position.x.floor() as i32;
-        let iy = self.position.y.floor() as i32;
-        let iz = self.position.z.floor() as i32;
-
-        let head_hitbox = Hitbox::new(
-            self.position.x,
-            self.position.y + PLAYER_HEIGHT / 2.0 - 0.2,
-            self.position.z,
-            PLAYER_SIZE,
-            0.4,
-            PLAYER_SIZE,
-        );
-
-        for x in (ix - 2)..=(ix + 2) {
-            for y in (iy - 2)..=(iy + 2) {
-                for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id != block_id {
-                        continue;
-                    }
-
-                    let block_hitbox = Hitbox::from_block(x, y, z);
-
-                    if block_hitbox.intersects(&head_hitbox) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        false
-    }
-
-    //Returns true if the player is intersecting a specific block type
-    pub fn is_intersecting(&self, world: &World, block_id: u8) -> bool {
-        let ix = self.position.x.floor() as i32;
-        let iy = self.position.y.floor() as i32;
-        let iz = self.position.z.floor() as i32;
-
-        for x in (ix - 2)..=(ix + 2) {
-            for y in (iy - 2)..=(iy + 2) {
-                for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id != block_id {
-                        continue;
-                    }
-
-                    let block_hitbox = Hitbox::from_block(x, y, z);
-                    let hitbox = self.get_hitbox();
-
-                    if block_hitbox.intersects(&hitbox) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        false
-    }
-
-    pub fn top_intersecting(&self, world: &World, block_id: u8, fract: f32) -> bool {
-        let ix = self.position.x.floor() as i32;
-        let iy = self.position.y.floor() as i32;
-        let iz = self.position.z.floor() as i32;
-
-        let hitbox = Hitbox::new(
-            self.position.x,
-            self.position.y + PLAYER_HEIGHT * (1.0 - fract) / 2.0,
-            self.position.z,
-            PLAYER_SIZE,
-            PLAYER_HEIGHT * fract,
-            PLAYER_SIZE,
-        );
-
-        for x in (ix - 2)..=(ix + 2) {
-            for y in (iy - 2)..=(iy + 2) {
-                for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id != block_id {
-                        continue;
-                    }
-
-                    let block_hitbox = Hitbox::from_block(x, y, z);
-
-                    if block_hitbox.intersects(&hitbox) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        false
     }
 
     pub fn to_entry(&self) -> impfile::Entry {

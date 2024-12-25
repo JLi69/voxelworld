@@ -6,6 +6,7 @@ use crate::{
 use std::collections::{HashMap, HashSet};
 
 const BLOCK_UPDATE_INTERVAL: f32 = 0.2;
+const ADJ: [(i32, i32, i32); 4] = [(1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, 0, -1)];
 
 type UpdateList = HashMap<(i32, i32, i32), Block>;
 
@@ -35,8 +36,6 @@ fn add_water_tile(x: i32, y: i32, z: i32, level: u8, to_update: &mut UpdateList)
 
 //Returns true if updated
 fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
-    const ADJ: [(i32, i32, i32); 4] = [(1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, 0, -1)];
-
     let block = world.get_block(x, y, z);
     let below = world.get_block(x, y - 1, z);
     let level = block.geometry.min(7);

@@ -1,4 +1,4 @@
-mod block_update;
+pub mod block_update;
 mod default_world;
 mod flat_world;
 mod gen_more;
