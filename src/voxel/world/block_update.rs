@@ -64,8 +64,10 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
 
             if block2.geometry > maxval {
                 maxval = block2.geometry;
-                count = 1;
-            } else if block2.geometry == maxval {
+                count = 0;
+            }
+
+            if block2.geometry == maxval {
                 count += 1;
             }
         }

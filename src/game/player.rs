@@ -104,20 +104,14 @@ impl Player {
     }
 
     fn check_y_collision(&mut self, world: &World) {
-        let swimming =
-            self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
         //We lower the player's y position to check if we intersect with any blocks
-        if !(swimming && self.velocity_y > 0.0) || self.velocity_y > 0.0 {
-            self.position.y -= 0.02;
-        }
+        self.position.y -= 0.02;
         if let Some(block_hitbox) = self.check_collision(world) {
             self.uncollide_y(&block_hitbox);
         } else {
             self.falling = true;
             //If we don't intersect with anything, reset the y position
-            if !(swimming && self.velocity_y > 0.0) || self.velocity_y > 0.0 {
-                self.position.y += 0.02;
-            }
+            self.position.y += 0.02;
         }
     }
 
