@@ -1,5 +1,5 @@
-mod movement;
 mod intersection;
+mod movement;
 
 use super::Hitbox;
 use super::KeyState;
@@ -57,7 +57,7 @@ impl Player {
                 self.selected_block = Block::new_fluid(block_id);
             }
         }
-    } 
+    }
 
     //Set direction for strafe camera left and right (x direction)
     pub fn strafe(&mut self, left: KeyState, right: KeyState) {

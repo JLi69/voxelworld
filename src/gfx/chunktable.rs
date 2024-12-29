@@ -134,7 +134,12 @@ impl ChunkVaoTable {
         }
     }
 
-    pub fn update_chunks(&mut self, world: &World, maxtime: f32, gen_verts: fn(&Chunk, &World) -> ChunkData) {
+    pub fn update_chunks(
+        &mut self,
+        world: &World,
+        maxtime: f32,
+        gen_verts: fn(&Chunk, &World) -> ChunkData,
+    ) {
         let start = std::time::Instant::now();
         let mut total_time = 0.0;
         while total_time < maxtime && !self.to_update.is_empty() {

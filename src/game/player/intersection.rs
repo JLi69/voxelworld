@@ -1,5 +1,5 @@
 use super::{Player, PLAYER_HEIGHT, PLAYER_SIZE};
-use crate::game::{World, Hitbox};
+use crate::game::{Hitbox, World};
 use crate::voxel::EMPTY_BLOCK;
 use cgmath::InnerSpace;
 

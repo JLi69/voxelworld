@@ -4,7 +4,7 @@ mod flat_world;
 mod gen_more;
 mod save;
 
-use super::{world_to_chunk_position, Block, Chunk, wrap_coord, CHUNK_SIZE_I32};
+use super::{world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32};
 use crate::gfx::ChunkTables;
 use cgmath::Vector3;
 use noise::{Fbm, Perlin};
@@ -153,7 +153,8 @@ impl World {
                         continue;
                     }
 
-                    self.updating.insert((chunkx + dx, chunky + dy, chunkz + dz));
+                    self.updating
+                        .insert((chunkx + dx, chunky + dy, chunkz + dz));
                 }
             }
         }
