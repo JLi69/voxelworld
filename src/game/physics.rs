@@ -1,9 +1,19 @@
 use cgmath::Vector3;
+use crate::voxel::Block;
 
 //Axis aligned bounding box (this hitbox is aligned with the x, y, z axis)
 pub struct Hitbox {
     pub position: Vector3<f32>,
     pub dimensions: Vector3<f32>,
+}
+
+//Returns the height of the fluid based on its geometry
+fn get_fluid_height(geometry: u8) -> f32 {
+    if geometry <= 7 {
+        return geometry as f32 / 8.0
+    }
+    
+    1.0
 }
 
 impl Hitbox {
@@ -19,11 +29,27 @@ impl Hitbox {
     }
 
     //Create a hitbox from voxel coordinates to represent a block
+    //This function assumes that the block is a full voxel
     pub fn from_block(x: i32, y: i32, z: i32) -> Self {
         let fx = x as f32 + 0.5;
         let fy = y as f32 + 0.5;
         let fz = z as f32 + 0.5;
         Hitbox::new(fx, fy, fz, 1.0, 1.0, 1.0)
+    }
+
+    //Create a hitbox from voxel coordinates and also block data
+    //Will attempt to use the block geometry to determine an appropriate hitbox
+    pub fn from_block_data(x: i32, y: i32, z: i32, block: Block) -> Self {
+        let fx = x as f32 + 0.5;
+        let fy = y as f32 + 0.5;
+        let fz = z as f32 + 0.5;
+
+        if block.is_fluid() {
+            let height = get_fluid_height(block.geometry);
+            Hitbox::new(fx, fy - (1.0 - height) / 2.0, fz, 1.0, height, 1.0)
+        } else {
+            Hitbox::new(fx, fy, fz, 1.0, 1.0, 1.0)
+        }
     }
 
     //Create a hitbox from Vector3, we assume that size has positive dimensions

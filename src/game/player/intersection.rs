@@ -61,11 +61,12 @@ impl Player {
         for x in (ix - 2)..=(ix + 2) {
             for y in (iy - 2)..=(iy + 2) {
                 for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id != block_id {
+                    let block = world.get_block(x, y, z);
+                    if block.id != block_id {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z);
+                    let block_hitbox = Hitbox::from_block_data(x, y, z, block);
 
                     if block_hitbox.intersects(&head_hitbox) {
                         return true;
