@@ -10,7 +10,7 @@ cgmath = "0.18.0"
 egui_gl_glfw = "0.1.5"
 fastrand = "2.1.1"
 gl = "0.14.0"
-glfw = "0.58.0"
+glfw = "0.59.0"
 noise = "0.9.0"
 png = "0.17.13"
 
