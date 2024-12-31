@@ -3,8 +3,8 @@ mod movement;
 
 use super::Hitbox;
 use super::KeyState;
+use super::inventory::Hotbar;
 use crate::impfile;
-use crate::voxel::Block;
 use crate::voxel::World;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
@@ -24,9 +24,7 @@ pub struct Player {
     velocity_y: f32,
     pub speed: f32,
     pub rotation: f32,
-    //TODO: This should probably be replaced with some sort of inventory,
-    //for now this can just function as the player's "selected" block id
-    pub selected_block: Block,
+    pub hotbar: Hotbar,
     jump_cooldown: f32,
     prev_swimming: bool,
     swim_cooldown: f32,
@@ -43,19 +41,16 @@ impl Player {
             velocity_y: 0.0,
             speed: DEFAULT_PLAYER_SPEED,
             rotation: 0.0,
-            selected_block: Block::new_id(1),
+            hotbar: Hotbar::init_hotbar(),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
         }
     }
 
-    pub fn select_block(&mut self, keystate: KeyState, block_id: u8) {
+    pub fn select_hotbar_item(&mut self, keystate: KeyState, index: usize) {
         if keystate.is_held() {
-            self.selected_block = Block::new_id(block_id);
-            if self.selected_block.is_fluid() {
-                self.selected_block = Block::new_fluid(block_id);
-            }
+            self.hotbar.selected = index;
         }
     }
 
@@ -327,7 +322,7 @@ impl Player {
         entry.add_bool("falling", self.falling);
         entry.add_float("velocity_y", self.velocity_y);
         entry.add_float("rotation", self.rotation);
-        entry.add_integer("selected_block", self.selected_block.id as i64);
+        //TODO: save hotbar data in player impfile
 
         entry
     }
@@ -335,13 +330,7 @@ impl Player {
     pub fn from_entry(entry: &impfile::Entry) -> Self {
         let x = entry.get_var("x").parse::<f32>().unwrap_or(0.0);
         let y = entry.get_var("y").parse::<f32>().unwrap_or(0.0);
-        let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0);
-        let blockid = entry.get_var("selected_block").parse::<u8>().unwrap_or(0);
-
-        let mut selected = Block::new_id(blockid);
-        if selected.is_fluid() {
-            selected = Block::new_fluid(blockid);
-        }
+        let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0); 
 
         Self {
             position: Vector3::new(x, y, z),
@@ -351,7 +340,8 @@ impl Player {
             velocity_y: entry.get_var("velocity_y").parse::<f32>().unwrap_or(0.0),
             speed: DEFAULT_PLAYER_SPEED,
             rotation: entry.get_var("rotation").parse::<f32>().unwrap_or(0.0),
-            selected_block: selected,
+            //TODO: have this actually be saved with player data
+            hotbar: Hotbar::init_hotbar(),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,

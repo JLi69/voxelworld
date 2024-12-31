@@ -7,6 +7,7 @@ pub mod physics;
 pub mod player;
 pub mod save;
 pub mod update;
+pub mod inventory;
 
 use crate::impfile;
 use crate::voxel::world::WorldGenType;
@@ -45,6 +46,7 @@ pub fn init_window(glfw: &mut glfw::Glfw) -> (PWindow, EventHandler) {
         .create_window(960, 640, "voxelworld", glfw::WindowMode::Windowed)
         .expect("Failed to init window!");
     window.set_key_polling(true);
+    window.set_scroll_polling(true);
     window.set_framebuffer_size_polling(true);
     window.set_cursor_pos_polling(true);
     window.set_mouse_button_polling(true);
@@ -81,6 +83,7 @@ pub struct Game {
     paused: bool,
     key_states: HashMap<Key, KeyState>,
     mouse_states: HashMap<MouseButton, KeyState>,
+    scroll_state: f32,
     mousex: f32, //Mouse cursor position
     mousey: f32,
     dmousex: f32, //Change in mouse position since last frame
@@ -108,6 +111,7 @@ impl Game {
             player: Player::new(0.0, 0.0, 0.0),
             key_states: HashMap::new(),
             mouse_states: HashMap::new(),
+            scroll_state: 0.0,
             mousex: 0.0,
             mousey: 0.0,
             dmousex: 0.0,

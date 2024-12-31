@@ -157,6 +157,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);
 
+        //Display hotbar
+        gfx::display::display_hotbar(gamestate, w, h);
         //Display gui
         gui::set_ui_gl_state();
         let mut pause_action = None;
@@ -183,6 +185,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
 
         gamestate.pause();
         if !gamestate.paused {
+            gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
             //Update gameobjects
             gamestate.update_player(dt, window.get_cursor_mode());
             //Destroy and place blocks

@@ -5,3 +5,7 @@
 "blocks" {
 	"path" = "assets/textures/blocktextures.png";
 }
+
+"hotbar_icon" {
+	"path" = "assets/textures/hotbar.png";
+}

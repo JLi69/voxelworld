@@ -9,7 +9,7 @@ pub type Int3 = (i32, i32, i32);
 
 pub type ChunkData = Vec<u8>;
 
-fn add_block_vertices(
+pub fn add_block_vertices(
     chunk: &Chunk,
     adj_chunks: [Option<&Chunk>; 6],
     xyz: Int3,
@@ -46,7 +46,7 @@ fn add_block_vertices(
     }
 }
 
-fn add_block_vertices_transparent(
+pub fn add_block_vertices_transparent(
     chunk: &Chunk,
     adj_chunks: [Option<&Chunk>; 6],
     xyz: Int3,

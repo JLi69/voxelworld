@@ -35,10 +35,44 @@ fn set_fog(gamestate: &Game, chunkshader: &ShaderProgram) {
 
 const BUF_COUNT: usize = 2;
 
-struct ChunkVao {
+pub struct ChunkVao {
     id: u32,
     buffers: [u32; BUF_COUNT],
     vert_count: i32,
+}
+
+impl ChunkVao {
+    pub fn generate_new(chunkdata: &ChunkData) -> Self {
+        let mut vao = Self {
+            id: 0,
+            buffers: [0; BUF_COUNT],
+            vert_count: 0,
+        };
+
+        unsafe {
+            gl::GenVertexArrays(1, &mut vao.id);
+            gl::GenBuffers(BUF_COUNT as i32, &mut vao.buffers[0]);
+        }
+
+        send_chunk_data_to_vao(&vao, chunkdata);
+        vao.vert_count = chunkdata.len() as i32 / 5;
+
+        vao
+    }
+
+    pub fn draw(&self) {
+        unsafe {
+            gl::BindVertexArray(self.id);
+            gl::DrawArrays(gl::TRIANGLES, 0, self.vert_count);
+        }
+    }
+
+    pub fn delete(&mut self) {
+        unsafe {
+            gl::GenVertexArrays(1, &mut self.id);
+            gl::GenBuffers(BUF_COUNT as i32, &mut self.buffers[0]);
+        }
+    }
 }
 
 //Send chunk vertex data to a buffer and vao

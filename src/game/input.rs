@@ -80,6 +80,10 @@ impl Game {
                 WindowEvent::MouseButton(button, action, _mods) => {
                     self.set_mouse_state(button, action);
                 }
+                //Handle scrolling
+                WindowEvent::Scroll(_x, y) => {
+                    self.scroll_state = y as f32;
+                } 
                 _ => {}
             }
         }
@@ -111,6 +115,10 @@ impl Game {
                 WindowEvent::MouseButton(button, action, _mods) => {
                     self.set_mouse_state(button, action);
                 }
+                //Handle scrolling
+                WindowEvent::Scroll(_x, y) => {
+                    self.scroll_state = y as f32;
+                }
                 _ => {}
             }
         }
@@ -136,11 +144,19 @@ impl Game {
         //Set change in mouse position to be 0
         self.dmousex = 0.0;
         self.dmousey = 0.0;
+
+        //Change mouse scroll amount to be 0
+        self.scroll_state = 0.0;
     }
 
     //Returns the change in mouse position
     pub fn get_mouse_diff(&self) -> (f32, f32) {
         (self.dmousex, self.dmousey)
+    }
+
+    //Returns scroll state
+    pub fn get_scroll_state(&self) -> f32 {
+        self.scroll_state
     }
 
     //Initializes the mouse position to be where the mouse is on the window

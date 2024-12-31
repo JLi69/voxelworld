@@ -37,22 +37,16 @@ impl Game {
         self.player.jump(space);
         //Swim
         self.player.swim(space, &self.world);
-        //Select blocks
-        self.player.select_block(self.get_key_state(Key::Num1), 1);
-        self.player.select_block(self.get_key_state(Key::Num2), 2);
-        self.player.select_block(self.get_key_state(Key::Num3), 4);
-        self.player.select_block(self.get_key_state(Key::Num4), 5);
-        self.player.select_block(self.get_key_state(Key::Num5), 6);
-        self.player.select_block(self.get_key_state(Key::Num6), 7);
-        self.player.select_block(self.get_key_state(Key::Num7), 8);
-        self.player.select_block(self.get_key_state(Key::Num8), 9);
-        self.player.select_block(self.get_key_state(Key::Num9), 10);
-        self.player.select_block(self.get_key_state(Key::Num0), 11);
-        //Temporary, DELETE LATER!
-        self.player
-            .select_block(self.get_key_state(Key::GraveAccent), 12);
-        self.player
-            .select_block(self.get_key_state(Key::Tab), 13);
+        //Select items from the hotbar
+        self.player.select_hotbar_item(self.get_key_state(Key::Num1), 0);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num2), 1);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num3), 2);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num4), 3);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num5), 4);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num6), 5);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num7), 6);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num8), 7);
+        self.player.select_hotbar_item(self.get_key_state(Key::Num9), 8);
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {

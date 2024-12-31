@@ -22,3 +22,13 @@
 	"vert" = "assets/shaders/quadvert.glsl";
 	"frag" = "assets/shaders/quadfrag.glsl";
 }
+
+"2d" {
+	"vert" = "assets/shaders/vert2d.glsl";
+	"frag" = "assets/shaders/quadfrag.glsl";
+}
+
+"orthographic" {
+	"vert" = "assets/shaders/orthographic.glsl";
+	"frag" = "assets/shaders/chunkfrag.glsl";
+}

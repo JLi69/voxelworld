@@ -1,5 +1,6 @@
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
+use crate::game::inventory::Item;
 use crate::game::physics::Hitbox;
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
@@ -201,7 +202,14 @@ pub fn place_block(
         }
     };
     let (mut ix, mut iy, mut iz) = get_raycast_voxel(x, y, z, dir, axis);
-    let mut block = player.selected_block;
+
+    let mut block;
+    if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
+        block = blockdata;
+    } else {
+        return None;
+    }
+
     match axis {
         Axis::X => {
             ix -= dir.x.signum() as i32;
