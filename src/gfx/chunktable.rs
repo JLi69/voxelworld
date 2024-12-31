@@ -69,8 +69,8 @@ impl ChunkVao {
 
     pub fn delete(&mut self) {
         unsafe {
-            gl::GenVertexArrays(1, &mut self.id);
-            gl::GenBuffers(BUF_COUNT as i32, &mut self.buffers[0]);
+            gl::DeleteVertexArrays(1, &mut self.id);
+            gl::DeleteBuffers(BUF_COUNT as i32, &mut self.buffers[0]);
         }
     }
 }
