@@ -51,6 +51,8 @@ impl Game {
         //Temporary, DELETE LATER!
         self.player
             .select_block(self.get_key_state(Key::GraveAccent), 12);
+        self.player
+            .select_block(self.get_key_state(Key::Tab), 13);
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {

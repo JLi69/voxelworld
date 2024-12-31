@@ -74,7 +74,9 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
 
         if maxval > 1 && (below.id == EMPTY_BLOCK || below.id == block.id) {
             add_water_tile(x, y, z, 1, block.id, to_update);
-            add_water_tile(x, y - 1, z, 8, block.id, to_update);
+            if below.geometry != 7 {
+                add_water_tile(x, y - 1, z, 8, block.id, to_update);
+            }
             return;
         } else if maxval == 7 && count > 1 && decrease == 1 {
             add_water_tile(x, y, z, 7, block.id, to_update);
@@ -132,6 +134,60 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     }
 }
 
+//Returns true if updated
+fn water_to_stone(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) -> bool {
+    //Is the block above lava?
+    if world.get_block(x, y + 1, z).id == 13 {
+        //then turn to stone
+        to_update.insert((x, y, z), Block::new_id(2));
+        return true;
+    }
+    false
+}
+
+//Returns true if updated
+fn freeze_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) -> bool {
+    let block = world.get_block(x, y, z);
+    let new_block = if block.geometry == 7 {
+        //Obsidian
+        Block::new_id(14)
+    } else {
+        //Stone
+        Block::new_id(2)
+    };
+
+    //If water is above or to the side, then freeze the lava
+    if world.get_block(x, y + 1, z).id == 12 {
+        to_update.insert((x, y, z), new_block);
+        return true;
+    }
+
+    for (dx, dy, dz) in ADJ {
+        if world.get_block(x + dx, y + dy, z + dz).id == 12 {
+            to_update.insert((x, y, z), new_block);
+            return true;
+        }
+    }
+
+    false
+}
+
+fn update_water(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let updated = water_to_stone(world, x, y, z, to_update);
+    if updated {
+        return;
+    }
+    update_fluid(world, x, y, z, to_update, 1);
+}
+
+fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let updated = freeze_lava(world, x, y, z, to_update);
+    if updated {
+        return;
+    }
+    update_fluid(world, x, y, z, to_update, 2);
+}
+
 impl World {
     //Returns true if at least one block updated, otherwise false
     fn update_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32, to_update: &mut UpdateList) {
@@ -143,11 +199,12 @@ impl World {
             for y in starty..(starty + CHUNK_SIZE_I32) {
                 for z in startz..(startz + CHUNK_SIZE_I32) {
                     let block = self.get_block(x, y, z);
-                    //Water
                     if block.id == 12 {
-                        update_fluid(self, x, y, z, to_update, 1);
+                        //Water
+                        update_water(self, x, y, z, to_update);
                     } else if block.id == 13 {
-                        update_fluid(self, x, y, z, to_update, 2);
+                        //Lava
+                        update_lava(self, x, y, z, to_update);
                     }
                 }
             }
