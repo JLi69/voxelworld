@@ -20,7 +20,7 @@ pub use select_world_menu::run_select_world_menu;
 
 //Initialized the egui input state
 pub fn init_egui_input_state(window: &PWindow) -> EguiInputState {
-    let (w, h) = window.get_framebuffer_size();
+    let (w, h) = window.get_size();
     let native_pixels_per_point = window.get_content_scale().0;
     let dimensions = vec2(w as f32, h as f32) / native_pixels_per_point;
     let rect = Rect::from_min_size(Pos2::new(0.0, 0.0), dimensions);

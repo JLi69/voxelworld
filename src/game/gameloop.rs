@@ -240,7 +240,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         //Update egui input state
         input_state.input.time = Some(game_start.elapsed().as_secs_f64());
         input_state.pixels_per_point = native_pixels_per_point;
-        let (w, h) = window.get_framebuffer_size();
         painter.set_size(w as u32, h as u32);
         //Handle/update input states
         gamestate.update_input_states();

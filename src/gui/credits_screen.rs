@@ -64,7 +64,7 @@ pub fn run_credits_screen(
         //Update input state
         input_state.input.time = Some(start.elapsed().as_secs_f64());
         input_state.pixels_per_point = native_pixels_per_point;
-        let (w, h) = window.get_framebuffer_size();
+        let (w, h) = window.get_size();
         painter.set_size(w as u32, h as u32);
 
         ctx.begin_pass(input_state.input.take());
