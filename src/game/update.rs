@@ -54,6 +54,12 @@ impl Game {
         self.destroy_cooldown -= dt;
     }
 
+    pub fn update_display_debug(&mut self) {
+        if self.get_key_state(Key::F3) == KeyState::JustPressed {
+            self.display_debug = !self.display_debug;
+        }
+    }
+
     //Place and destroy blocks
     pub fn build(&mut self, chunktables: &mut ChunkTables) {
         //Destroy blocks
@@ -94,5 +100,9 @@ impl Game {
         if self.get_key_state(Key::Escape) == KeyState::JustPressed {
             self.paused = !self.paused;
         }
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.paused
     }
 }

@@ -100,6 +100,8 @@ pub struct Game {
     pub textures: TextureManager,
     //Config
     cfg: Config,
+    //Debug info
+    display_debug: bool,
 }
 
 impl Game {
@@ -126,6 +128,7 @@ impl Game {
             shaders: ShaderManager::new(),
             textures: TextureManager::new(),
             cfg: Config::default(),
+            display_debug: false,
         }
     }
 

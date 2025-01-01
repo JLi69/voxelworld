@@ -6,7 +6,6 @@ use crate::gfx::chunktable::ChunkVao;
 use crate::voxel::{self, Chunk};
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
 use cgmath::{Matrix4, SquareMatrix, Vector3, Deg};
-
 use super::ChunkTables;
 
 pub fn display_selected_outline(gamestate: &Game) {
@@ -162,7 +161,7 @@ pub fn display_hotbar(
                 add_block_vertices(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
                 add_block_vertices_transparent(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
                 add_block_vertices_fluid(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
-                let mut vao = ChunkVao::generate_new(&vert_data);
+                let vao = ChunkVao::generate_new(&vert_data);
                 vao.draw();
                 vao.delete();
             }

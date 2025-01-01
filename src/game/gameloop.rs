@@ -94,6 +94,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     gamestate.world.update_all_chunks();
     //Main loop
     let mut dt = 0.0f32;
+    let mut fps = 0;
     let mut fps_timer = 0.0;
     let mut save_timer = 0.0;
     let mut time_passed = 0.0;
@@ -161,8 +162,12 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gfx::display::display_hotbar(gamestate, w, h);
         //Display gui
         gui::set_ui_gl_state();
+        gamestate.update_display_debug(); 
         let mut pause_action = None;
-        if gamestate.paused {
+        if gamestate.display_debug {
+            //Display debug screen
+            gui::display_debug_window(&ctx, &mut input_state, &mut painter, gamestate, fps);
+        } else if gamestate.paused {
             pause_action = gui::run_pause_menu(&ctx, &mut input_state, &mut painter);
         }
 
@@ -214,6 +219,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         if fps_timer > 1.0 {
             eprintln!("FPS: {frames} | Chunks drawn: {chunks_drawn}");
             fps_timer = 0.0;
+            fps = frames;
             frames = 0;
             chunks_drawn = 0;
         } else {
