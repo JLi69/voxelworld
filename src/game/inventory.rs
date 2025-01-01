@@ -1,9 +1,47 @@
-use crate::voxel::Block;
+use crate::{voxel::Block, impfile};
 
 #[derive(Clone, Copy)]
 pub enum Item {
     BlockItem(Block, u8),
     EmptyItem,
+}
+
+fn item_to_string(item: Item) -> String {
+    match item {
+        Item::BlockItem(block, amt) => {
+            "block,".to_string() + &block.id.to_string() + "," + &amt.to_string()
+        }
+        Item::EmptyItem => {
+            "empty".to_string()
+        }
+    }
+}
+
+//Returns empty item if failed to parse
+fn string_to_item(s: &str) -> Item {
+    let tokens: Vec<String> = s.split(",").map(|s| s.to_string()).collect();
+
+    if tokens.len() == 3 && tokens[0] == "block" {
+        let id = if let Ok(id) = tokens[1].parse::<u8>() {
+            id
+        } else {
+            0
+        };
+
+        let amt = if let Ok(amt) = tokens[2].parse::<u8>() {
+            amt
+        } else {
+            0
+        };
+
+        if amt == 0 || id == 0 {
+            return Item::EmptyItem;
+        }
+
+        Item::BlockItem(Block::new_id(id), amt)
+    } else {
+        Item::EmptyItem
+    }
 }
 
 const HOTBAR_SIZE: usize = 9;
@@ -52,6 +90,32 @@ impl Hotbar {
                 self.selected += 1;
                 self.selected %= HOTBAR_SIZE;
             }
+        }
+    }
+
+    pub fn to_entry(&self) -> impfile::Entry {
+        let mut entry = impfile::Entry::new("hotbar");
+
+        entry.add_integer("selected", self.selected as i64);
+
+        for (i, item) in self.items.iter().enumerate() {
+            entry.add_string(&i.to_string(), &item_to_string(*item));
+        }
+
+        entry
+    }
+
+    pub fn from_entry(entry: &impfile::Entry) -> Self {
+        let mut hotbar_items = [ Item::EmptyItem; HOTBAR_SIZE ];
+        
+        for i in 0..HOTBAR_SIZE {
+            let slot = i.to_string();
+            hotbar_items[i] = string_to_item(&entry.get_var(&slot));
+        }
+
+        Self {
+            selected: entry.get_var("selected").parse::<usize>().unwrap_or(0),
+            items: hotbar_items,
         }
     }
 }

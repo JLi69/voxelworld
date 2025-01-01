@@ -322,7 +322,6 @@ impl Player {
         entry.add_bool("falling", self.falling);
         entry.add_float("velocity_y", self.velocity_y);
         entry.add_float("rotation", self.rotation);
-        //TODO: save hotbar data in player impfile
 
         entry
     }

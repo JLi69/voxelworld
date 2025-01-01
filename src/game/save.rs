@@ -80,15 +80,35 @@ impl Game {
         }
     }
 
+    fn save_inventory(&self) {
+        //Save hotbar
+        let hotbar_entry = self.player.hotbar.to_entry();
+        let hotbar_save_path = self.world.path.clone() + "inventory.impfile";
+        let hotbar_entry_str = hotbar_entry.to_impfile_string();
+        let res = match File::create(hotbar_save_path) {
+            Ok(mut camera_file) => {
+                impfile::write_comment(&mut camera_file, "This files contains inventory data");
+                camera_file.write_all(hotbar_entry_str.as_bytes())
+            }
+            Err(msg) => Err(msg),
+        };
+
+        if let Err(msg) = res {
+            eprintln!("E: Failed to save hotbar: {msg}");
+        }
+    }
+
     pub fn save_game(&self) {
         self.save_camera();
         self.save_player();
+        self.save_inventory();
         self.world.save();
     }
 
     pub fn save_entire_world(&self) {
         self.save_camera();
         self.save_player();
+        self.save_inventory();
         self.world.save_all();
     }
 }
