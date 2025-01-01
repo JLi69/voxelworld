@@ -50,6 +50,9 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
         return;
     }
 
+    let seed = ((chunkpos.x as u64) << 32) | (chunkpos.z as u64);
+    let mut rng = fastrand::Rng::with_seed(seed + world_generator.world_seed as u64);
+
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let height = heights[((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize];
@@ -62,6 +65,12 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
             for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
                 if y == BOTTOM_OF_WORLD {
                     //Bottom of the world
+                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
+                    continue;
+                } else if y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2 { 
+                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
+                    continue;
+                } else if y == BOTTOM_OF_WORLD + 2 && rng.i32(0..6) == 0 {
                     chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
                     continue;
                 }
@@ -115,9 +124,9 @@ fn gen_tree_positions(
     heights: &mut Vec<i32>,
     world_seed: u32,
 ) {
-    let xz = [chunkx as f64 + 0.5, 0.0, chunkz as f64 + 0.5];
+    let xz = [chunkx as f64 / 3.0 + 0.5, 0.0, chunkz as f64 / 3.0 + 0.5];
     let noise_val = (tree_noise.get(xz) + 1.0) / 2.0;
-    let tree_count = (noise_val * 24.0).floor() as u32;
+    let tree_count = (noise_val * noise_val * 24.0).floor() as u32;
     let xu32 = chunkx as u32;
     let zu32 = chunkz as u32;
     let seed = ((xu32 as u64) << 32) | (zu32 as u64);
@@ -127,7 +136,7 @@ fn gen_tree_positions(
         let treex = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
         let treez = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
         let x = treex + chunkx * CHUNK_SIZE_I32;
-        let z = treez + chunkz * CHUNK_SIZE_I32;
+        let z = treez + chunkz * CHUNK_SIZE_I32; 
         let h = tree_generator.i32(4..=6);
         positions.push((x, z));
         heights.push(h);
