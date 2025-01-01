@@ -24,15 +24,13 @@ fn debug_info(
         ctx.native_pixels_per_point().unwrap_or(1.0),
         input_state.pixels_per_point,
     );
-
     let pixels_per_point = format!(
         "ctx.pixels_per_point() = {}",
         ctx.pixels_per_point(),
     );
-
     let paused = format!("paused = {}", gamestate.is_paused());
-
     let fps_text = format!("{fps} FPS");
+    let chunk_updates = format!("chunk updates: {}", gamestate.world.get_chunk_updates());
 
     egui::TopBottomPanel::top("debug")
         .frame(transparent_frame())
@@ -43,6 +41,7 @@ fn debug_info(
             ui.heading(debug_text(&native_pixels_per_point));
             ui.heading(debug_text(&pixels_per_point));
             ui.heading(debug_text(&paused));
+            ui.heading(debug_text(&chunk_updates));
             ui.heading(debug_text(&fps_text));
         });
 }

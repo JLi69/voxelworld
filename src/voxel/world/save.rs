@@ -115,6 +115,7 @@ impl World {
             path: world_dir_path.to_string(),
             block_update_timer: 0.0,
             updating: HashSet::new(),
+            ticks: 0,
         }
     }
 

@@ -185,7 +185,18 @@ fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
     if updated {
         return;
     }
-    update_fluid(world, x, y, z, to_update, 2);
+    let mut update_list = UpdateList::new();
+    update_fluid(world, x, y, z, &mut update_list, 2);
+    if world.ticks % 5 == 0 {
+        for (pos, block) in update_list { 
+            let (px, py, pz) = pos;
+            add_water_tile(px, py, pz, block.geometry, block.id, to_update);
+        }
+    } else if !update_list.is_empty() {
+        let mut block2 = world.get_block(x, y, z);
+        block2.geometry |= 1 << 7;
+        to_update.insert((x, y, z), block2);
+    }
 }
 
 impl World {
@@ -204,7 +215,7 @@ impl World {
                         update_water(self, x, y, z, to_update);
                     } else if block.id == 13 {
                         //Lava
-                        update_lava(self, x, y, z, to_update);
+                        update_lava(self, x, y, z, to_update); 
                     }
                 }
             }
@@ -217,6 +228,7 @@ impl World {
             return;
         }
 
+        self.ticks += 1;
         self.block_update_timer = 0.0;
 
         let mut to_update = UpdateList::new();
@@ -237,6 +249,13 @@ impl World {
 
         for ((x, y, z), block) in to_update {
             if self.get_block(x, y, z) == block {
+                continue;
+            }
+
+            if block.geometry & (1 << 7) != 0 && block.is_fluid() {
+                let mut block2 = block;
+                block2.geometry &= !(1 << 7);
+                self.set_block(x, y, z, block2);
                 continue;
             }
 

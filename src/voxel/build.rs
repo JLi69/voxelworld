@@ -206,6 +206,9 @@ pub fn place_block(
     let mut block;
     if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
         block = blockdata;
+        if block.is_fluid() {
+            block.geometry = 7;
+        }
     } else {
         return None;
     }

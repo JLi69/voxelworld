@@ -223,6 +223,9 @@ impl Player {
         self.jump_cooldown -= dt;
         //Update swim cooldown
         self.swim_cooldown -= dt;
+        //Check if the player is no longer swimming
+        let swimming =
+            self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
 
         //Check if the player was falling in the previous frame
         let falling_prev = self.falling;
@@ -231,6 +234,9 @@ impl Player {
         //Apply gravity
         if self.falling {
             self.velocity_y -= dt * GRAVITY;
+        }
+        if swimming {
+            self.velocity_y = self.velocity_y.max(-GRAVITY / 6.0);
         }
         self.translate(dt * 0.5, world);
         self.check_y_collision(world);
@@ -241,9 +247,6 @@ impl Player {
             self.jump_cooldown = JUMP_COOLDOWN;
         }
 
-        //Check if the player is no longer swimming
-        let swimming =
-            self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
         if !swimming && self.prev_swimming {
             self.swim_cooldown = 0.4;
         } else if swimming && !self.prev_swimming {
@@ -339,8 +342,7 @@ impl Player {
             velocity_y: entry.get_var("velocity_y").parse::<f32>().unwrap_or(0.0),
             speed: DEFAULT_PLAYER_SPEED,
             rotation: entry.get_var("rotation").parse::<f32>().unwrap_or(0.0),
-            //TODO: have this actually be saved with player data
-            hotbar: Hotbar::init_hotbar(),
+            hotbar: Hotbar::empty_hotbar(),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
