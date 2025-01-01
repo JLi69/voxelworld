@@ -9,3 +9,7 @@
 "hotbar_icon" {
 	"path" = "assets/textures/hotbar.png";
 }
+
+"crosshair" {
+	"path" = "assets/textures/crosshair.png";
+}

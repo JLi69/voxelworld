@@ -171,3 +171,29 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
         gl::Enable(gl::DEPTH_TEST);
     }
 }
+
+pub fn display_crosshair(gamestate: &Game, w: i32, h: i32) {
+    unsafe {
+        gl::Disable(gl::DEPTH_TEST);
+        gl::Disable(gl::CULL_FACE);
+    }
+
+    gamestate.textures.bind("crosshair");
+    gamestate.shaders.use_program("2d");
+    let shader2d = gamestate.shaders.get("2d");
+    let quad = gamestate.models.bind("quad2d");
+
+    let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
+    const CROSSHAIR_SIZE: f32 = 12.0;
+    let transform = Matrix4::from_scale(CROSSHAIR_SIZE);
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_matrix4f("transform", &transform);
+    shader2d.uniform_float("alpha", 0.4);
+
+    draw_elements(quad);
+
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::CULL_FACE);
+    }
+}

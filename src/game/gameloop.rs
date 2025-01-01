@@ -158,6 +158,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);
 
+        //Display crosshair
+        gfx::display::display_crosshair(gamestate, w, h);
         //Display hotbar
         gfx::display::display_hotbar(gamestate, w, h);
         //Display gui
