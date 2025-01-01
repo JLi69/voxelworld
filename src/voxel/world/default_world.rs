@@ -180,7 +180,17 @@ fn generate_trees(chunk: &mut Chunk, world_generator: &WorldGenerator) {
         }
     }
 
+    let chunkpos = chunk.get_chunk_pos();
+    let lower_x = chunkpos.x * CHUNK_SIZE_I32;
+    let upper_x = chunkpos.x * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1;
+    let lower_z = chunkpos.z * CHUNK_SIZE_I32;
+    let upper_z = chunkpos.z * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1;
+
     for (i, (x, z)) in tree_positions.iter().enumerate() {
+        if x - lower_x < -2 || x - upper_x > 2 || z - lower_z < -2 || z - upper_z > 2 {
+            continue;
+        }
+
         let h = get_height(*x, *z, &world_generator.terrain_generator);
 
         //Below sea level
