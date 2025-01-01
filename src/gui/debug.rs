@@ -1,18 +1,21 @@
-use egui_backend::egui::{Color32, RichText};
-use egui_gl_glfw::egui;
-use egui_gl_glfw as egui_backend;
-use crate::game::Game;
 use super::transparent_frame;
+use crate::game::Game;
+use egui_backend::egui::{Color32, RichText};
+use egui_gl_glfw as egui_backend;
+use egui_gl_glfw::egui;
 
 pub fn debug_text(s: &str) -> RichText {
-    RichText::new(s).heading().color(Color32::WHITE).background_color(Color32::DARK_GRAY)
+    RichText::new(s)
+        .heading()
+        .color(Color32::WHITE)
+        .background_color(Color32::DARK_GRAY)
 }
 
 fn debug_info(
-    ctx: &egui::Context, 
+    ctx: &egui::Context,
     input_state: &egui_backend::EguiInputState,
-    gamestate: &Game, 
-    fps: i32
+    gamestate: &Game,
+    fps: i32,
 ) {
     let playerx = gamestate.player.position.x;
     let playery = gamestate.player.position.y;
@@ -24,10 +27,7 @@ fn debug_info(
         ctx.native_pixels_per_point().unwrap_or(1.0),
         input_state.pixels_per_point,
     );
-    let pixels_per_point = format!(
-        "ctx.pixels_per_point() = {}",
-        ctx.pixels_per_point(),
-    );
+    let pixels_per_point = format!("ctx.pixels_per_point() = {}", ctx.pixels_per_point(),);
     let paused = format!("paused = {}", gamestate.is_paused());
     let fps_text = format!("{fps} FPS");
     let chunk_updates = format!("chunk updates: {}", gamestate.world.get_chunk_updates());

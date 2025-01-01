@@ -83,7 +83,7 @@ impl Game {
                 //Handle scrolling
                 WindowEvent::Scroll(_x, y) => {
                     self.scroll_state = y as f32;
-                } 
+                }
                 _ => {}
             }
         }

@@ -1,9 +1,9 @@
 mod intersection;
 mod movement;
 
+use super::inventory::Hotbar;
 use super::Hitbox;
 use super::KeyState;
-use super::inventory::Hotbar;
 use crate::impfile;
 use crate::voxel::World;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
@@ -332,7 +332,7 @@ impl Player {
     pub fn from_entry(entry: &impfile::Entry) -> Self {
         let x = entry.get_var("x").parse::<f32>().unwrap_or(0.0);
         let y = entry.get_var("y").parse::<f32>().unwrap_or(0.0);
-        let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0); 
+        let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0);
 
         Self {
             position: Vector3::new(x, y, z),

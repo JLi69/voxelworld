@@ -1,4 +1,4 @@
-use super::{player::Player, Camera, Game, inventory::Hotbar};
+use super::{inventory::Hotbar, player::Player, Camera, Game};
 use crate::{impfile, voxel::World};
 
 fn load_camera(path: &str) -> Camera {

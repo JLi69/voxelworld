@@ -1,12 +1,13 @@
 pub mod create_world_menu;
 pub mod credits_screen;
+pub mod debug;
 pub mod main_menu;
 pub mod pause_menu;
 pub mod select_world_menu;
-pub mod debug;
 
 pub use create_world_menu::run_create_world_menu;
 pub use credits_screen::run_credits_screen;
+pub use debug::display_debug_window;
 use egui_backend::{
     egui::{self, vec2, Color32, Pos2, RawInput, Rect},
     glfw::PWindow,
@@ -16,7 +17,6 @@ use egui_gl_glfw as egui_backend;
 pub use main_menu::run_main_menu;
 pub use pause_menu::run_pause_menu;
 pub use select_world_menu::run_select_world_menu;
-pub use debug::display_debug_window;
 
 //Initialized the egui input state
 pub fn init_egui_input_state(window: &PWindow) -> EguiInputState {

@@ -1,12 +1,14 @@
+use super::ChunkTables;
 use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
 use crate::game::inventory::Item;
-use crate::gfx::buildchunk::{add_block_vertices, add_block_vertices_transparent, add_block_vertices_fluid};
+use crate::gfx::buildchunk::{
+    add_block_vertices, add_block_vertices_fluid, add_block_vertices_transparent,
+};
 use crate::gfx::chunktable::ChunkVao;
 use crate::voxel::{self, Chunk};
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
-use cgmath::{Matrix4, SquareMatrix, Vector3, Deg};
-use super::ChunkTables;
+use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 
 pub fn display_selected_outline(gamestate: &Game) {
     let outlineshader = gamestate.shaders.use_program("outline");
@@ -80,11 +82,7 @@ pub fn display_water(
     }
 }
 
-pub fn display_hotbar(
-    gamestate: &Game,
-    w: i32,
-    h: i32,
-) {
+pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
         gl::Disable(gl::CULL_FACE);
@@ -103,7 +101,7 @@ pub fn display_hotbar(
         let position = Vector3::new(
             i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE,
             -h as f32 / 2.0 + HOTBAR_SIZE,
-            0.0
+            0.0,
         );
         let mut transform = Matrix4::identity();
 
@@ -135,7 +133,7 @@ pub fn display_hotbar(
         let position = Vector3::new(
             i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE,
             -h as f32 / 2.0 + HOTBAR_SIZE,
-            0.0
+            0.0,
         );
 
         let mut transform = Matrix4::identity();
@@ -157,7 +155,7 @@ pub fn display_hotbar(
                 //these so it should be fine
                 chunk.set_block_relative(1, 1, 1, *block);
                 let mut vert_data = vec![];
-                let adj_chunks = [ None; 6 ];
+                let adj_chunks = [None; 6];
                 add_block_vertices(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
                 add_block_vertices_transparent(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
                 add_block_vertices_fluid(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);

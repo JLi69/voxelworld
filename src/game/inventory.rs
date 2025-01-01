@@ -1,4 +1,4 @@
-use crate::{voxel::Block, impfile};
+use crate::{impfile, voxel::Block};
 
 #[derive(Clone, Copy)]
 pub enum Item {
@@ -11,9 +11,7 @@ fn item_to_string(item: Item) -> String {
         Item::BlockItem(block, amt) => {
             "block,".to_string() + &block.id.to_string() + "," + &amt.to_string()
         }
-        Item::EmptyItem => {
-            "empty".to_string()
-        }
+        Item::EmptyItem => "empty".to_string(),
     }
 }
 
@@ -22,17 +20,8 @@ fn string_to_item(s: &str) -> Item {
     let tokens: Vec<String> = s.split(",").map(|s| s.to_string()).collect();
 
     if tokens.len() == 3 && tokens[0] == "block" {
-        let id = if let Ok(id) = tokens[1].parse::<u8>() {
-            id
-        } else {
-            0
-        };
-
-        let amt = if let Ok(amt) = tokens[2].parse::<u8>() {
-            amt
-        } else {
-            0
-        };
+        let id = tokens[1].parse::<u8>().unwrap_or(0);
+        let amt = tokens[2].parse::<u8>().unwrap_or(0);
 
         if amt == 0 || id == 0 {
             return Item::EmptyItem;
@@ -77,7 +66,7 @@ impl Hotbar {
         self.items[self.selected]
     }
 
-    pub fn scroll(&mut self, scroll_dir: f32) { 
+    pub fn scroll(&mut self, scroll_dir: f32) {
         if scroll_dir != 0.0 {
             let dir = scroll_dir.signum() as i32;
             if dir == -1 {
@@ -106,11 +95,11 @@ impl Hotbar {
     }
 
     pub fn from_entry(entry: &impfile::Entry) -> Self {
-        let mut hotbar_items = [ Item::EmptyItem; HOTBAR_SIZE ];
-        
-        for i in 0..HOTBAR_SIZE {
+        let mut hotbar_items = [Item::EmptyItem; HOTBAR_SIZE];
+
+        for (i, item) in hotbar_items.iter_mut().enumerate() {
             let slot = i.to_string();
-            hotbar_items[i] = string_to_item(&entry.get_var(&slot));
+            *item = string_to_item(&entry.get_var(&slot));
         }
 
         Self {

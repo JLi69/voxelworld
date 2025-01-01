@@ -1,5 +1,5 @@
-use cgmath::Vector3;
 use crate::voxel::Block;
+use cgmath::Vector3;
 
 //Axis aligned bounding box (this hitbox is aligned with the x, y, z axis)
 pub struct Hitbox {
@@ -10,9 +10,9 @@ pub struct Hitbox {
 //Returns the height of the fluid based on its geometry
 fn get_fluid_height(geometry: u8) -> f32 {
     if geometry <= 7 {
-        return geometry as f32 / 8.0
+        return geometry as f32 / 8.0;
     }
-    
+
     1.0
 }
 

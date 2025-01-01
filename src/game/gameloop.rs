@@ -162,7 +162,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gfx::display::display_hotbar(gamestate, w, h);
         //Display gui
         gui::set_ui_gl_state();
-        gamestate.update_display_debug(); 
+        gamestate.update_display_debug();
         let mut pause_action = None;
         if gamestate.display_debug {
             //Display debug screen

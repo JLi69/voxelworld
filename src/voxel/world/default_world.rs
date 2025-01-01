@@ -63,14 +63,11 @@ fn gen_chunk(chunk: &mut Chunk, heights: &[i32], world_generator: &WorldGenerato
 
             let h = (height + 1).max(SEA_LEVEL + 1);
             for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
-                if y == BOTTOM_OF_WORLD {
+                let indestructible = (y == BOTTOM_OF_WORLD)
+                    || (y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2)
+                    || (y == BOTTOM_OF_WORLD + 2 && rng.i32(0..6) == 0);
+                if indestructible {
                     //Bottom of the world
-                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
-                    continue;
-                } else if y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2 { 
-                    chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
-                    continue;
-                } else if y == BOTTOM_OF_WORLD + 2 && rng.i32(0..6) == 0 {
                     chunk.set_block(x, y, z, Block::new_id(INDESTRUCTIBLE));
                     continue;
                 }
@@ -136,7 +133,7 @@ fn gen_tree_positions(
         let treex = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
         let treez = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
         let x = treex + chunkx * CHUNK_SIZE_I32;
-        let z = treez + chunkz * CHUNK_SIZE_I32; 
+        let z = treez + chunkz * CHUNK_SIZE_I32;
         let h = tree_generator.i32(4..=6);
         positions.push((x, z));
         heights.push(h);
