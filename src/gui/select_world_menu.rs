@@ -54,17 +54,18 @@ impl SelectWorldMenuState {
 }
 
 //Display the select world gui
-fn display_create_world(
+fn display_select_world(
     ui: &mut egui::Ui,
     menu_state: &mut SelectWorldMenuState,
     gamestate: &mut Game,
+    h: i32,
 ) {
     ui.vertical_centered(|ui| {
         ui.label(" ");
         ui.label(menu_text("Select World", 32.0, Color32::WHITE));
         ui.label(" ");
 
-        egui::ScrollArea::vertical().show(ui, |ui| {
+        egui::ScrollArea::vertical().max_height(h as f32 - 256.0).show(ui, |ui| {
             for world in &menu_state.worlds {
                 ui.selectable_value(
                     &mut menu_state.selected_world,
@@ -186,7 +187,7 @@ pub fn run_select_world_menu(
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 if menu_state.to_delete.is_empty() {
-                    display_create_world(ui, &mut menu_state, gamestate);
+                    display_select_world(ui, &mut menu_state, gamestate, h);
                 } else {
                     display_delete_world(ui, &mut menu_state, h);
                 }

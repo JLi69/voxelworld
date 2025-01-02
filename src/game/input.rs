@@ -1,6 +1,6 @@
 use crate::gfx;
 use crate::Game;
-use egui_gl_glfw::EguiInputState;
+use egui_gl_glfw::{EguiInputState, egui::{emath, Event, MouseWheelUnit}};
 use glfw::CursorMode;
 use glfw::MouseButton;
 use glfw::{Action, GlfwReceiver, Key, PWindow, WindowEvent};
@@ -116,8 +116,15 @@ impl Game {
                     self.set_mouse_state(button, action);
                 }
                 //Handle scrolling
-                WindowEvent::Scroll(_x, y) => {
+                WindowEvent::Scroll(x, y) => {
                     self.scroll_state = y as f32;
+                    //This is a hack to make scrolling better,
+                    //probably should be fixed later.
+                    egui_input_state.input.events.push(Event::MouseWheel {
+                        unit: MouseWheelUnit::Line,
+                        delta: emath::vec2(x as f32, y as f32),
+                        modifiers: egui_input_state.modifiers,
+                    });
                 }
                 _ => {}
             }

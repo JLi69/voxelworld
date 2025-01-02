@@ -1,5 +1,7 @@
 by Nullptr Error
 
+3rd Party Artwork used:
+
 Title: Worldmap/Overworld tileset
 Author: Beast
 URL: https://opengameart.org/content/worldmapoverworld-tileset
@@ -7,3 +9,6 @@ License: CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
 Notes: used water.png for water texture
 
 Font used: Pixeloid Sans (License: SIL Open Font License)
+
+Voxelworld License: GPLv3
+Check out the source code here: https://github.com/JLi69/voxelworld

@@ -32,7 +32,7 @@ fn read_credits_text() -> Vec<String> {
 //Display the credits, line by line
 fn display_credits(ui: &mut egui::Ui, credits: &[String]) {
     for text in credits {
-        ui.label(menu_text(text, 24.0, Color32::WHITE));
+        ui.label(menu_text(text, 20.0, Color32::WHITE));
     }
 }
 
@@ -67,23 +67,25 @@ pub fn run_credits_screen(
         let (w, h) = window.get_size();
         painter.set_size(w as u32, h as u32);
 
-        ctx.begin_pass(input_state.input.take());
+        ctx.begin_pass(input_state.input.take());  
 
-        //Display main menu
+        //Display credits
         egui::CentralPanel::default()
             .frame(transparent_frame())
-            .show(&ctx, |ui| {
-                ui.vertical_centered(|ui| {
-                    ui.label(menu_text("Credits", 48.0, Color32::WHITE));
-                    display_credits(ui, &credits_text);
+            .show(&ctx, |ui| { 
+                ui.vertical(|ui| {
+                    egui::ScrollArea::vertical().show(ui, |ui| {  
+                        ui.label(menu_text("Credits", 48.0, Color32::WHITE));
+                        display_credits(ui, &credits_text);
 
-                    //Return to main menu
-                    if ui
-                        .button(menu_text("Main Menu", 24.0, Color32::WHITE))
-                        .clicked()
-                    {
-                        quit_to_menu = true;
-                    }
+                        //Return to main menu
+                        if ui
+                            .button(menu_text("Main Menu", 24.0, Color32::WHITE))
+                            .clicked()
+                        {
+                            quit_to_menu = true;
+                        }
+                    }); 
                 });
             });
 
