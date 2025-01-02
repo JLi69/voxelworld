@@ -69,5 +69,5 @@ pub fn display_debug_window(
 
     //Display
     let clipped_shapes = ctx.tessellate(shapes, pixels_per_point);
-    painter.paint_and_update_textures(1.0, &clipped_shapes, &textures_delta);
+    painter.paint_and_update_textures(pixels_per_point, &clipped_shapes, &textures_delta);
 }
