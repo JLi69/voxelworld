@@ -158,7 +158,7 @@ pub fn run_create_world_menu(
             platform_output,
             textures_delta,
             shapes,
-            pixels_per_point,
+            pixels_per_point: _,
             viewport_output: _,
         } = ctx.end_pass();
 
@@ -168,8 +168,12 @@ pub fn run_create_world_menu(
         }
 
         //Display
-        let clipped_shapes = ctx.tessellate(shapes, pixels_per_point);
-        painter.paint_and_update_textures(1.0, &clipped_shapes, &textures_delta);
+        let clipped_shapes = ctx.tessellate(shapes, native_pixels_per_point);
+        painter.paint_and_update_textures(
+            native_pixels_per_point,
+            &clipped_shapes,
+            &textures_delta,
+        );
 
         //Handle/update input states
         gamestate.update_input_states();
