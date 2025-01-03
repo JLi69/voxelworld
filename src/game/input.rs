@@ -1,6 +1,9 @@
 use crate::gfx;
 use crate::Game;
-use egui_gl_glfw::{EguiInputState, egui::{emath, Event, MouseWheelUnit}};
+use egui_gl_glfw::{
+    egui::{emath, Event, MouseWheelUnit},
+    EguiInputState,
+};
 use glfw::CursorMode;
 use glfw::MouseButton;
 use glfw::{Action, GlfwReceiver, Key, PWindow, WindowEvent};
@@ -194,15 +197,18 @@ impl Game {
     }
 }
 
-//Release/capture the mouse cursor if escape is pressed
+//Capture the mouse cursor if the game is paused,
+//Release it if the game is unpaused
 pub fn release_cursor(gamestate: &Game, window: &mut PWindow) {
-    if gamestate.get_key_state(Key::Escape) == KeyState::JustPressed {
-        let cursormode = window.get_cursor_mode();
-
-        if cursormode == CursorMode::Disabled {
-            window.set_cursor_mode(CursorMode::Normal);
-        } else {
-            window.set_cursor_mode(CursorMode::Disabled);
-        }
+    if gamestate.paused {
+        window.set_cursor_mode(CursorMode::Normal);
+    } else {
+        window.set_cursor_mode(CursorMode::Disabled);
     }
+}
+
+//Converts the glfw mouse position into floats, with (0.0, 0.0) as the center
+//of the screen
+pub fn convert_mouse_pos(x: i32, y: i32, w: i32, h: i32) -> (f32, f32) {
+    ((x - w / 2) as f32, -(y - h / 2) as f32)
 }

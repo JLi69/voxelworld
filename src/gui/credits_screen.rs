@@ -67,14 +67,14 @@ pub fn run_credits_screen(
         let (w, h) = window.get_size();
         painter.set_size(w as u32, h as u32);
 
-        ctx.begin_pass(input_state.input.take());  
+        ctx.begin_pass(input_state.input.take());
 
         //Display credits
         egui::CentralPanel::default()
             .frame(transparent_frame())
-            .show(&ctx, |ui| { 
+            .show(&ctx, |ui| {
                 ui.vertical(|ui| {
-                    egui::ScrollArea::vertical().show(ui, |ui| {  
+                    egui::ScrollArea::vertical().show(ui, |ui| {
                         ui.label(menu_text("Credits", 48.0, Color32::WHITE));
                         display_credits(ui, &credits_text);
 
@@ -85,7 +85,7 @@ pub fn run_credits_screen(
                         {
                             quit_to_menu = true;
                         }
-                    }); 
+                    });
                 });
             });
 

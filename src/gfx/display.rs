@@ -1,3 +1,5 @@
+pub mod block_menu;
+
 use super::ChunkTables;
 use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
@@ -8,6 +10,7 @@ use crate::gfx::buildchunk::{
 use crate::gfx::chunktable::ChunkVao;
 use crate::voxel::{self, Chunk};
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
+pub use block_menu::display_block_menu;
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 
 pub fn display_selected_outline(gamestate: &Game) {

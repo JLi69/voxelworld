@@ -66,6 +66,10 @@ impl Hotbar {
         self.items[self.selected]
     }
 
+    pub fn set_selected(&mut self, item: Item) {
+        self.items[self.selected] = item;
+    }
+
     pub fn scroll(&mut self, scroll_dir: f32) {
         if scroll_dir != 0.0 {
             let dir = scroll_dir.signum() as i32;

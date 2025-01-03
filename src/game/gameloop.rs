@@ -1,6 +1,8 @@
+use super::input::convert_mouse_pos;
 use super::{EventHandler, Game};
 use crate::assets::Texture;
 use crate::gfx::buildchunk::generate_chunk_vertex_data;
+use crate::gfx::display::block_menu::{BLOCK_MENU_HEIGHT, BLOCK_MENU_WIDTH};
 use crate::gfx::fluid::generate_fluid_vertex_data;
 use crate::gui;
 use crate::{game, gfx, gui::pause_menu::PauseMenuAction};
@@ -106,7 +108,10 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     while !window.should_close() && !quit {
         let start = std::time::Instant::now();
 
-        //Update render buffer and water frame dimensions
+        //Get mouse position
+        let (mousex, mousey) = window.get_cursor_pos();
+        let (mousex, mousey) = (mousex as i32, mousey as i32); //Convert to i32
+                                                               //Update render buffer and water frame dimensions
         let (w, h) = window.get_size();
         unsafe {
             gl::BindRenderbuffer(gl::RENDERBUFFER, depth_rbo);
@@ -169,6 +174,15 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         if gamestate.display_debug {
             //Display debug screen
             gui::display_debug_window(&ctx, &mut input_state, &mut painter, gamestate, fps);
+            if gamestate.get_display_block_menu() {
+                gfx::display::display_block_menu(gamestate, w, h, mousex, mousey);
+            }
+        } else if gamestate.display_block_menu {
+            gfx::display::display_block_menu(gamestate, w, h, mousex, mousey);
+            let menu =
+                game::block_menu::get_positions(gamestate, -BLOCK_MENU_WIDTH, BLOCK_MENU_HEIGHT);
+            let (mousex_f32, mousey_f32) = convert_mouse_pos(mousex, mousey, w, h);
+            game::block_menu::select_block(gamestate, &menu, mousex_f32, mousey_f32);
         } else if gamestate.paused {
             pause_action = gui::run_pause_menu(&ctx, &mut input_state, &mut painter);
         }
@@ -191,8 +205,11 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         }
 
         gamestate.pause();
-        if !gamestate.paused {
+        if !gamestate.paused || gamestate.display_block_menu {
             gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
+        }
+
+        if !gamestate.paused {
             //Update gameobjects
             gamestate.update_player(dt, window.get_cursor_mode());
             //Destroy and place blocks

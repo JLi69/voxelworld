@@ -107,11 +107,29 @@ impl Game {
     //Handle pausing
     pub fn pause(&mut self) {
         if self.get_key_state(Key::Escape) == KeyState::JustPressed {
+            //Escape out of the block menu
+            if self.display_block_menu {
+                self.display_block_menu = false;
+                self.paused = false;
+                return;
+            }
+
+            //Pause the game
             self.paused = !self.paused;
+        }
+
+        //Toggle the block menu with Tab (Note: the block menu pauses the game)
+        if self.get_key_state(Key::Tab) == KeyState::JustPressed {
+            self.paused = !self.paused;
+            self.display_block_menu = !self.display_block_menu;
         }
     }
 
     pub fn is_paused(&self) -> bool {
         self.paused
+    }
+
+    pub fn get_display_block_menu(&self) -> bool {
+        self.display_block_menu
     }
 }

@@ -13,3 +13,7 @@
 "crosshair" {
 	"path" = "assets/textures/crosshair.png";
 }
+
+"block_menu_background" {
+	"path" = "assets/textures/block_menu.png";
+}

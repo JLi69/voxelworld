@@ -1,4 +1,5 @@
 pub mod assets;
+pub mod block_menu;
 pub mod camera;
 pub mod gameloop;
 pub mod input;
@@ -29,12 +30,14 @@ pub use std::collections::HashMap;
 //Application config values, these are not meant to be changed by normal users
 struct Config {
     font_path: String,
+    block_menu: Vec<u8>,
 }
 
 impl Config {
     pub fn default() -> Self {
         Self {
             font_path: String::new(),
+            block_menu: vec![],
         }
     }
 }
@@ -102,6 +105,7 @@ pub struct Game {
     cfg: Config,
     //Debug info
     display_debug: bool,
+    display_block_menu: bool,
 }
 
 impl Game {
@@ -129,6 +133,7 @@ impl Game {
             textures: TextureManager::new(),
             cfg: Config::default(),
             display_debug: false,
+            display_block_menu: false,
         }
     }
 
@@ -171,5 +176,15 @@ impl Game {
         }
         let e = &entries[0];
         self.cfg.font_path = e.get_var("font_path");
+
+        self.cfg.block_menu = e
+            .get_var("block_menu")
+            .split(",")
+            .map(|s| s.parse::<u8>().unwrap_or(1))
+            .collect();
+    }
+
+    pub fn get_block_menu(&self) -> &[u8] {
+        &self.cfg.block_menu
     }
 }

@@ -65,15 +65,17 @@ fn display_select_world(
         ui.label(menu_text("Select World", 32.0, Color32::WHITE));
         ui.label(" ");
 
-        egui::ScrollArea::vertical().max_height(h as f32 - 256.0).show(ui, |ui| {
-            for world in &menu_state.worlds {
-                ui.selectable_value(
-                    &mut menu_state.selected_world,
-                    world.clone(),
-                    menu_text(world, 24.0, Color32::WHITE),
-                );
-            }
-        });
+        egui::ScrollArea::vertical()
+            .max_height(h as f32 - 256.0)
+            .show(ui, |ui| {
+                for world in &menu_state.worlds {
+                    ui.selectable_value(
+                        &mut menu_state.selected_world,
+                        world.clone(),
+                        menu_text(world, 24.0, Color32::WHITE),
+                    );
+                }
+            });
 
         ui.label(" ");
         if ui
