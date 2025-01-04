@@ -10,5 +10,5 @@ copy cfg.impfile release\%VOXELWORLD_DIR%
 Xcopy /E /I assets\ release\%VOXELWORLD_DIR%\assets\
 cd release\
 Rem NOTE: You need 7-zip installed to use this script
-"C:\Program Files\7-Zip\7z.exe" a -tzip voxelworld-linux.zip %VOXELWORLD_DIR%
+"C:\Program Files\7-Zip\7z.exe" a -tzip voxelworld-windows.zip %VOXELWORLD_DIR%
 cd ..
