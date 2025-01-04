@@ -106,6 +106,7 @@ pub struct Game {
     //Debug info
     display_debug: bool,
     display_block_menu: bool,
+    pub display_hud: bool,
 }
 
 impl Game {
@@ -134,6 +135,7 @@ impl Game {
             cfg: Config::default(),
             display_debug: false,
             display_block_menu: false,
+            display_hud: true,
         }
     }
 

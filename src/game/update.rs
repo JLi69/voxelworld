@@ -132,4 +132,11 @@ impl Game {
     pub fn get_display_block_menu(&self) -> bool {
         self.display_block_menu
     }
+
+    //Toggle hud
+    pub fn toggle_hud(&mut self) {
+        if self.get_key_state(Key::F1) == KeyState::JustPressed {
+            self.display_hud = !self.display_hud;
+        }
+    }
 }

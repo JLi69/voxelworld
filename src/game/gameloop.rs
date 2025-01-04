@@ -163,10 +163,12 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         //Display selection outline
         gfx::display::display_selected_outline(gamestate);
 
-        //Display crosshair
-        gfx::display::display_crosshair(gamestate, w, h);
-        //Display hotbar
-        gfx::display::display_hotbar(gamestate, w, h);
+        if gamestate.display_hud {
+            //Display crosshair
+            gfx::display::display_crosshair(gamestate, w, h);
+            //Display hotbar
+            gfx::display::display_hotbar(gamestate, w, h);
+        }
         //Display gui
         gui::set_ui_gl_state();
         gamestate.update_display_debug();
@@ -204,6 +206,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             }
         }
 
+        gamestate.toggle_hud();
         gamestate.pause();
         if !gamestate.paused || gamestate.display_block_menu {
             gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
