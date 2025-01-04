@@ -144,6 +144,7 @@ impl Game {
         self.player = Player::new(15.5, 0.0, 15.5);
         self.build_cooldown = 0.0;
         self.destroy_cooldown = 0.0;
+        self.paused = false;
     }
 
     //Initialize game state

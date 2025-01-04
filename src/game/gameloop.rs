@@ -199,7 +199,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
                 }
                 //Quit to the main menu
                 PauseMenuAction::QuitToMainMenu => {
-                    gamestate.paused = false;
                     quit = true;
                     window.set_cursor_mode(glfw::CursorMode::Normal);
                 }
