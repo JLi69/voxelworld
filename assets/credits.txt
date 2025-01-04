@@ -8,6 +8,12 @@ URL: https://opengameart.org/content/worldmapoverworld-tileset
 License: CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
 Notes: used water.png for water texture
 
+Title: 	Seamless Pattern Pack - beach_sand.png
+Author: n4
+URL: https://opengameart.org/content/seamless-pattern-pack-beachsandpng
+License: CC0
+Notes: cropped to be used as sand texture
+
 Font used: Pixeloid Sans (License: SIL Open Font License)
 
 Voxelworld License: GPLv3
