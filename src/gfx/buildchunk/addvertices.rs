@@ -2,6 +2,7 @@ mod fluid;
 mod grass;
 mod log;
 mod transparent;
+mod furnace;
 
 use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
@@ -12,6 +13,7 @@ pub use fluid::add_fluid_vertices;
 pub use grass::add_block_vertices_grass;
 pub use log::add_block_vertices_log;
 pub use transparent::add_block_vertices_trans;
+pub use furnace::add_block_vertices_furnace_rotated;
 
 #[derive(Copy, Clone)]
 struct FaceInfo {

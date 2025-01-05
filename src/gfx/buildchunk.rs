@@ -1,9 +1,14 @@
 mod addvertices;
 
-use self::addvertices::add_fluid_vertices;
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
 use addvertices::add_block_vertices_trans;
-use addvertices::{add_block_vertices_default, add_block_vertices_grass, add_block_vertices_log};
+use addvertices::{
+    add_block_vertices_default,
+    add_block_vertices_grass, 
+    add_block_vertices_log, 
+    add_fluid_vertices, 
+    add_block_vertices_furnace_rotated
+};
 
 pub type Int3 = (i32, i32, i32);
 
@@ -38,6 +43,22 @@ pub fn add_block_vertices(
         8 => {
             //Log
             add_block_vertices_log(chunk, adj_chunks, xyz, vert_data, 24, 25);
+        }
+        37 => {
+            //Chest
+            add_block_vertices_furnace_rotated(chunk, adj_chunks, xyz, vert_data, 38, 39);
+        }
+        40 => {
+            //Furnace
+            add_block_vertices_furnace_rotated(chunk, adj_chunks, xyz, vert_data, 41, 42);
+        }
+        43 => {
+            //Farmland
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 44, 43);
+        }
+        45 => {
+            //Dry Farmland
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 46, 45);
         }
         _ => {
             //Everything else

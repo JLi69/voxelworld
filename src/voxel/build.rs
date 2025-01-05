@@ -183,6 +183,35 @@ pub fn destroy_block(
     None
 }
 
+fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
+    if !block.can_rotate() {
+        return;
+    }
+
+    if dir.y.abs() > dir.z.abs() && dir.y.abs() > dir.x.abs() && !block.rotate_y_only() {
+        //Set orientation of the block
+        if dir.y.signum() as i32 == -1 && block.can_rotate() {
+            block.set_orientation(3);
+        } else if dir.y.signum() as i32 == 1 && block.can_rotate() {
+            block.set_orientation(0);
+        } 
+    } else if dir.z.abs() >= dir.x.abs() {
+        //Set orientation of the block
+        if dir.z.signum() as i32 == -1 && block.can_rotate() {
+            block.set_orientation(5);
+        } else if dir.z.signum() as i32 == 1 && block.can_rotate() {
+            block.set_orientation(2);
+        }
+    } else if dir.x.abs() > dir.z.abs() {
+        //Set orientation of the block
+        if dir.x.signum() as i32 == -1 && block.can_rotate() {
+            block.set_orientation(4);
+        } else if dir.x.signum() as i32 == 1 && block.can_rotate() {
+            block.set_orientation(1);
+        }
+    }
+}
+
 //Returns the (x, y, z) coordinate of the block placed as an option
 //Returns none if no block is placed
 pub fn place_block(
@@ -214,34 +243,13 @@ pub fn place_block(
     }
 
     match axis {
-        Axis::X => {
-            ix -= dir.x.signum() as i32;
-            //Set orientation of the block
-            if dir.x.signum() as i32 == -1 && block.can_rotate() {
-                block.set_orientation(4);
-            } else if dir.x.signum() as i32 == 1 && block.can_rotate() {
-                block.set_orientation(1);
-            }
-        }
-        Axis::Y => {
-            iy -= dir.y.signum() as i32;
-            //Set orientation of the block
-            if dir.y.signum() as i32 == -1 && block.can_rotate() {
-                block.set_orientation(3);
-            } else if dir.y.signum() as i32 == 1 && block.can_rotate() {
-                block.set_orientation(0);
-            }
-        }
-        Axis::Z => {
-            iz -= dir.z.signum() as i32;
-            //Set orientation of the block
-            if dir.z.signum() as i32 == -1 && block.can_rotate() {
-                block.set_orientation(5);
-            } else if dir.z.signum() as i32 == 1 && block.can_rotate() {
-                block.set_orientation(2);
-            }
-        }
+        Axis::X => ix -= dir.x.signum() as i32,
+        Axis::Y => iy -= dir.y.signum() as i32,
+        Axis::Z => iz -= dir.z.signum() as i32,
     }
+
+    set_block_rotation(dir, &mut block);
+
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
     if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
         let prev_block = world.get_block(ix, iy, iz);
