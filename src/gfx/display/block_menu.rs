@@ -5,15 +5,11 @@ use crate::{
         input::convert_mouse_pos,
         Game,
     },
-    gfx::{
-        buildchunk::{
-            add_block_vertices, add_block_vertices_fluid, add_block_vertices_transparent,
-        },
-        chunktable::ChunkVao,
-    },
     voxel::{Block, Chunk},
 };
-use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
+use cgmath::{Matrix4, Vector3};
+
+use super::inventory::{get_block_item_transform, display_block_item};
 
 pub const BLOCK_MENU_WIDTH: f32 = 384.0;
 pub const BLOCK_MENU_HEIGHT: f32 = 224.0;
@@ -63,22 +59,9 @@ pub fn display_block_menu(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey:
             ICON_SIZE
         };
 
-        let mut transform = Matrix4::identity();
-        transform = Matrix4::from_angle_y(Deg(45.0)) * transform;
-        transform = Matrix4::from_angle_x(Deg(30.0)) * transform;
-        transform = Matrix4::from_scale(size) * transform;
-        transform = Matrix4::from_translation(position) * transform;
+        let transform = get_block_item_transform(size, position, Block::new_id(*block));
         orthographic_shader.uniform_matrix4f("transform", &transform);
-
-        chunk.set_block_relative(1, 1, 1, Block::new_id(*block));
-        let mut vert_data = vec![];
-        let adj_chunks = [None; 6];
-        add_block_vertices(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
-        add_block_vertices_transparent(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
-        add_block_vertices_fluid(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
-        let vao = ChunkVao::generate_new(&vert_data);
-        vao.draw();
-        vao.delete();
+        display_block_item(&mut chunk, Block::new_id(*block));
     }
 
     unsafe {

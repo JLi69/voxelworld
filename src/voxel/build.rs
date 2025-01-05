@@ -194,7 +194,7 @@ fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
             block.set_orientation(3);
         } else if dir.y.signum() as i32 == 1 && block.can_rotate() {
             block.set_orientation(0);
-        } 
+        }
     } else if dir.z.abs() >= dir.x.abs() {
         //Set orientation of the block
         if dir.z.signum() as i32 == -1 && block.can_rotate() {

@@ -7,6 +7,7 @@ pub const CAN_ROTATE_FLAG: u8 = 1 << 2;
 pub const NO_HITBOX: u8 = 1 << 3;
 pub const FLUID: u8 = 1 << 4;
 pub const ROTATE_Y_ONLY: u8 = 1 << 5;
+pub const FLAT_ITEM: u8 = 1 << 6;
 
 //TODO: Have a better way of configuring block flags other than hardcoding
 //This function should be called at the start of the game
@@ -35,6 +36,10 @@ pub fn init_voxel_flags() {
         //Furnace
         VOXEL_FLAGS[40] |= CAN_ROTATE_FLAG;
         VOXEL_FLAGS[40] |= ROTATE_Y_ONLY;
+        //Sapling
+        VOXEL_FLAGS[47] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[47] |= NO_HITBOX;
+        VOXEL_FLAGS[47] |= FLAT_ITEM;
     }
 }
 

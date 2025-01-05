@@ -1,6 +1,6 @@
-use crate::voxel::{Chunk, EMPTY_BLOCK};
-use crate::gfx::face_data::{BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE};
 use super::{add_face, ChunkData, FaceInfo, Int3};
+use crate::gfx::face_data::{BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE};
+use crate::voxel::{Chunk, EMPTY_BLOCK};
 
 fn add_block_vertices_furnace(
     chunk: &Chunk,

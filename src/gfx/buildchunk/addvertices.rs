@@ -1,8 +1,9 @@
 mod fluid;
+mod furnace;
 mod grass;
 mod log;
 mod transparent;
-mod furnace;
+mod plant;
 
 use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
@@ -10,10 +11,11 @@ use crate::gfx::face_data::{
 };
 use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK};
 pub use fluid::add_fluid_vertices;
+pub use furnace::add_block_vertices_furnace_rotated;
 pub use grass::add_block_vertices_grass;
 pub use log::add_block_vertices_log;
 pub use transparent::add_block_vertices_trans;
-pub use furnace::add_block_vertices_furnace_rotated;
+pub use plant::add_block_vertices_plant;
 
 #[derive(Copy, Clone)]
 struct FaceInfo {
@@ -112,4 +114,23 @@ pub fn add_block_vertices_default(
     add_face(chunk, adj_chunks[4], xyz, (0, 0, -1), vert_data, &FRONT_FACE, facez);
     #[rustfmt::skip]
     add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez);
+}
+
+//Adds front face
+pub fn add_block_vertices_flat(
+    chunk: &Chunk,
+    xyz: Int3,
+    vert_data: &mut ChunkData,
+) {
+    let (x, y, z) = xyz;
+    let blockid = chunk
+        .get_block_relative(x as usize, y as usize, z as usize)
+        .id;
+    if blockid == EMPTY_BLOCK {
+        return;
+    }
+
+    let facex = FaceInfo::new(blockid, 0);
+    #[rustfmt::skip]
+    add_face(chunk, None, xyz, (-1, 0, 0), vert_data, &LEFT_FACE, facex);
 }

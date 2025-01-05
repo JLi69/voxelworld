@@ -1,14 +1,11 @@
 mod addvertices;
 
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
-use addvertices::add_block_vertices_trans;
 use addvertices::{
-    add_block_vertices_default,
-    add_block_vertices_grass, 
-    add_block_vertices_log, 
-    add_fluid_vertices, 
-    add_block_vertices_furnace_rotated
+    add_block_vertices_default, add_block_vertices_furnace_rotated, add_block_vertices_grass,
+    add_block_vertices_log, add_fluid_vertices, add_block_vertices_trans, add_block_vertices_plant,
 };
+pub use addvertices::add_block_vertices_flat;
 
 pub type Int3 = (i32, i32, i32);
 
@@ -74,22 +71,27 @@ pub fn add_block_vertices_transparent(
     vert_data: &mut ChunkData,
 ) {
     let (x, y, z) = xyz;
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
-    if !chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .transparent()
-    {
+    if !block.transparent() {
         return;
     }
 
-    if chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .is_fluid()
-    {
+    if block.is_fluid() {
         return;
     }
 
-    add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data);
+    match block.id {
+        47 => {
+            //Sapling
+            add_block_vertices_plant(chunk, xyz, vert_data)
+        }
+        _ => {
+            //Everything else
+            add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data);
+        }
+    }
+    
 }
 
 pub fn add_block_vertices_fluid(

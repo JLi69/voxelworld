@@ -6,7 +6,16 @@ pub mod world;
 
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
-use self::flags::{get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLUID, NO_HITBOX, TRANSPARENT_FLAG, ROTATE_Y_ONLY};
+use self::flags::{
+    get_flag, 
+    CAN_ROTATE_FLAG,
+    CONNECT_FLAG,
+    FLUID,
+    NO_HITBOX,
+    ROTATE_Y_ONLY,
+    TRANSPARENT_FLAG,
+    FLAT_ITEM,
+};
 pub use chunk::Chunk;
 pub use world::World;
 
@@ -109,5 +118,10 @@ impl Block {
     //Returns if the voxel can rotate only about the y axis
     pub fn rotate_y_only(&self) -> bool {
         get_flag(self.id) & ROTATE_Y_ONLY != 0
+    }
+
+    //Returns if the voxel must be displayed as a flat item
+    pub fn is_flat_item(&self) -> bool {
+        get_flag(self.id) & FLAT_ITEM != 0
     }
 }
