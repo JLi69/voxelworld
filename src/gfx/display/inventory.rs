@@ -1,23 +1,17 @@
 use crate::{
-    game::{assets::models::draw_elements, Game, inventory::Item},
+    game::{assets::models::draw_elements, inventory::Item, Game},
     gfx::{
         buildchunk::{
-            add_block_vertices, 
-            add_block_vertices_fluid,
+            add_block_vertices, add_block_vertices_flat, add_block_vertices_fluid,
             add_block_vertices_transparent,
-            add_block_vertices_flat,
         },
         chunktable::ChunkVao,
     },
-    voxel::{Chunk, Block},
+    voxel::{Block, Chunk},
 };
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 
-pub fn get_block_item_transform(
-    size: f32,
-    position: Vector3<f32>,
-    block: Block,
-) -> Matrix4<f32> {
+pub fn get_block_item_transform(size: f32, position: Vector3<f32>, block: Block) -> Matrix4<f32> {
     let mut transform = Matrix4::identity();
     if !block.is_flat_item() {
         transform = Matrix4::from_angle_y(Deg(45.0)) * transform;
@@ -108,7 +102,7 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
             HOTBAR_SIZE * 18.0 / 16.0 * 14.0 / 16.0
         } else {
             HOTBAR_SIZE * 14.0 / 16.0
-        }; 
+        };
 
         match item {
             Item::BlockItem(block, _amt) => {

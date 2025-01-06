@@ -1,11 +1,11 @@
 mod addvertices;
 
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
+pub use addvertices::add_block_vertices_flat;
 use addvertices::{
     add_block_vertices_default, add_block_vertices_furnace_rotated, add_block_vertices_grass,
-    add_block_vertices_log, add_fluid_vertices, add_block_vertices_trans, add_block_vertices_plant,
+    add_block_vertices_log, add_block_vertices_plant, add_block_vertices_trans, add_fluid_vertices,
 };
-pub use addvertices::add_block_vertices_flat;
 
 pub type Int3 = (i32, i32, i32);
 
@@ -91,7 +91,6 @@ pub fn add_block_vertices_transparent(
             add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data);
         }
     }
-    
 }
 
 pub fn add_block_vertices_fluid(

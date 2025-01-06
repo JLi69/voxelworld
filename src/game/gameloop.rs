@@ -158,7 +158,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             &water_frame_color,
             w,
             h,
-        ); 
+        );
 
         if gamestate.display_hud {
             //Display selection outline

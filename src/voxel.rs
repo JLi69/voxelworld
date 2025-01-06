@@ -7,14 +7,8 @@ pub mod world;
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
-    get_flag, 
-    CAN_ROTATE_FLAG,
-    CONNECT_FLAG,
-    FLUID,
-    NO_HITBOX,
-    ROTATE_Y_ONLY,
+    get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, NO_HITBOX, ROTATE_Y_ONLY,
     TRANSPARENT_FLAG,
-    FLAT_ITEM,
 };
 pub use chunk::Chunk;
 pub use world::World;

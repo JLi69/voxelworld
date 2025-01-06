@@ -7,8 +7,8 @@ use crate::game::assets::models::draw_elements;
 use crate::voxel;
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
-pub use inventory::display_hotbar;
 use cgmath::{Matrix4, SquareMatrix, Vector3};
+pub use inventory::display_hotbar;
 
 pub fn display_selected_outline(gamestate: &Game) {
     let outlineshader = gamestate.shaders.use_program("outline");

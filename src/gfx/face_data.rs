@@ -91,7 +91,6 @@ pub const DIAGONAL_FACE_1: Face = [
     1, 1, 1,
 ];
 
-
 #[rustfmt::skip]
 pub const DIAGONAL_FACE_1_REVERSED: Face = [
     //Triangle 1

@@ -9,7 +9,7 @@ use crate::{
 };
 use cgmath::{Matrix4, Vector3};
 
-use super::inventory::{get_block_item_transform, display_block_item};
+use super::inventory::{display_block_item, get_block_item_transform};
 
 pub const BLOCK_MENU_WIDTH: f32 = 384.0;
 pub const BLOCK_MENU_HEIGHT: f32 = 224.0;
