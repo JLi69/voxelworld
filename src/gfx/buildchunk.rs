@@ -82,8 +82,8 @@ pub fn add_block_vertices_transparent(
     }
 
     match block.id {
-        47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 => {
-            //Sapling
+        47..=56 => {
+            //Plants
             add_block_vertices_plant(chunk, xyz, vert_data)
         }
         _ => {
