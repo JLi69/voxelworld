@@ -158,12 +158,11 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             &water_frame_color,
             w,
             h,
-        );
-
-        //Display selection outline
-        gfx::display::display_selected_outline(gamestate);
+        ); 
 
         if gamestate.display_hud {
+            //Display selection outline
+            gfx::display::display_selected_outline(gamestate);
             //Display crosshair
             gfx::display::display_crosshair(gamestate, w, h);
             //Display hotbar

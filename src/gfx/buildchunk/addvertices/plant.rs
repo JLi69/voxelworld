@@ -41,9 +41,10 @@ pub fn add_block_vertices_plant(
         return;
     }
 
-    let face_info = FaceInfo::new(blockid, 0);
-    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_1, face_info);
-    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_2, face_info);
-    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_1_REVERSED, face_info);
-    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_2_REVERSED, face_info);
+    let facex = FaceInfo::new(blockid, 0);
+    let facez = FaceInfo::new(blockid, 2);
+    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_1, facex);
+    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_2, facez);
+    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_1_REVERSED, facex);
+    add_face_plant(xyz, vert_data, &DIAGONAL_FACE_2_REVERSED, facez);
 }

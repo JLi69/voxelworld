@@ -33,7 +33,16 @@ pub fn display_selected_outline(gamestate: &Game) {
         && !gamestate.world.get_block(ix, iy, iz).is_fluid()
     {
         let cube = gamestate.models.bind("cube");
+
+        unsafe {
+            gl::Disable(gl::CULL_FACE);
+        }
+
         draw_elements(cube);
+
+        unsafe {
+            gl::Enable(gl::CULL_FACE);
+        }
     }
 }
 
