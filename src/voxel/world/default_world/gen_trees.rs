@@ -1,7 +1,7 @@
-use crate::voxel::{CHUNK_SIZE_I32, Chunk, EMPTY_BLOCK, Block};
-use noise::{Perlin, NoiseFn};
-use super::terrain::{is_noise_cave, get_height};
-use super::{SAND_LEVEL, WorldGenerator};
+use super::terrain::{get_height, is_noise_cave};
+use super::{WorldGenerator, SAND_LEVEL};
+use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
+use noise::{NoiseFn, Perlin};
 
 fn gen_tree_positions(
     chunkx: i32,
@@ -62,7 +62,7 @@ fn generate_leaves(chunk: &mut Chunk, starty: i32, x: i32, y: i32, z: i32, heigh
 pub fn get_tree_gen_info(
     x: i32,
     z: i32,
-    world_generator: &WorldGenerator
+    world_generator: &WorldGenerator,
 ) -> (Vec<(i32, i32)>, Vec<i32>) {
     let mut tree_positions = vec![];
     let mut tree_heights = vec![];
@@ -84,10 +84,10 @@ pub fn get_tree_gen_info(
 
 pub fn generate_trees(
     chunk: &mut Chunk,
-    tree_positions: &[(i32, i32)], 
+    tree_positions: &[(i32, i32)],
     tree_heights: &[i32],
     world_generator: &WorldGenerator,
-) { 
+) {
     let chunkpos = chunk.get_chunk_pos();
     let lower_x = chunkpos.x * CHUNK_SIZE_I32;
     let upper_x = chunkpos.x * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1;

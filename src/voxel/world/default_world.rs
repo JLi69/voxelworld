@@ -5,8 +5,8 @@
 mod gen_trees;
 mod terrain;
 
-use std::collections::HashMap;
 use self::gen_trees::get_tree_gen_info;
+use std::collections::HashMap;
 
 use super::{
     gen_more::{find_in_range, get_chunks_to_generate, update_chunk_vao_table},
@@ -46,14 +46,19 @@ impl GenInfoTable {
 
     pub fn generate_heights(
         &mut self,
-        positions: &Vec<(i32, i32, i32)>, 
+        positions: &Vec<(i32, i32, i32)>,
         world_generator: &WorldGenerator,
     ) {
         self.heightmap = generate_heightmap(positions, &world_generator.terrain_generator);
     }
 
     pub fn add_heights(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
-        add_to_heightmap(x, z, &mut self.heightmap, &world_generator.terrain_generator);
+        add_to_heightmap(
+            x,
+            z,
+            &mut self.heightmap,
+            &world_generator.terrain_generator,
+        );
     }
 
     pub fn generate_trees(
@@ -83,29 +88,17 @@ impl GenInfoTable {
     }
 
     fn get(&self, x: i32, z: i32) -> Option<GenInfo> {
-        let h = if let Some(heights) = self.heightmap.get(&(x, z)) {
-            heights
-        } else {
-            return None;
-        };
+        let h = self.heightmap.get(&(x, z))?;
 
-        let trees = if let Some(tree_positions) = self.tree_positions.get(&(x, z)) {
-            tree_positions
-        } else {
-            return None;
-        };
+        let trees = self.tree_positions.get(&(x, z))?;
 
-        let tree_h = if let Some(tree_heights) = self.tree_heights.get(&(x, z)) {
-            tree_heights
-        } else {
-            return None;
-        };
+        let tree_h = self.tree_heights.get(&(x, z))?;
 
-        return Some(GenInfo {
+        Some(GenInfo {
             heights: h,
             tree_positions: trees,
             tree_heights: tree_h,
-        });
+        })
     }
 }
 
@@ -174,7 +167,12 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     }
 
     //Generate trees
-    generate_trees(chunk, gen_info.tree_positions, gen_info.tree_heights, world_generator);
+    generate_trees(
+        chunk,
+        gen_info.tree_positions,
+        gen_info.tree_heights,
+        world_generator,
+    );
 }
 
 impl World {

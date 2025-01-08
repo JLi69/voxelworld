@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::voxel::CHUNK_SIZE_I32;
-use noise::{Perlin, NoiseFn, Fbm};
+use noise::{Fbm, NoiseFn, Perlin};
+use std::collections::HashMap;
 
 pub type HeightMap = HashMap<(i32, i32), Vec<i32>>;
 
