@@ -82,7 +82,7 @@ pub fn add_block_vertices_transparent(
     }
 
     match block.id {
-        47..=56 => {
+        47..=56 | 69 => {
             //Plants
             add_block_vertices_plant(chunk, xyz, vert_data)
         }

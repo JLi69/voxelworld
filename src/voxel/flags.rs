@@ -61,6 +61,8 @@ pub fn init_voxel_flags() {
         set_plant_flags(55);
         //Blue flower
         set_plant_flags(56);
+        //Sugar cane
+        set_plant_flags(69);
     }
 }
 
