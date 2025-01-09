@@ -45,10 +45,11 @@ pub fn init_voxel_flags() {
         //Sapling
         set_plant_flags(47);
         //Mushroom
-        set_plant_flags(48); //Yeah yeah mushrooms are fungi not plants,
-                             //I know that, but they have the same voxel flags
-                             //so I don't give a flying duck
-                             //Tall grass
+        //Yeah yeah mushrooms are fungi not plants,
+        //I know that, but they have the same voxel flags
+        //so I don't give a flying duck
+        set_plant_flags(48);  
+        //Tall grass
         set_plant_flags(49);
         //Wheat
         set_plant_flags(50);
@@ -57,7 +58,7 @@ pub fn init_voxel_flags() {
         set_plant_flags(53);
         //Red flower
         set_plant_flags(54);
-        //Yellow floer
+        //Yellow flower
         set_plant_flags(55);
         //Blue flower
         set_plant_flags(56);

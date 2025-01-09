@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use super::terrain::{get_height, is_noise_cave};
 use super::{WorldGenerator, SAND_LEVEL};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
@@ -19,14 +20,19 @@ fn gen_tree_positions(
     let seed = ((xu32 as u64) << 32) | (zu32 as u64);
     let mut tree_generator = fastrand::Rng::with_seed(seed);
     let mut rng = fastrand::Rng::with_seed(seed + world_seed as u64);
+    let mut generated = HashSet::<(i32, i32)>::new();
     for _ in 0..tree_count {
         let treex = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
         let treez = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
+        if generated.contains(&(treex, treez)) {
+            continue;
+        }
         let x = treex + chunkx * CHUNK_SIZE_I32;
         let z = treez + chunkz * CHUNK_SIZE_I32;
         let h = tree_generator.i32(4..=6);
         positions.push((x, z));
         heights.push(h);
+        generated.insert((treex, treez));
     }
 }
 

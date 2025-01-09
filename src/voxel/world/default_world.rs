@@ -4,8 +4,9 @@
 
 mod gen_trees;
 mod terrain;
+mod plants;
 
-use self::gen_trees::get_tree_gen_info;
+use self::{gen_trees::get_tree_gen_info, plants::{generate_plants, get_plant_positions}};
 use std::collections::HashMap;
 
 use super::{
@@ -27,12 +28,14 @@ struct GenInfoTable {
     heightmap: HeightMap,
     tree_positions: HashMap<(i32, i32), Vec<(i32, i32)>>,
     tree_heights: HashMap<(i32, i32), Vec<i32>>,
+    plant_positions: HashMap<(i32, i32), Vec<(i32, i32)>>,
 }
 
 struct GenInfo<'a> {
     heights: &'a [i32],
     tree_positions: &'a [(i32, i32)],
     tree_heights: &'a [i32],
+    plant_positions: &'a [(i32, i32)],
 }
 
 impl GenInfoTable {
@@ -41,10 +44,11 @@ impl GenInfoTable {
             heightmap: HeightMap::new(),
             tree_positions: HashMap::new(),
             tree_heights: HashMap::new(),
+            plant_positions: HashMap::new(),
         }
     }
 
-    pub fn generate_heights(
+    fn generate_heights(
         &mut self,
         positions: &Vec<(i32, i32, i32)>,
         world_generator: &WorldGenerator,
@@ -52,7 +56,7 @@ impl GenInfoTable {
         self.heightmap = generate_heightmap(positions, &world_generator.terrain_generator);
     }
 
-    pub fn add_heights(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
+    fn add_heights(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
         add_to_heightmap(
             x,
             z,
@@ -61,7 +65,7 @@ impl GenInfoTable {
         );
     }
 
-    pub fn generate_trees(
+    fn generate_trees(
         &mut self,
         positions: &Vec<(i32, i32, i32)>,
         world_generator: &WorldGenerator,
@@ -77,7 +81,7 @@ impl GenInfoTable {
         }
     }
 
-    pub fn add_trees(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
+    fn add_trees(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
         if self.tree_positions.contains_key(&(x, z)) {
             return;
         }
@@ -87,17 +91,40 @@ impl GenInfoTable {
         self.tree_heights.insert((x, z), tree_h);
     }
 
+    fn generate_plants(
+        &mut self,
+        positions: &Vec<(i32, i32, i32)>,
+        world_generator: &WorldGenerator,
+    ) {
+        for (chunkx, _, chunkz) in positions {
+            let pos = (*chunkx, *chunkz);
+            if self.plant_positions.contains_key(&pos) {
+                continue;
+            }
+            let plants = get_plant_positions(*chunkx, *chunkz, world_generator.world_seed);
+            self.plant_positions.insert(pos, plants);
+        }
+    }
+
+    fn add_plants(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
+        if self.plant_positions.contains_key(&(x, z)) {
+            return;
+        }
+        let plants = get_plant_positions(x, z, world_generator.world_seed);
+        self.plant_positions.insert((x, z), plants);
+    }
+
     fn get(&self, x: i32, z: i32) -> Option<GenInfo> {
         let h = self.heightmap.get(&(x, z))?;
-
         let trees = self.tree_positions.get(&(x, z))?;
-
         let tree_h = self.tree_heights.get(&(x, z))?;
+        let plants = self.plant_positions.get(&(x, z))?;
 
         Some(GenInfo {
             heights: h,
             tree_positions: trees,
             tree_heights: tree_h,
+            plant_positions: plants,
         })
     }
 }
@@ -173,6 +200,8 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
         gen_info.tree_heights,
         world_generator,
     );
+    //Generate plants
+    generate_plants(chunk, gen_info.plant_positions, &mut rng, world_generator);
 }
 
 impl World {
@@ -183,6 +212,7 @@ impl World {
         let mut gen_info_table = GenInfoTable::new();
         gen_info_table.generate_heights(&positions, &self.world_generator);
         gen_info_table.generate_trees(&positions, &self.world_generator);
+        gen_info_table.generate_plants(&positions, &self.world_generator);
 
         for chunk in &mut self.chunks.values_mut() {
             let pos = chunk.get_chunk_pos();
@@ -231,6 +261,7 @@ impl World {
 
             gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             //Should always evaluate to true
             if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
