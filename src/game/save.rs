@@ -98,7 +98,7 @@ impl Game {
         }
     }
 
-    pub fn save_game(&self) {
+    pub fn save_game(&mut self) {
         self.save_camera();
         self.save_player();
         self.save_inventory();

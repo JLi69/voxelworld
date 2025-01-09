@@ -55,12 +55,17 @@ impl World {
         }
     }
 
-    pub fn save(&self) {
+    pub fn save(&mut self) {
         self.save_world_metadata();
-        for chunk in self.chunks.values() {
-            save_chunk(chunk, &self.path);
+        let mut total_chunks_saved = 0;
+        for pos in &self.to_save {
+            if let Some(chunk) = self.chunks.get(pos) {
+                save_chunk(chunk, &self.path);
+                total_chunks_saved += 1;
+            }
         }
-        eprintln!("Saved chunks.");
+        self.to_save.clear();
+        eprintln!("Saved {total_chunks_saved} chunks.");
     }
 
     pub fn save_all(&self) {
@@ -116,6 +121,7 @@ impl World {
             block_update_timer: 0.0,
             updating: HashSet::new(),
             ticks: 0,
+            to_save: HashSet::new(),
         }
     }
 
