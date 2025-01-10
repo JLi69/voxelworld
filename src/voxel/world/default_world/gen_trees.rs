@@ -1,8 +1,8 @@
-use std::collections::HashSet;
 use super::terrain::{get_height, is_noise_cave};
 use super::{WorldGenerator, SAND_LEVEL};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use noise::{NoiseFn, Perlin};
+use std::collections::HashSet;
 
 fn gen_tree_positions(
     chunkx: i32,

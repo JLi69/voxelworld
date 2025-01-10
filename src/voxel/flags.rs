@@ -48,7 +48,7 @@ pub fn init_voxel_flags() {
         //Yeah yeah mushrooms are fungi not plants,
         //I know that, but they have the same voxel flags
         //so I don't give a flying duck
-        set_plant_flags(48);  
+        set_plant_flags(48);
         //Tall grass
         set_plant_flags(49);
         //Wheat

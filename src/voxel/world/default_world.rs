@@ -3,10 +3,13 @@
  * */
 
 mod gen_trees;
-mod terrain;
 mod plants;
+mod terrain;
 
-use self::{gen_trees::get_tree_gen_info, plants::{generate_plants, get_plant_positions}};
+use self::{
+    gen_trees::get_tree_gen_info,
+    plants::{generate_plants, get_plant_positions},
+};
 use std::collections::HashMap;
 
 use super::{

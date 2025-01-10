@@ -15,6 +15,7 @@ pub const CAMERA_OFFSET: f32 = 0.7;
 pub const GRAVITY: f32 = 24.0;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
 const BLOCK_OFFSET: f32 = 0.01;
+const MAX_CROUCH_HEIGHT: f32 = 0.15;
 
 pub struct Player {
     pub position: Vector3<f32>,
@@ -28,6 +29,9 @@ pub struct Player {
     jump_cooldown: f32,
     prev_swimming: bool,
     swim_cooldown: f32,
+    sprinting: bool,
+    crouching: bool,
+    crouch_height: f32,
 }
 
 impl Player {
@@ -45,6 +49,9 @@ impl Player {
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
+            sprinting: false,
+            crouching: true,
+            crouch_height: 0.0,
         }
     }
 
@@ -203,11 +210,19 @@ impl Player {
                 self.uncollide_x(&block_hitbox);
             }
 
+            if !self.standing_on_block(world) && self.crouching {
+                self.position.x -= vx;
+            }
+
             //Move in the z direction
             self.position.z += vz;
             let block_hitbox = self.check_collision(world);
             if let Some(block_hitbox) = block_hitbox {
                 self.uncollide_z(&block_hitbox);
+            }
+
+            if !self.standing_on_block(world) && self.crouching {
+                self.position.z -= vz;
             }
 
             dx -= vx;
@@ -253,6 +268,19 @@ impl Player {
             self.swim_cooldown = 0.2;
         }
         self.prev_swimming = swimming;
+
+        //Crouch
+        if self.crouching {
+            self.crouch_height += MAX_CROUCH_HEIGHT * dt * 5.0;
+            self.crouch_height = self.crouch_height.min(MAX_CROUCH_HEIGHT);
+        } else {
+            self.crouch_height -= MAX_CROUCH_HEIGHT * dt * 5.0;
+            self.crouch_height = self.crouch_height.max(0.0);
+        }
+    }
+
+    pub fn cam_offset(&self) -> Vector3<f32> {
+        Vector3::new(0.0, CAMERA_OFFSET - self.crouch_height, 0.0)
     }
 
     //Calculates the hitbox for the object
@@ -346,6 +374,9 @@ impl Player {
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
+            sprinting: false,
+            crouching: false,
+            crouch_height: 0.0,
         }
     }
 }

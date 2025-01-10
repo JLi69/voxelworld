@@ -1,5 +1,5 @@
-use crate::voxel::{Chunk, CHUNK_SIZE_I32, Block};
-use super::{WorldGenerator, terrain::get_height, SAND_LEVEL, is_noise_cave};
+use super::{is_noise_cave, terrain::get_height, WorldGenerator, SAND_LEVEL};
+use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32};
 use fastrand::Rng;
 
 pub fn get_plant_positions(chunkx: i32, chunkz: i32, world_seed: u32) -> Vec<(i32, i32)> {
@@ -46,7 +46,7 @@ pub fn generate_plants(
 
         match rand_val {
             //Tall grass
-            0..50 => chunk.set_block(*x, h + 1, *z, Block::new_id(49)), 
+            0..50 => chunk.set_block(*x, h + 1, *z, Block::new_id(49)),
             //Red flower
             50..58 => chunk.set_block(*x, h + 1, *z, Block::new_id(54)),
             //Yellow flower

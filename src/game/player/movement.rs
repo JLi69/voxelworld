@@ -3,7 +3,8 @@ use crate::game::{KeyState, World};
 
 pub const JUMP_FORCE: f32 = 7.5;
 pub const SWIM_SPEED: f32 = JUMP_FORCE / 2.0;
-pub const SPRINT_AMT: f32 = 1.33;
+const SPRINT_AMT: f32 = 1.33;
+const CROUCH_AMT: f32 = 0.33;
 
 impl Player {
     //Jump up in the y direction
@@ -48,7 +49,27 @@ impl Player {
 
     //Sprint when a key is pressed
     pub fn sprint(&mut self, sprint_key: KeyState) {
-        if sprint_key.is_held() {
+        self.sprinting = sprint_key.is_held();
+    }
+
+    pub fn sprint_or(&mut self, sprint_key: KeyState) {
+        self.sprinting = self.sprinting || sprint_key.is_held();
+    }
+
+    //Crouch when a key is pressed
+    pub fn crouch(&mut self, crouch_key: KeyState) {
+        self.crouching = crouch_key.is_held();
+    }
+
+    pub fn crouch_or(&mut self, crouch_key: KeyState) {
+        self.crouching = self.crouching || crouch_key.is_held();
+    }
+
+    //Set speed of player
+    pub fn set_speed(&mut self) {
+        if self.crouching {
+            self.speed = DEFAULT_PLAYER_SPEED * CROUCH_AMT;
+        } else if self.sprinting {
             self.speed = DEFAULT_PLAYER_SPEED * SPRINT_AMT;
         } else {
             self.speed = DEFAULT_PLAYER_SPEED;

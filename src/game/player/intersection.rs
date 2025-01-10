@@ -104,6 +104,7 @@ impl Player {
         false
     }
 
+    //Is the top `fract` portion of the player intersecting a block
     pub fn top_intersecting(&self, world: &World, block_id: u8, fract: f32) -> bool {
         let ix = self.position.x.floor() as i32;
         let iy = self.position.y.floor() as i32;
@@ -128,6 +129,36 @@ impl Player {
                     let block_hitbox = Hitbox::from_block(x, y, z);
 
                     if block_hitbox.intersects(&hitbox) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    //Is the player standing on a block?
+    pub fn standing_on_block(&self, world: &World) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+        let mut hitbox = self.get_hitbox();
+        hitbox.position.y -= 0.02;
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=iy {
+                for z in (iz - 2)..=(iz + 2) {
+                    if world.get_block(x, y, z).id == EMPTY_BLOCK {
+                        continue;
+                    }
+
+                    if world.get_block(x, y, z).no_hitbox() {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block(x, y, z);
+
+                    if hitbox.intersects(&block_hitbox) {
                         return true;
                     }
                 }

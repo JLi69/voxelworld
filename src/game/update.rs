@@ -1,12 +1,22 @@
-use super::player::CAMERA_OFFSET;
 use super::{Game, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::{destroy_block, place_block};
-use cgmath::Vector3;
 use glfw::{CursorMode, Key};
 use glfw::{MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
+
+const HOTBAR_KEYS: [Key; 9] = [
+    Key::Num1,
+    Key::Num2,
+    Key::Num3,
+    Key::Num4,
+    Key::Num5,
+    Key::Num6,
+    Key::Num7,
+    Key::Num8,
+    Key::Num9,
+];
 
 impl Game {
     //Update player and camera
@@ -22,10 +32,17 @@ impl Game {
         //Update player
         self.player.update(dt, &self.world);
         //Set position of camera
-        self.cam.position = self.player.position + Vector3::new(0.0, CAMERA_OFFSET, 0.0);
+        self.cam.position = self.player.position + self.player.cam_offset();
         //Move player
-        let shift = self.get_key_state(Key::LeftShift);
-        self.player.sprint(shift);
+        let lshift = self.get_key_state(Key::LeftShift);
+        let rshift = self.get_key_state(Key::RightShift);
+        self.player.sprint(lshift);
+        self.player.sprint_or(rshift);
+        let lctrl = self.get_key_state(Key::LeftControl);
+        let rctrl = self.get_key_state(Key::RightShift);
+        self.player.crouch(lctrl);
+        self.player.crouch_or(rctrl);
+        self.player.set_speed();
         let w = self.get_key_state(Key::W);
         let s = self.get_key_state(Key::S);
         let a = self.get_key_state(Key::A);
@@ -38,24 +55,10 @@ impl Game {
         //Swim
         self.player.swim(space, &self.world);
         //Select items from the hotbar
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num1), 0);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num2), 1);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num3), 2);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num4), 3);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num5), 4);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num6), 5);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num7), 6);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num8), 7);
-        self.player
-            .select_hotbar_item(self.get_key_state(Key::Num9), 8);
+        for (i, key) in HOTBAR_KEYS.iter().enumerate() {
+            let keystate = self.get_key_state(*key);
+            self.player.select_hotbar_item(keystate, i);
+        }
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {
