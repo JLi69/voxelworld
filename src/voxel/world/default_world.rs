@@ -8,7 +8,7 @@ mod terrain;
 
 use self::{
     gen_trees::get_tree_gen_info,
-    plants::{generate_plants, get_plant_positions},
+    plants::{generate_plants, get_plant_positions, get_water_adjacent, generate_sugarcane},
 };
 use std::collections::HashMap;
 
@@ -32,6 +32,7 @@ struct GenInfoTable {
     tree_positions: HashMap<(i32, i32), Vec<(i32, i32)>>,
     tree_heights: HashMap<(i32, i32), Vec<i32>>,
     plant_positions: HashMap<(i32, i32), Vec<(i32, i32)>>,
+    sugarcane_positions: HashMap<(i32, i32), Vec<(i32, i32)>>,
 }
 
 struct GenInfo<'a> {
@@ -39,6 +40,7 @@ struct GenInfo<'a> {
     tree_positions: &'a [(i32, i32)],
     tree_heights: &'a [i32],
     plant_positions: &'a [(i32, i32)],
+    sugarcane_positions: &'a [(i32, i32)],
 }
 
 impl GenInfoTable {
@@ -48,6 +50,7 @@ impl GenInfoTable {
             tree_positions: HashMap::new(),
             tree_heights: HashMap::new(),
             plant_positions: HashMap::new(),
+            sugarcane_positions: HashMap::new(),
         }
     }
 
@@ -117,17 +120,46 @@ impl GenInfoTable {
         self.plant_positions.insert((x, z), plants);
     }
 
+    //Assumes that heightmap has already been generated
+    fn generate_sugarcane(&mut self, positions: &Vec<(i32, i32, i32)>) {
+        for (chunkx, _, chunkz) in positions { 
+            let pos = (*chunkx, *chunkz);
+            if self.sugarcane_positions.contains_key(&pos) {
+                continue;
+            }
+            let heights = self.heightmap.get(&pos);
+            if let Some(heights) = heights {
+                let water_adjacent = get_water_adjacent(*chunkx, *chunkz, heights);
+                self.sugarcane_positions.insert(pos, water_adjacent);
+            }
+        }
+    }
+
+    //Assumes that (x, z) has been generated
+    fn add_sugarcane(&mut self, x: i32, z: i32) {
+        if self.sugarcane_positions.contains_key(&(x, z)) {
+            return;
+        }
+        let heights = self.heightmap.get(&(x, z));
+        if let Some(heights) = heights {
+            let water_adjacent = get_water_adjacent(x, z, heights);
+            self.sugarcane_positions.insert((x, z), water_adjacent);
+        }
+    }
+
     fn get(&self, x: i32, z: i32) -> Option<GenInfo> {
         let h = self.heightmap.get(&(x, z))?;
         let trees = self.tree_positions.get(&(x, z))?;
         let tree_h = self.tree_heights.get(&(x, z))?;
         let plants = self.plant_positions.get(&(x, z))?;
+        let sugarcane = self.sugarcane_positions.get(&(x, z))?;
 
         Some(GenInfo {
             heights: h,
             tree_positions: trees,
             tree_heights: tree_h,
             plant_positions: plants,
+            sugarcane_positions: sugarcane,
         })
     }
 }
@@ -205,6 +237,8 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     );
     //Generate plants
     generate_plants(chunk, gen_info.plant_positions, &mut rng, world_generator);
+    //Generate sugar cane
+    generate_sugarcane(chunk, gen_info.sugarcane_positions, &mut rng);
 }
 
 impl World {
@@ -216,6 +250,7 @@ impl World {
         gen_info_table.generate_heights(&positions, &self.world_generator);
         gen_info_table.generate_trees(&positions, &self.world_generator);
         gen_info_table.generate_plants(&positions, &self.world_generator);
+        gen_info_table.generate_sugarcane(&positions);
 
         for chunk in &mut self.chunks.values_mut() {
             let pos = chunk.get_chunk_pos();
@@ -265,6 +300,7 @@ impl World {
             gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_sugarcane(*chunkx, *chunkz);
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             //Should always evaluate to true
             if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
