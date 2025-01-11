@@ -20,7 +20,7 @@ pub fn display_block_menu(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey:
         gl::Disable(gl::CULL_FACE);
     }
 
-    gamestate.textures.bind("block_menu_background");
+    gamestate.textures.bind("black_bg");
     gamestate.shaders.use_program("2d");
     let shader2d = gamestate.shaders.get("2d");
     let quad = gamestate.models.bind("quad2d");
