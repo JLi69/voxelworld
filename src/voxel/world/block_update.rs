@@ -199,6 +199,14 @@ fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
     }
 }
 
+fn update_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let above = world.get_block(x, y + 1, z);
+    if above.transparent() || above.id == EMPTY_BLOCK {
+        return; 
+    }
+    to_update.insert((x, y, z), Block::new_id(4));
+}
+
 impl World {
     //Returns true if at least one block updated, otherwise false
     fn update_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32, to_update: &mut UpdateList) {
@@ -210,12 +218,14 @@ impl World {
             for y in starty..(starty + CHUNK_SIZE_I32) {
                 for z in startz..(startz + CHUNK_SIZE_I32) {
                     let block = self.get_block(x, y, z);
-                    if block.id == 12 {
+                    match block.id {
                         //Water
-                        update_water(self, x, y, z, to_update);
-                    } else if block.id == 13 {
+                        12 => update_water(self, x, y, z, to_update),
                         //Lava
-                        update_lava(self, x, y, z, to_update);
+                        13 => update_lava(self, x, y, z, to_update),
+                        //Farmland
+                        43 | 45 => update_farmland(self, x, y, z, to_update),
+                        _ => {}
                     }
                 }
             }
