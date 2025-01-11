@@ -123,7 +123,7 @@ pub fn display_suffocation_screen(gamestate: &Game, w: i32, h: i32) {
         gl::Disable(gl::CULL_FACE);
     }
 
-    gamestate.textures.bind("block_menu_background"); 
+    gamestate.textures.bind("block_menu_background");
     gamestate.shaders.use_program("2d");
     let shader2d = gamestate.shaders.get("2d");
     let quad = gamestate.models.bind("quad2d");

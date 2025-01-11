@@ -194,7 +194,7 @@ impl Player {
 
             return true;
         }
-        
+
         false
     }
 

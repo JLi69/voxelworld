@@ -170,7 +170,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             gfx::display::display_suffocation_screen(gamestate, w, h);
         }
 
-        if gamestate.display_hud { 
+        if gamestate.display_hud {
             //Display crosshair
             gfx::display::display_crosshair(gamestate, w, h);
             //Display hotbar
