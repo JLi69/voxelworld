@@ -251,6 +251,11 @@ pub fn place_block(
     set_block_rotation(dir, &mut block);
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
+
+    if replace.is_fluid() && block.fluid_destructibe() {
+        return None;
+    }
+
     if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
         let prev_block = world.get_block(ix, iy, iz);
         world.set_block(ix, iy, iz, block);

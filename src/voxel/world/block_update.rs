@@ -96,7 +96,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     }
 
     //Flow down
-    if (below.id == EMPTY_BLOCK || below.id == block.id) && level > 0 {
+    if (below.id == EMPTY_BLOCK || below.id == block.id || below.fluid_destructibe()) && level > 0 {
         if below.geometry != 7 {
             add_water_tile(x, y - 1, z, 8, block.id, to_update);
         }
@@ -115,6 +115,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
         let adjacent = world.get_block(posx, posy, posz);
         if adjacent.id == EMPTY_BLOCK
             || (adjacent.id == block.id && adjacent.geometry < block.geometry - 1)
+            || adjacent.fluid_destructibe()
         {
             let underblock = world.get_block(posx, posy - 1, posz);
             let blocklevel = if underblock.id == block.id || underblock.id == EMPTY_BLOCK {

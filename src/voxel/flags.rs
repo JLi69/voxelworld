@@ -8,11 +8,13 @@ pub const NO_HITBOX: u8 = 1 << 3;
 pub const FLUID: u8 = 1 << 4;
 pub const ROTATE_Y_ONLY: u8 = 1 << 5;
 pub const FLAT_ITEM: u8 = 1 << 6;
+pub const FLUID_DESTRUCTIBLE: u8 = 1 << 7;
 
 unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
     VOXEL_FLAGS[voxel_id] |= NO_HITBOX;
     VOXEL_FLAGS[voxel_id] |= FLAT_ITEM;
+    VOXEL_FLAGS[voxel_id] |= FLUID_DESTRUCTIBLE;
 }
 
 //TODO: Have a better way of configuring block flags other than hardcoding

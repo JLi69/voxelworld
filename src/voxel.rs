@@ -7,8 +7,8 @@ pub mod world;
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
-    get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, NO_HITBOX, ROTATE_Y_ONLY,
-    TRANSPARENT_FLAG,
+    get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NO_HITBOX,
+    ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
 pub use chunk::Chunk;
 pub use world::World;
@@ -117,5 +117,10 @@ impl Block {
     //Returns if the voxel must be displayed as a flat item
     pub fn is_flat_item(&self) -> bool {
         get_flag(self.id) & FLAT_ITEM != 0
+    }
+
+    //Returns if the voxel can be destroyed by fluid
+    pub fn fluid_destructibe(&self) -> bool {
+        get_flag(self.id) & FLUID_DESTRUCTIBLE != 0
     }
 }
