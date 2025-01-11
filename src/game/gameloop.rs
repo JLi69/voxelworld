@@ -93,6 +93,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     //Initialize egui input state
     let mut input_state = gui::init_egui_input_state(window);
 
+    gamestate.save_entire_world();
     gamestate.world.update_all_chunks();
     //Main loop
     let mut dt = 0.0f32;
@@ -163,6 +164,13 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         if gamestate.display_hud {
             //Display selection outline
             gfx::display::display_selected_outline(gamestate);
+        }
+
+        if gamestate.player.suffocating(&gamestate.world) {
+            gfx::display::display_suffocation_screen(gamestate, w, h);
+        }
+
+        if gamestate.display_hud { 
             //Display crosshair
             gfx::display::display_crosshair(gamestate, w, h);
             //Display hotbar

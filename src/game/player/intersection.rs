@@ -167,4 +167,72 @@ impl Player {
 
         false
     }
+
+    pub fn stuck(&mut self, world: &World) -> bool {
+        if let Some(block) = self.check_collision(world) {
+            //Attempt to uncollide
+            let prev_x = self.position.x;
+            self.uncollide_x(&block);
+            if self.check_collision(world).is_none() {
+                return false;
+            }
+
+            self.position.x = prev_x;
+            let prev_z = self.position.z;
+            self.uncollide_z(&block);
+            if self.check_collision(world).is_none() {
+                return false;
+            }
+            self.position.z = prev_z;
+
+            let prev_y = self.position.y;
+            self.uncollide_y(&block);
+            if self.check_collision(world).is_none() {
+                return false;
+            }
+            self.position.y = prev_y;
+
+            return true;
+        }
+        
+        false
+    }
+
+    pub fn suffocating(&self, world: &World) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        let head_hitbox = Hitbox::new(
+            self.position.x,
+            self.position.y + PLAYER_HEIGHT / 2.0 - 0.2,
+            self.position.z,
+            PLAYER_SIZE,
+            0.4,
+            PLAYER_SIZE,
+        );
+
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=(iy + 2) {
+                for z in (iz - 2)..=(iz + 2) {
+                    let block = world.get_block(x, y, z);
+                    if block.id == EMPTY_BLOCK {
+                        continue;
+                    }
+
+                    if block.no_hitbox() {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block_data(x, y, z, block);
+
+                    if block_hitbox.intersects(&head_hitbox) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
 }

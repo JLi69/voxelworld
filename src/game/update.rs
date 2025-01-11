@@ -1,5 +1,6 @@
 use super::{Game, KeyState};
 use crate::gfx::{self, ChunkTables};
+use crate::voxel::build::destroy_block_suffocating;
 use crate::voxel::{destroy_block, place_block};
 use glfw::{CursorMode, Key};
 use glfw::{MouseButtonLeft, MouseButtonRight};
@@ -81,8 +82,21 @@ impl Game {
             self.destroy_cooldown = 0.0;
         }
 
-        if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
+        let suffocating = self.player.suffocating(&self.world);
+        if self.get_mouse_state(MouseButtonLeft).is_held() 
+            && self.destroy_cooldown <= 0.0
+            && !suffocating {
             let destroyed = destroy_block(pos, dir, &mut self.world);
+            gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
+            if destroyed.is_some() {
+                self.destroy_cooldown = BUILD_COOLDOWN;
+            } else {
+                self.destroy_cooldown = 0.0;
+            }
+        } else if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 { 
+            //If the player is trapped in a block, then they can only break
+            //the block that is currently trapping them
+            let destroyed = destroy_block_suffocating(pos, &mut self.world);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
@@ -96,7 +110,10 @@ impl Game {
             self.build_cooldown = 0.0;
         }
 
-        if self.get_mouse_state(MouseButtonRight).is_held() && self.build_cooldown <= 0.0 {
+        if self.get_mouse_state(MouseButtonRight).is_held() 
+            && self.build_cooldown <= 0.0
+            && !suffocating
+        {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunktables, placed, &self.world);
             if placed.is_some() {

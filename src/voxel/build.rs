@@ -183,6 +183,29 @@ pub fn destroy_block(
     None
 }
 
+//If the player is suffocating (their head is trapped in a block)
+//then they can only destroy the block that they are trapped in
+pub fn destroy_block_suffocating(pos: Vector3<f32>, world: &mut World) -> Option<(i32, i32, i32)> {
+    let (x, y, z) = (pos.x.floor(), pos.y.floor(), pos.z.floor());
+    let (ix, iy, iz) = (x as i32, y as i32, z as i32);
+    let block = world.get_block(ix, iy, iz);
+    if block.id == INDESTRUCTIBLE {
+        return None;
+    }
+
+    //You cannot destroy fluids
+    if block.is_fluid() {
+        return None;
+    }
+
+    world.set_block(ix, iy, iz, Block::new_id(0));
+    if block.id != EMPTY_BLOCK {
+        return Some((ix, iy, iz));
+    }
+
+    None
+}
+
 fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
     if !block.can_rotate() {
         return;

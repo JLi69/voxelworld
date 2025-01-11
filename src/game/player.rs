@@ -156,7 +156,7 @@ impl Player {
     }
 
     //Translate player object, account for collisions with blocks
-    fn translate(&mut self, dt: f32, world: &World) {
+    fn translate(&mut self, dt: f32, world: &World) { 
         //Move in the xz plane
         let velocity = if self.is_intersecting(world, 13) {
             //Slow down in lava
@@ -197,8 +197,8 @@ impl Player {
             let vy = d / dist_remaining * dy;
 
             //Move in the y direction
-            self.position.y += vy;
-            self.check_y_collision(world);
+            self.position.y += vy; 
+            self.check_y_collision(world); 
             while let Some(hitbox) = self.check_collision(world) {
                 self.uncollide_y(&hitbox);
             }
@@ -234,6 +234,10 @@ impl Player {
 
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
+        if self.stuck(world) {
+            return;
+        }
+
         //Update jump cooldown
         self.jump_cooldown -= dt;
         //Update swim cooldown
