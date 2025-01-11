@@ -66,7 +66,7 @@ fn is_adjacent_to_water(x: i32, z: i32, h: i32, heights: &[i32]) -> bool {
         return false;
     }
 
-    const ADJ: [(i32, i32); 4] = [ (0, 1), (0, -1), (1, 0), (-1, 0) ];
+    const ADJ: [(i32, i32); 4] = [(0, 1), (0, -1), (1, 0), (-1, 0)];
     for (dx, dz) in ADJ {
         if x + dx < 0 || x + dx >= CHUNK_SIZE_I32 || z + dz < 0 || z + dz >= CHUNK_SIZE_I32 {
             continue;
@@ -96,11 +96,7 @@ pub fn get_water_adjacent(chunkx: i32, chunkz: i32, heights: &[i32]) -> Vec<(i32
     adjacent
 }
 
-pub fn generate_sugarcane(
-    chunk: &mut Chunk,
-    water_adjacent: &[(i32, i32)],
-    rng: &mut Rng,
-) {
+pub fn generate_sugarcane(chunk: &mut Chunk, water_adjacent: &[(i32, i32)], rng: &mut Rng) {
     for (x, z) in water_adjacent {
         if rng.i32(0..80) != 0 {
             continue;

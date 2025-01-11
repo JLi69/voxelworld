@@ -8,7 +8,7 @@ mod terrain;
 
 use self::{
     gen_trees::get_tree_gen_info,
-    plants::{generate_plants, get_plant_positions, get_water_adjacent, generate_sugarcane},
+    plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
 };
 use std::collections::HashMap;
 
@@ -122,7 +122,7 @@ impl GenInfoTable {
 
     //Assumes that heightmap has already been generated
     fn generate_sugarcane(&mut self, positions: &Vec<(i32, i32, i32)>) {
-        for (chunkx, _, chunkz) in positions { 
+        for (chunkx, _, chunkz) in positions {
             let pos = (*chunkx, *chunkz);
             if self.sugarcane_positions.contains_key(&pos) {
                 continue;

@@ -202,7 +202,7 @@ fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
 fn update_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
     let above = world.get_block(x, y + 1, z);
     if above.transparent() || above.id == EMPTY_BLOCK {
-        return; 
+        return;
     }
     to_update.insert((x, y, z), Block::new_id(4));
 }
