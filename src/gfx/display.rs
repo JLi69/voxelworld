@@ -1,4 +1,5 @@
 pub mod block_menu;
+mod hand;
 mod inventory;
 
 use super::ChunkTables;
@@ -8,6 +9,7 @@ use crate::voxel;
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
 use cgmath::{Matrix4, SquareMatrix, Vector3};
+pub use hand::display_hand_item;
 pub use inventory::display_hotbar;
 
 pub fn display_selected_outline(gamestate: &Game) {

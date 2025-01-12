@@ -173,6 +173,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         if gamestate.display_hud {
             //Display crosshair
             gfx::display::display_crosshair(gamestate, w, h);
+            //Display held item
+            gfx::display::display_hand_item(gamestate);
             //Display hotbar
             gfx::display::display_hotbar(gamestate, w, h);
         }
@@ -224,6 +226,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             //Destroy and place blocks
             gamestate.build(&mut chunktables);
             gamestate.update_build_cooldown(dt);
+            //Update hand animation
+            gamestate.update_hand_animation(dt);
             //Update blocks
             gamestate.world.update_blocks(dt, &mut chunktables, 1);
         }

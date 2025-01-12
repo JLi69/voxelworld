@@ -118,6 +118,7 @@ impl Game {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunktables, placed, &self.world);
             if placed.is_some() {
+                self.hand_animation = 0.1;
                 self.build_cooldown = BUILD_COOLDOWN;
             } else {
                 self.build_cooldown = 0.0;
@@ -154,10 +155,30 @@ impl Game {
         self.display_block_menu
     }
 
+    pub fn get_hand_animation(&self) -> f32 {
+        self.hand_animation
+    }
+
     //Toggle hud
     pub fn toggle_hud(&mut self) {
         if self.get_key_state(Key::F1) == KeyState::JustPressed {
             self.display_hud = !self.display_hud;
+        }
+    }
+
+    //Update hand animation
+    pub fn update_hand_animation(&mut self, dt: f32) {
+        if self.get_mouse_state(MouseButtonLeft).is_held() {
+            self.hand_animation += dt * 3.0;
+            self.hand_animation = self.hand_animation.fract();
+        } else {
+            if self.hand_animation > 0.0 {
+                self.hand_animation += dt * 3.0;
+            }
+
+            if self.hand_animation > 1.0 {
+                self.hand_animation = 0.0;
+            }
         }
     }
 }
