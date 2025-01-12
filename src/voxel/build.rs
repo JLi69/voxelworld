@@ -4,6 +4,7 @@ use crate::game::inventory::Item;
 use crate::game::physics::Hitbox;
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
+use super::is_valid::get_check_valid_fn;
 
 pub const BLOCK_REACH: f32 = 4.0;
 
@@ -280,13 +281,18 @@ pub fn place_block(
     }
 
     if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
+        if let Some(check_valid) = get_check_valid_fn(block.id) {
+            if !check_valid(world, ix, iy, iz) {
+                return None;
+            }
+        }
         let prev_block = world.get_block(ix, iy, iz);
         world.set_block(ix, iy, iz, block);
         let block_hitbox = Hitbox::from_block(ix, iy, iz);
         if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
             world.set_block(ix, iy, iz, prev_block);
             return None;
-        }
+        } 
         return Some((ix, iy, iz));
     }
 
