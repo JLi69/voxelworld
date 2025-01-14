@@ -18,6 +18,7 @@ struct WorldGenerator {
     pub terrain_generator: Fbm<Perlin>,
     pub noise_cave_generator: Perlin,
     pub tree_generator: Perlin,
+    pub steepness: Perlin,
     world_seed: u32,
 }
 
@@ -31,6 +32,7 @@ impl WorldGenerator {
             terrain_generator: terrain_noise,
             noise_cave_generator: Perlin::new(seed + 1),
             tree_generator: Perlin::new(seed + 2),
+            steepness: Perlin::new(seed + 3),
             world_seed: seed,
         }
     }

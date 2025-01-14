@@ -1,10 +1,10 @@
+use super::is_valid::get_check_valid_fn;
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::inventory::Item;
 use crate::game::physics::Hitbox;
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
-use super::is_valid::get_check_valid_fn;
 
 pub const BLOCK_REACH: f32 = 4.0;
 
@@ -292,7 +292,7 @@ pub fn place_block(
         if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
             world.set_block(ix, iy, iz, prev_block);
             return None;
-        } 
+        }
         return Some((ix, iy, iz));
     }
 

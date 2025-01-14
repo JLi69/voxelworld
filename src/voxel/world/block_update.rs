@@ -1,7 +1,10 @@
 use super::World;
 use crate::{
     gfx::ChunkTables,
-    voxel::{world_to_chunk_position, wrap_coord, Block, CHUNK_SIZE_I32, EMPTY_BLOCK, is_valid::get_check_valid_fn},
+    voxel::{
+        is_valid::get_check_valid_fn, world_to_chunk_position, wrap_coord, Block, CHUNK_SIZE_I32,
+        EMPTY_BLOCK,
+    },
 };
 use std::collections::{HashMap, HashSet};
 
@@ -208,14 +211,7 @@ fn update_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut Update
     to_update.insert((x, y, z), Block::new_id(4));
 }
 
-fn update_plant(
-    world: &World,
-    x: i32,
-    y: i32,
-    z: i32,
-    id: u8,
-    to_update: &mut UpdateList,
-) {
+fn update_plant(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut UpdateList) {
     if let Some(check_valid) = get_check_valid_fn(id) {
         if check_valid(world, x, y, z) {
             return;

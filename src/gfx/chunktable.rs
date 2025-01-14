@@ -452,7 +452,7 @@ impl ChunkTables {
 
     pub fn update_tables(&mut self, gamestate: &Game) {
         self.chunk_vaos
-            .update_chunks(&gamestate.world, 0.003, |chunk, world| {
+            .update_chunks(&gamestate.world, 0.005, |chunk, world| {
                 generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
             });
         self.lava_vaos

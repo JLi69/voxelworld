@@ -105,7 +105,12 @@ pub fn generate_trees(
             continue;
         }
 
-        let h = get_height(*x, *z, &world_generator.terrain_generator);
+        let h = get_height(
+            *x,
+            *z,
+            &world_generator.terrain_generator,
+            &world_generator.steepness,
+        );
 
         //Below sea level
         if h <= SAND_LEVEL {

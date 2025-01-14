@@ -21,18 +21,27 @@ fn cave_perc(y: i32, cave_y1: i32, cave_y2: i32, cave_y3: i32) -> f64 {
 
 pub fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
     let xyz = [x as f64 / 8.0, y as f64 / 8.0, z as f64 / 8.0];
-    cave_noise.get(xyz) < cave_perc(y, -64, -51, 48)
+    cave_noise.get(xyz) < cave_perc(y, -64, -51, 64)
 }
 
-pub fn get_height(x: i32, z: i32, terrain_generator: &Fbm<Perlin>) -> i32 {
+pub fn get_height(x: i32, z: i32, terrain_generator: &Fbm<Perlin>, steepness: &Perlin) -> i32 {
     let point = [x as f64 / 192.0, z as f64 / 192.0];
     let noise_height = terrain_generator.get(point);
-    (noise_height * 47.0) as i32 + 16
+    let transformed_noise = if noise_height > 0.0 {
+        let steepness_point = [x as f64 / 16.0, z as f64 / 16.0];
+        let steepness = (steepness.get(steepness_point) + 1.0) / 2.0;
+        let v = steepness.powf(1.0 - steepness.sqrt());
+        noise_height.powf(1.0 - noise_height.powf(0.3)) * v
+    } else {
+        noise_height * 48.0 / 64.0
+    };
+    (transformed_noise * 64.0) as i32 + 16
 }
 
 pub fn generate_heightmap(
     positions: &Vec<(i32, i32, i32)>,
     terrain_generator: &Fbm<Perlin>,
+    steepness: &Perlin,
 ) -> HeightMap {
     let mut heightmap = HeightMap::new();
 
@@ -46,7 +55,7 @@ pub fn generate_heightmap(
         for x in posx..(posx + CHUNK_SIZE_I32) {
             for z in posz..(posz + CHUNK_SIZE_I32) {
                 let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-                let h = get_height(x, z, terrain_generator);
+                let h = get_height(x, z, terrain_generator, steepness);
                 heights[index] = h;
             }
         }
@@ -61,6 +70,7 @@ pub fn add_to_heightmap(
     chunkz: i32,
     heightmap: &mut HeightMap,
     terrain_generator: &Fbm<Perlin>,
+    steepness: &Perlin,
 ) {
     if heightmap.contains_key(&(chunkx, chunkz)) {
         return;
@@ -71,7 +81,7 @@ pub fn add_to_heightmap(
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-            let h = get_height(x, z, terrain_generator);
+            let h = get_height(x, z, terrain_generator, steepness);
             heights[index] = h;
         }
     }

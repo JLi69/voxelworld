@@ -28,7 +28,12 @@ pub fn generate_plants(
 ) {
     for (x, z) in plant_positions {
         let rand_val = rng.i32(0..80);
-        let h = get_height(*x, *z, &world_generator.terrain_generator);
+        let h = get_height(
+            *x,
+            *z,
+            &world_generator.terrain_generator,
+            &world_generator.steepness,
+        );
 
         if chunk.get_block(*x, h + 1, *z) != Block::new() {
             continue;

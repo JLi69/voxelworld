@@ -3,11 +3,13 @@
  * */
 
 mod gen_trees;
+mod ore;
 mod plants;
 mod terrain;
 
 use self::{
     gen_trees::get_tree_gen_info,
+    ore::{generate_magma_blocks, generate_ore},
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
 };
 use std::collections::HashMap;
@@ -59,7 +61,11 @@ impl GenInfoTable {
         positions: &Vec<(i32, i32, i32)>,
         world_generator: &WorldGenerator,
     ) {
-        self.heightmap = generate_heightmap(positions, &world_generator.terrain_generator);
+        self.heightmap = generate_heightmap(
+            positions,
+            &world_generator.terrain_generator,
+            &world_generator.steepness,
+        );
     }
 
     fn add_heights(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
@@ -68,6 +74,7 @@ impl GenInfoTable {
             z,
             &mut self.heightmap,
             &world_generator.terrain_generator,
+            &world_generator.steepness,
         );
     }
 
@@ -176,6 +183,9 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
 
     let seed = ((chunkpos.x as u64) << 32) | (chunkpos.z as u64);
     let mut rng = fastrand::Rng::with_seed(seed + world_generator.world_seed as u64);
+    let ore_seed = ((chunkpos.x as u64) << 48) | ((chunkpos.y as u64) << 16) | (chunkpos.z as u64);
+    let mut ore_rng =
+        fastrand::Rng::with_seed(ore_seed + ((world_generator.world_seed as u64) << 16));
 
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
@@ -214,16 +224,42 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
                     continue;
                 }
 
+                let dirt_depth = if height > 48 {
+                    2
+                } else if height > 16 {
+                    3
+                } else {
+                    4
+                };
+
                 if y == height {
                     //Grass
                     chunk.set_block(x, y, z, Block::new_id(1));
-                } else if y > height - 4 && y < height {
+                } else if y > height - dirt_depth && y < height {
                     //Dirt
                     chunk.set_block(x, y, z, Block::new_id(4));
                 } else if y < height && y > -64 {
                     //Stone
                     chunk.set_block(x, y, z, Block::new_id(2));
                 }
+            }
+        }
+    }
+
+    //Generate ore
+    for x in posx..(posx + CHUNK_SIZE_I32) {
+        for z in posz..(posz + CHUNK_SIZE_I32) {
+            let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
+            let height = gen_info.heights[index];
+
+            if height < posy {
+                continue;
+            }
+
+            let h = height + 1;
+            for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
+                generate_ore(chunk, x, y, z, &mut ore_rng);
+                generate_magma_blocks(chunk, x, y, z, &mut ore_rng);
             }
         }
     }
