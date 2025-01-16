@@ -1,7 +1,7 @@
-use crate::voxel::{Block, World, world::WorldGenType};
 use super::rand_block_update::RANDOM_UPDATE_INTERVAL;
+use crate::voxel::{world::WorldGenType, Block, World};
 
-/* 
+/*
  * Test simulations for testing purposes
  * Each simulation takes in the number of iterations to run and returns
  * the average amount of time it takes in minutes
@@ -35,11 +35,14 @@ fn simulate_wheat_growth(iterations: i32) -> f32 {
         }
         let minutes = total_time / 60.0;
         total += minutes;
-        eprintln!("({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat", i + 1);
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat",
+            i + 1
+        );
     }
     total / iterations as f32
 }
- 
+
 fn simulate_slow_wheat_growth(iterations: i32) -> f32 {
     eprintln!("SLOW WHEAT GROWTH SIMULATION");
     let mut total = 0.0f32;
@@ -68,7 +71,10 @@ fn simulate_slow_wheat_growth(iterations: i32) -> f32 {
         }
         let minutes = total_time / 60.0;
         total += minutes;
-        eprintln!("({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat", i + 1);
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat",
+            i + 1
+        );
     }
     total / iterations as f32
 }
@@ -85,7 +91,10 @@ pub fn run_test_simulations(args: &[String]) {
     eprintln!("Simulation Results");
     eprintln!("------------------");
     eprintln!("Average time to grow all wheat: {} min", average_wheat_time);
-    eprintln!("Average time to grow all wheat (slow): {} min", average_slow_wheat_time);
+    eprintln!(
+        "Average time to grow all wheat (slow): {} min",
+        average_slow_wheat_time
+    );
     //Exit program once all simulations are completed
     std::process::exit(0);
 }
