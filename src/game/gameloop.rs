@@ -230,6 +230,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             gamestate.update_hand_animation(dt);
             //Update blocks
             gamestate.world.update_blocks(dt, &mut chunktables, 1);
+            gamestate.world.rand_block_update(dt, Some(&mut chunktables), 1);
         }
         //Generate new chunks
         gamestate.world.check_for_cache_clear();

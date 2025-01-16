@@ -64,6 +64,7 @@ pub struct World {
     pub path: String,
     //Block update timer
     block_update_timer: f32,
+    random_update_timer: f32,
     //Updating chunks
     updating: HashSet<(i32, i32, i32)>,
     ticks: u64,
@@ -87,6 +88,7 @@ impl World {
             world_seed: 0,
             path: String::new(),
             block_update_timer: 0.0,
+            random_update_timer: 0.0,
             updating: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
@@ -118,6 +120,7 @@ impl World {
             world_seed: seed,
             path: String::new(),
             block_update_timer: 0.0,
+            random_update_timer: 0.0,
             updating: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),

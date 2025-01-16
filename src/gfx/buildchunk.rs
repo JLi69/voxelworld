@@ -131,6 +131,10 @@ pub fn add_block_vertices_fluid(
 pub fn generate_chunk_vertex_data(chunk: &Chunk, adj_chunks: [Option<&Chunk>; 6]) -> ChunkData {
     let mut chunk_vert_data = vec![];
 
+    if chunk.is_empty() {
+        return chunk_vert_data;
+    }
+
     for x in 0..CHUNK_SIZE_I32 {
         for y in 0..CHUNK_SIZE_I32 {
             for z in 0..CHUNK_SIZE_I32 {

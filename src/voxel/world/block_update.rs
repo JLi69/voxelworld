@@ -1,3 +1,6 @@
+pub mod rand_block_update;
+mod simulations;
+
 use super::World;
 use crate::{
     gfx::ChunkTables,
@@ -7,11 +10,38 @@ use crate::{
     },
 };
 use std::collections::{HashMap, HashSet};
+pub use simulations::run_test_simulations;
 
-const BLOCK_UPDATE_INTERVAL: f32 = 0.2;
+pub const BLOCK_UPDATE_INTERVAL: f32 = 0.2;
 const ADJ: [(i32, i32, i32); 4] = [(1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, 0, -1)];
 
 type UpdateList = HashMap<(i32, i32, i32), Block>;
+
+pub fn get_chunktable_updates(x: i32, y: i32, z: i32, update_mesh: &mut HashSet::<(i32, i32, i32)>) {
+    let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+    let ix = wrap_coord(x);
+    let iy = wrap_coord(y);
+    let iz = wrap_coord(z);
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            for dz in -1..=1 {
+                if (dx == -1 && ix != 0) || (dx == 1 && ix != CHUNK_SIZE_I32 - 1) {
+                    continue;
+                }
+
+                if (dy == -1 && iy != 0) || (dy == 1 && iy != CHUNK_SIZE_I32 - 1) {
+                    continue;
+                }
+
+                if (dz == -1 && iz != 0) || (dz == 1 && iz != CHUNK_SIZE_I32 - 1) {
+                    continue;
+                }
+
+                update_mesh.insert((chunkx + dx, chunky + dy, chunkz + dz));
+            }
+        }
+    }
+}
 
 fn add_water_tile(x: i32, y: i32, z: i32, level: u8, id: u8, to_update: &mut UpdateList) {
     let mut water = Block::new_fluid(id);
@@ -47,8 +77,7 @@ fn update_fluid(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     if block.geometry < 7 {
         let mut count = 0;
         let mut maxval = 0;
-        let mut next_to_fall = false;
-        for (dx, dy, dz) in ADJ {
+        let mut next_to_fall = false; for (dx, dy, dz) in ADJ {
             let (posx, posy, posz) = (x + dx, y + dy, z + dz);
             let block2 = world.get_block(posx, posy, posz);
             if block2.id != block.id {
@@ -245,7 +274,7 @@ impl World {
                 }
             }
         }
-    }
+    } 
 
     pub fn update_blocks(&mut self, dt: f32, chunktables: &mut ChunkTables, chunk_sim_dist: i32) {
         self.block_update_timer += dt;
@@ -284,29 +313,7 @@ impl World {
                 continue;
             }
 
-            let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
-            let ix = wrap_coord(x);
-            let iy = wrap_coord(y);
-            let iz = wrap_coord(z);
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    for dz in -1..=1 {
-                        if (dx == -1 && ix != 0) || (dx == 1 && ix != CHUNK_SIZE_I32 - 1) {
-                            continue;
-                        }
-
-                        if (dy == -1 && iy != 0) || (dy == 1 && iy != CHUNK_SIZE_I32 - 1) {
-                            continue;
-                        }
-
-                        if (dz == -1 && iz != 0) || (dz == 1 && iz != CHUNK_SIZE_I32 - 1) {
-                            continue;
-                        }
-
-                        update_mesh.insert((chunkx + dx, chunky + dy, chunkz + dz));
-                    }
-                }
-            }
+            get_chunktable_updates(x, y, z, &mut update_mesh);
             self.set_block(x, y, z, block);
         }
 

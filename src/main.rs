@@ -12,6 +12,12 @@ use gui::main_menu::MainMenuOutput;
 use voxel::{build::BLOCK_REACH, flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    //If the user provides the arguments --run-test-sims,
+    //run the test simulations and then exit the program, however, this option
+    //only exists for testing purposes.
+    voxel::world::block_update::run_test_simulations(&args);
+
     //Attempt to create save directory
     save::create_save_dir();
     //Attempt to initialize glfw
