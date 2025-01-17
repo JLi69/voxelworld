@@ -22,6 +22,9 @@ fn update_grass(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     if (above.transparent() || above.id == EMPTY_BLOCK) && !above.is_fluid() {
         return;
     }
+    if above.id == 12 && above.geometry < 7 {
+        return;
+    }
     //If a non-trasparent block is above the block, then have the grass die
     to_update.insert((x, y, z), Block::new_id(4));
 }

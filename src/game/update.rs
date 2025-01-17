@@ -82,10 +82,10 @@ impl Game {
             self.destroy_cooldown = 0.0;
         }
 
-        let suffocating = self.player.suffocating(&self.world);
+        let stuck = self.player.get_head_stuck_block(&self.world);
         if self.get_mouse_state(MouseButtonLeft).is_held()
             && self.destroy_cooldown <= 0.0
-            && !suffocating
+            && stuck.is_none()
         {
             let destroyed = destroy_block(pos, dir, &mut self.world);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
@@ -97,7 +97,7 @@ impl Game {
         } else if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
             //If the player is trapped in a block, then they can only break
             //the block that is currently trapping them
-            let destroyed = destroy_block_suffocating(pos, &mut self.world);
+            let destroyed = destroy_block_suffocating(stuck, &mut self.world);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
@@ -113,7 +113,7 @@ impl Game {
 
         if self.get_mouse_state(MouseButtonRight).is_held()
             && self.build_cooldown <= 0.0
-            && !suffocating
+            && stuck.is_none()
         {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunktables, placed, &self.world);

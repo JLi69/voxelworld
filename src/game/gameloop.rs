@@ -161,7 +161,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             h,
         );
 
-        if gamestate.display_hud {
+        let stuck = gamestate.player.get_head_stuck_block(&gamestate.world);
+        if gamestate.display_hud && stuck.is_none() {
             //Display selection outline
             gfx::display::display_selected_outline(gamestate);
         }

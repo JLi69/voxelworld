@@ -224,6 +224,10 @@ impl Player {
                         continue;
                     }
 
+                    if block.transparent() {
+                        continue;
+                    }
+
                     let block_hitbox = Hitbox::from_block_data(x, y, z, block);
 
                     if block_hitbox.intersects(&head_hitbox) {
@@ -234,5 +238,44 @@ impl Player {
         }
 
         false
+    }
+
+    //Returns the block that the player's head is intersecting
+    pub fn get_head_stuck_block(&self, world: &World) -> Option<(i32, i32, i32)> {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        let head_hitbox = Hitbox::new(
+            self.position.x,
+            self.position.y + PLAYER_HEIGHT / 2.0 - 0.2,
+            self.position.z,
+            PLAYER_SIZE,
+            0.4,
+            PLAYER_SIZE,
+        );
+
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=(iy + 2) {
+                for z in (iz - 2)..=(iz + 2) {
+                    let block = world.get_block(x, y, z);
+                    if block.id == EMPTY_BLOCK {
+                        continue;
+                    }
+
+                    if block.no_hitbox() {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block_data(x, y, z, block);
+
+                    if block_hitbox.intersects(&head_hitbox) {
+                        return Some((x, y, z));
+                    }
+                }
+            }
+        }
+
+        None
     }
 }
