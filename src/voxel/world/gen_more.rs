@@ -1,5 +1,8 @@
 use super::World;
-use crate::{gfx::ChunkVaoTable, voxel::Chunk};
+use crate::{
+    gfx::{ChunkTables, ChunkVaoTable},
+    voxel::Chunk,
+};
 use std::collections::{HashMap, HashSet};
 
 type ChunkPosSet = HashSet<(i32, i32, i32)>;
@@ -65,9 +68,10 @@ pub fn update_chunk_vao_table(
     //Delete chunks that are out of range
     chunktable.delete_chunks(centerx, centery, centerz, range);
 
+    let mut to_update = HashSet::<(i32, i32, i32)>::new();
     //Mark chunks that need to have a vao generated
     for (chunkx, chunky, chunkz) in to_generate {
-        chunktable.add_to_update(*chunkx, *chunky, *chunkz);
+        to_update.insert((*chunkx, *chunky, *chunkz));
     }
 
     //Mark any chunks adjacent to the new border chunks that need to be regenerated
@@ -82,12 +86,33 @@ pub fn update_chunk_vao_table(
                     }
 
                     if chunks.contains_key(&(x + dx, y + dy, z + dz)) {
-                        chunktable.add_to_update(x + dx, y + dy, z + dz);
+                        to_update.insert((x + dx, y + dy, z + dz));
                     }
                 }
             }
         }
     }
+
+    for (x, y, z) in to_update {
+        chunktable.add_to_update(x, y, z);
+    }
+}
+
+pub fn update_chunk_tables(
+    chunktables: &mut ChunkTables,
+    x: i32,
+    y: i32,
+    z: i32,
+    range: i32,
+    chunks: &HashMap<(i32, i32, i32), Chunk>,
+    to_generate: &ChunkPosSet,
+) {
+    let chunk_vaos = &mut chunktables.chunk_vaos;
+    update_chunk_vao_table(chunk_vaos, x, y, z, range, chunks, to_generate);
+    let lava_vaos = &mut chunktables.lava_vaos;
+    update_chunk_vao_table(lava_vaos, x, y, z, range, chunks, to_generate);
+    let water_vaos = &mut chunktables.water_vaos;
+    update_chunk_vao_table(water_vaos, x, y, z, range, chunks, to_generate);
 }
 
 impl World {

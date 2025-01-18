@@ -15,10 +15,12 @@ use self::{
 use std::collections::HashMap;
 
 use super::{
-    gen_more::{find_in_range, get_chunks_to_generate, update_chunk_vao_table},
+    gen_more::{find_in_range, get_chunks_to_generate},
     World, WorldGenerator,
 };
-use crate::voxel::{Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE};
+use crate::voxel::{
+    world::gen_more::update_chunk_tables, Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE,
+};
 use crate::{gfx::ChunkTables, voxel::CHUNK_SIZE_I32};
 use cgmath::Vector3;
 use gen_trees::generate_trees;
@@ -318,6 +320,7 @@ impl World {
         let mut gen_info_table = GenInfoTable::new();
 
         //Generate new chunks
+        let start = std::time::Instant::now();
         for (chunkx, chunky, chunkz) in &to_generate {
             let pos = (*chunkx, *chunky, *chunkz);
             if self.chunk_cache.contains_key(&pos) {
@@ -343,34 +346,18 @@ impl World {
             }
             self.chunks.insert(pos, new_chunk);
         }
+        eprintln!(
+            "Took {} ms to generate new chunks",
+            start.elapsed().as_millis()
+        );
 
         //Set the center position
         self.centerx = x;
         self.centery = y;
         self.centerz = z;
 
-        update_chunk_vao_table(
-            &mut chunktables.chunk_vaos,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &to_generate,
-        );
-
-        update_chunk_vao_table(
-            &mut chunktables.lava_vaos,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &to_generate,
-        );
-
-        update_chunk_vao_table(
-            &mut chunktables.water_vaos,
+        update_chunk_tables(
+            chunktables,
             self.centerx,
             self.centery,
             self.centerz,

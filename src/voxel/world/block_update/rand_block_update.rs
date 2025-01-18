@@ -40,7 +40,7 @@ fn update_dirt(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
                 if dx == 0 && dz == 0 {
                     continue;
                 }
-               
+
                 let above = world.get_block(x + dx, y + dy + 1, z + dz);
                 if !(above.transparent() || above.id == EMPTY_BLOCK) || above.is_fluid() {
                     continue;
@@ -54,6 +54,53 @@ fn update_dirt(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
             }
         }
     }
+}
+
+//Convert dry farmland that is near water into wet farmland
+fn update_dry_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let above = world.get_block(x, y + 1, z);
+    if above.id == 12 {
+        to_update.insert((x, y, z), Block::new_id(43));
+        return;
+    }
+
+    for dx in -4..=4 {
+        for dz in -4..=4 {
+            let block = world.get_block(x + dx, y, z + dz);
+            if block.id == 12 {
+                to_update.insert((x, y, z), Block::new_id(43));
+                return;
+            }
+            let block = world.get_block(x + dx, y - 1, z + dz);
+            if block.id == 12 {
+                to_update.insert((x, y, z), Block::new_id(43));
+                return;
+            }
+        }
+    }
+}
+
+//Convert wet farmland that is far away from water into dry farmland
+fn update_wet_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let above = world.get_block(x, y + 1, z);
+    if above.id == 12 {
+        return;
+    }
+
+    for dx in -4..=4 {
+        for dz in -4..=4 {
+            let block = world.get_block(x + dx, y, z + dz);
+            if block.id == 12 {
+                return;
+            }
+            let block = world.get_block(x + dx, y - 1, z + dz);
+            if block.id == 12 {
+                return;
+            }
+        }
+    }
+
+    to_update.insert((x, y, z), Block::new_id(45));
 }
 
 impl World {
@@ -89,6 +136,10 @@ impl World {
                     1 => update_grass(self, x, y, z, to_update),
                     //Dirt
                     4 => update_dirt(self, x, y, z, to_update),
+                    //Wet farmland
+                    43 => update_wet_farmland(self, x, y, z, to_update),
+                    //Dry farmland
+                    45 => update_dry_farmland(self, x, y, z, to_update),
                     //Growing wheat
                     50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
                     _ => {}

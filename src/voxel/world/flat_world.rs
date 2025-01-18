@@ -1,5 +1,5 @@
 use super::{
-    gen_more::{find_in_range, get_chunks_to_generate, update_chunk_vao_table},
+    gen_more::{find_in_range, get_chunks_to_generate, update_chunk_tables},
     World,
 };
 use crate::{
@@ -89,28 +89,8 @@ impl World {
         self.centery = y;
         self.centerz = z;
 
-        update_chunk_vao_table(
-            &mut chunktables.chunk_vaos,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &to_generate,
-        );
-
-        update_chunk_vao_table(
-            &mut chunktables.lava_vaos,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &to_generate,
-        );
-
-        update_chunk_vao_table(
-            &mut chunktables.water_vaos,
+        update_chunk_tables(
+            chunktables,
             self.centerx,
             self.centery,
             self.centerz,
