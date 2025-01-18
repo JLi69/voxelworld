@@ -29,6 +29,33 @@ fn update_grass(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     to_update.insert((x, y, z), Block::new_id(4));
 }
 
+fn update_dirt(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let above = world.get_block(x, y + 1, z);
+    if !(above.transparent() || above.id == EMPTY_BLOCK) || above.is_fluid() {
+        return;
+    }
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            for dz in -1..=1 {
+                if dx == 0 && dz == 0 {
+                    continue;
+                }
+               
+                let above = world.get_block(x + dx, y + dy + 1, z + dz);
+                if !(above.transparent() || above.id == EMPTY_BLOCK) || above.is_fluid() {
+                    continue;
+                }
+                let block = world.get_block(x + dx, y + dy, z + dz);
+
+                if block.id == 1 && fastrand::bool() {
+                    to_update.insert((x, y, z), Block::new_id(1));
+                    return;
+                }
+            }
+        }
+    }
+}
+
 impl World {
     fn rand_block_chunk_update(
         &self,
@@ -60,6 +87,8 @@ impl World {
                 match block.id {
                     //Grass
                     1 => update_grass(self, x, y, z, to_update),
+                    //Dirt
+                    4 => update_dirt(self, x, y, z, to_update),
                     //Growing wheat
                     50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
                     _ => {}
