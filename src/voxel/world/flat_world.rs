@@ -67,7 +67,6 @@ impl World {
         //Generate new chunks
         for (chunkx, chunky, chunkz) in &to_generate {
             let pos = (*chunkx, *chunky, *chunkz);
-            self.updating.insert(pos);
             if self.chunk_cache.contains_key(&pos) {
                 let new_chunk = self.chunk_cache.get(&pos);
                 if let Some(new_chunk) = new_chunk {

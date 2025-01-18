@@ -253,6 +253,12 @@ fn update_plant(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut U
 impl World {
     //Returns true if at least one block updated, otherwise false
     fn update_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32, to_update: &mut UpdateList) {
+        if let Some(chunk) = self.chunks.get(&(chunkx, chunky, chunkz)) {
+            if chunk.is_empty() {
+                return;
+            }
+        }
+
         let startx = chunkx * CHUNK_SIZE_I32;
         let starty = chunky * CHUNK_SIZE_I32;
         let startz = chunkz * CHUNK_SIZE_I32;
@@ -327,6 +333,24 @@ impl World {
     pub fn update_all_chunks(&mut self) {
         for chunkpos in self.chunks.keys() {
             self.updating.insert(*chunkpos);
+            self.in_update_range.insert(*chunkpos);
         }
+    }
+
+    //Determine which chunks are in update range
+    pub fn update_sim_range(&mut self, chunk_sim_dist: i32) {
+        let mut update_range = HashSet::new();
+        for x in (self.centerx - chunk_sim_dist)..=(self.centerx + chunk_sim_dist) {
+            for y in (self.centery - chunk_sim_dist)..=(self.centery + chunk_sim_dist) {
+                for z in (self.centerz - chunk_sim_dist)..=(self.centerz + chunk_sim_dist) {
+                    update_range.insert((x, y, z));
+                    if !self.in_update_range.contains(&(x, y, z)) {
+                        self.updating.insert((x, y, z));
+                        continue;
+                    }
+                }
+            }
+        }
+        self.in_update_range = update_range;
     }
 }

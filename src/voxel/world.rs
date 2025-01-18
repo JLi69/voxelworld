@@ -67,6 +67,7 @@ pub struct World {
     random_update_timer: f32,
     //Updating chunks
     updating: HashSet<(i32, i32, i32)>,
+    in_update_range: HashSet<(i32, i32, i32)>,
     ticks: u64,
     //Chunks that experienced block update and need to be saved
     to_save: HashSet<(i32, i32, i32)>,
@@ -90,6 +91,7 @@ impl World {
             block_update_timer: 0.0,
             random_update_timer: 0.0,
             updating: HashSet::new(),
+            in_update_range: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
         }
@@ -122,6 +124,7 @@ impl World {
             block_update_timer: 0.0,
             random_update_timer: 0.0,
             updating: HashSet::new(),
+            in_update_range: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
         }

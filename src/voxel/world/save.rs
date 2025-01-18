@@ -121,6 +121,7 @@ impl World {
             block_update_timer: 0.0,
             random_update_timer: 0.0,
             updating: HashSet::new(),
+            in_update_range: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
         }
