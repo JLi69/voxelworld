@@ -27,15 +27,15 @@ pub fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
 pub fn get_height(x: i32, z: i32, terrain_generator: &Fbm<Perlin>, steepness: &Perlin) -> i32 {
     let point = [x as f64 / 192.0, z as f64 / 192.0];
     let noise_height = terrain_generator.get(point);
+    let steepness_point = [x as f64 / 24.0, z as f64 / 24.0];
+    let steepness = (steepness.get(steepness_point) + 1.0) / 2.0;
     let transformed_noise = if noise_height > 0.0 {
-        let steepness_point = [x as f64 / 16.0, z as f64 / 16.0];
-        let steepness = (steepness.get(steepness_point) + 1.0) / 2.0;
         let v = steepness.powf(1.0 - steepness.sqrt());
-        noise_height.powf(1.0 - noise_height.powf(0.3)) * v
+        noise_height.powf(1.0 - noise_height.powf(0.25 * v)) * v * v
     } else {
-        noise_height * 48.0 / 64.0
+        noise_height * 0.8 * steepness.powf(1.0 - noise_height.abs())
     };
-    (transformed_noise * 64.0) as i32 + 16
+    (transformed_noise * 64.0) as i32 + 12
 }
 
 pub fn generate_heightmap(

@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 cgmath = "0.18.0"
+crossbeam = "0.8.4"
 egui_gl_glfw = "0.1.5"
 fastrand = "2.1.1"
 gl = "0.14.0"

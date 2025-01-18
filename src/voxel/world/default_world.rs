@@ -13,6 +13,7 @@ use self::{
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
 };
 use std::collections::HashMap;
+use crossbeam::{thread, queue::ArrayQueue};
 
 use super::{
     gen_more::{find_in_range, get_chunks_to_generate},
@@ -316,9 +317,7 @@ impl World {
         //Delete old chunks
         self.delete_out_of_range(&out_of_range);
 
-        //Generate height map
         let mut gen_info_table = GenInfoTable::new();
-
         //Generate new chunks
         let start = std::time::Instant::now();
         for (chunkx, chunky, chunkz) in &to_generate {
@@ -338,14 +337,34 @@ impl World {
             gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
-            gen_info_table.add_sugarcane(*chunkx, *chunkz);
-            let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
-            //Should always evaluate to true
-            if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
-                gen_chunk(&mut new_chunk, gen_info, &self.world_generator);
-            }
-            self.chunks.insert(pos, new_chunk);
+            gen_info_table.add_sugarcane(*chunkx, *chunkz); 
         }
+
+        let generated = ArrayQueue::new(to_generate.len());
+        thread::scope(|s| {
+            for (chunkx, chunky, chunkz) in &to_generate {
+                if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
+                    continue;
+                }
+
+                s.spawn(|_| {
+                    let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
+                    //Should always evaluate to true
+                    if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
+                        gen_chunk(&mut new_chunk, gen_info, &self.world_generator);
+                    }
+                    //This should never fail
+                    generated.push(new_chunk).expect("Error: Failed to push onto ArrayQueue");
+                });
+            }
+        }).expect("Failed to generate new chunks!");
+
+        for chunk in generated {
+            let chunkpos = chunk.get_chunk_pos();
+            let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
+            self.chunks.insert(pos, chunk);
+        }
+
         eprintln!(
             "Took {} ms to generate new chunks",
             start.elapsed().as_millis()
