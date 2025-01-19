@@ -2,6 +2,9 @@ use super::{World, EMPTY_BLOCK};
 
 fn check_below_valid(world: &World, x: i32, y: i32, z: i32, valid_blocks: &[u8]) -> bool {
     let below = world.get_block(x, y - 1, z);
+    if below.shape() != 0 {
+        return false;
+    }
     for block in valid_blocks {
         if below.id == *block {
             return true;
@@ -21,6 +24,9 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
         //Mushroom
         48 => Some(|world, x, y, z| {
             let below = world.get_block(x, y - 1, z);
+            if below.shape() != 0 {
+                return false;
+            }
             !below.transparent() && below.id != EMPTY_BLOCK
         }),
         //Wheat

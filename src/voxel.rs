@@ -11,6 +11,7 @@ use self::flags::{
     get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NO_HITBOX,
     ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
+use cgmath::Vector3;
 pub use chunk::Chunk;
 pub use world::World;
 
@@ -33,6 +34,8 @@ pub struct Block {
     pub id: u8,
     //Represents geometry of the block
     //For liquid: 7 = still, 8 = flowing under
+    //First 3 bits = shape
+    //Last 3 bits = orientation
     //Orientation of the block
     //0 = up (normal)
     //1 = right
@@ -80,7 +83,22 @@ impl Block {
 
     pub fn set_orientation(&mut self, orientation: u8) {
         self.geometry &= 0xff << 3;
-        self.geometry |= orientation
+        self.geometry |= orientation;
+    }
+
+    pub fn shape(&self) -> u8 {
+        self.geometry >> 5
+    }
+
+    //Block shape
+    //0 = full block
+    //1 = slab
+    //2 = stair (5/8)
+    //3 = stair (6/8)
+    //4 = stair (7/8)
+    pub fn set_shape(&mut self, block_shape: u8) {
+        self.geometry &= 0xff >> 5;
+        self.geometry |= block_shape << 5;
     }
 
     //Returns if the block is transparent
@@ -123,5 +141,23 @@ impl Block {
     //Returns if the voxel can be destroyed by fluid
     pub fn fluid_destructibe(&self) -> bool {
         get_flag(self.id) & FLUID_DESTRUCTIBLE != 0
+    }
+}
+
+pub fn orientation_to_normal(orientation: u8) -> Vector3<i32> {
+    //0 = up (normal)
+    //1 = right
+    //2 = front
+    //3 = down
+    //4 = left
+    //5 = back
+    match orientation {
+        0 => Vector3::new(0, 1, 0),
+        1 => Vector3::new(1, 0, 0),
+        2 => Vector3::new(0, 0, 1),
+        3 => Vector3::new(0, -1, 0),
+        4 => Vector3::new(-1, 0, 0),
+        5 => Vector3::new(0, 0, -1),
+        _ => Vector3::new(0, 0, 0),
     }
 }

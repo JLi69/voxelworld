@@ -19,6 +19,9 @@ fn grow_wheat(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut Upd
 
 fn update_grass(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
     let above = world.get_block(x, y + 1, z);
+    if above.shape() != 0 && !above.is_fluid() {
+        return;
+    }
     if (above.transparent() || above.id == EMPTY_BLOCK) && !above.is_fluid() {
         return;
     }
@@ -31,7 +34,10 @@ fn update_grass(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
 
 fn update_dirt(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
     let above = world.get_block(x, y + 1, z);
-    if !(above.transparent() || above.id == EMPTY_BLOCK) || above.is_fluid() {
+    if above.is_fluid() {
+        return;
+    }
+    if !above.transparent() && above.id != EMPTY_BLOCK && above.shape() == 0 {
         return;
     }
     for dx in -1..=1 {
@@ -136,17 +142,27 @@ fn grow_sugarcane(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateL
 
 //Have sapling grow
 fn sapling_replaceable(block: Block) -> bool {
-    block.id == EMPTY_BLOCK || (block.transparent() && !block.is_fluid() && block.id != 9) || block.id == 8
+    block.id == EMPTY_BLOCK
+        || (block.transparent() && !block.is_fluid() && block.id != 9)
+        || block.id == 8
 }
 
-fn sapling_place_leaves(world: &World, to_update: &mut UpdateList,x: i32, y: i32, z: i32) {
+fn sapling_place_leaves(world: &World, to_update: &mut UpdateList, x: i32, y: i32, z: i32) {
     if world.get_block(x, y, z).id != EMPTY_BLOCK {
         return;
     }
     to_update.insert((x, y, z), Block::new_id(7));
 }
 
-fn grow_leaves(world: &World, to_update: &mut UpdateList, starty: i32, x: i32, y: i32, z: i32, height: i32) {
+fn grow_leaves(
+    world: &World,
+    to_update: &mut UpdateList,
+    starty: i32,
+    x: i32,
+    y: i32,
+    z: i32,
+    height: i32,
+) {
     if y == starty + height {
         sapling_place_leaves(world, to_update, x, y, z);
         sapling_place_leaves(world, to_update, x - 1, y, z);
@@ -185,10 +201,10 @@ fn grow_sapling(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
                     return;
                 }
             }
-        } 
+        }
     }
 
-    let height = fastrand::i32(4..=6); 
+    let height = fastrand::i32(4..=6);
     for vy in y..(y + height + 1) {
         grow_leaves(world, to_update, y, x, vy, z, height);
     }
@@ -246,6 +262,9 @@ impl World {
             })
             .for_each(|(x, y, z)| {
                 let block = self.get_block(x, y, z);
+                if block.shape() != 0 {
+                    return;
+                }
                 match block.id {
                     //Grass
                     1 => update_grass(self, x, y, z, to_update),

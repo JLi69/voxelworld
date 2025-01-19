@@ -11,6 +11,7 @@ pub mod save;
 pub mod update;
 
 use crate::impfile;
+use crate::voxel::Block;
 use crate::voxel::world::WorldGenType;
 use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT, World};
 use assets::models::ModelManager;
@@ -26,6 +27,12 @@ pub use input::{release_cursor, EventHandler, KeyState};
 use physics::Hitbox;
 use player::Player;
 pub use std::collections::HashMap;
+
+#[derive(Copy, Clone)]
+pub enum BlockMenuShape {
+    Normal,
+    Slab,
+}
 
 //Application config values, these are not meant to be changed by normal users
 struct Config {
@@ -106,7 +113,9 @@ pub struct Game {
     cfg: Config,
     //Debug info
     display_debug: bool,
+    //Block menu
     display_block_menu: bool,
+    block_menu_shape: BlockMenuShape,
     pub display_hud: bool,
 }
 
@@ -136,6 +145,7 @@ impl Game {
             textures: TextureManager::new(),
             cfg: Config::default(),
             display_debug: false,
+            block_menu_shape: BlockMenuShape::Normal,
             display_block_menu: false,
             display_hud: true,
         }
@@ -191,5 +201,20 @@ impl Game {
 
     pub fn get_block_menu(&self) -> &[u8] {
         &self.cfg.block_menu
+    }
+
+    pub fn get_block_menu_shape(&self) -> BlockMenuShape {
+        self.block_menu_shape
+    }
+
+    pub fn set_block_menu_shape(&mut self, shape: BlockMenuShape) {
+        self.block_menu_shape = shape;
+    }
+}
+
+pub fn set_block_shape(block: &mut Block, shape: BlockMenuShape) {
+    match shape {
+        BlockMenuShape::Slab => block.set_shape(1),
+        BlockMenuShape::Normal => {}
     }
 }

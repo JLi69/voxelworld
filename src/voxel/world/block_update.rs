@@ -267,6 +267,9 @@ impl World {
             for y in starty..(starty + CHUNK_SIZE_I32) {
                 for z in startz..(startz + CHUNK_SIZE_I32) {
                     let block = self.get_block(x, y, z);
+                    if block.shape() != 0 {
+                        continue;
+                    }
                     match block.id {
                         //Water
                         12 => update_water(self, x, y, z, to_update),

@@ -159,7 +159,10 @@ pub fn run_test_simulations(args: &[String]) {
         "Average time to grow all sugarcane: {} min",
         average_sugarcane_time
     );
-    eprintln!("Average time to grow all sapling: {} min", average_sapling_time);
+    eprintln!(
+        "Average time to grow all sapling: {} min",
+        average_sapling_time
+    );
     //Exit program once all simulations are completed
     std::process::exit(0);
 }

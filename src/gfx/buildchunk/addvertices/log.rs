@@ -44,7 +44,7 @@ pub fn add_block_vertices_log(
     };
 
     #[rustfmt::skip]
-    add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey);
+    add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey); 
     #[rustfmt::skip]
     add_face(chunk, adj_chunks[1], xyz, (0, -1, 0), vert_data, &BOTTOM_FACE, facey);
     #[rustfmt::skip]

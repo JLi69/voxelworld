@@ -1,7 +1,7 @@
-use super::{inventory::Item, Game, KeyState};
+use super::{inventory::Item, Game, KeyState, set_block_shape, BlockMenuShape};
 use crate::voxel::Block;
 use cgmath::Vector2;
-use glfw::MouseButton;
+use glfw::{MouseButton, Key};
 
 pub const ICON_SIZE: f32 = 32.0;
 pub const ROW_LENGTH: usize = 12;
@@ -36,9 +36,19 @@ pub fn get_selected(menu: &[(u8, Vector2<f32>)], mousex: f32, mousey: f32) -> Op
 }
 
 pub fn select_block(gamestate: &mut Game, menu: &[(u8, Vector2<f32>)], mousex: f32, mousey: f32) {
+    //Hotkey for changing block shape
+    if gamestate.get_key_state(Key::Num1).is_held() {
+        gamestate.set_block_menu_shape(BlockMenuShape::Normal);
+    } else if gamestate.get_key_state(Key::Num2).is_held() {
+        gamestate.set_block_menu_shape(BlockMenuShape::Slab);
+    }
+
     if let Some(i) = get_selected(menu, mousex, mousey) {
         if gamestate.get_mouse_state(MouseButton::Left) == KeyState::JustPressed {
-            let block = Block::new_id(menu[i].0);
+            let mut block = Block::new_id(menu[i].0);
+            if !block.is_flat_item() {
+                set_block_shape(&mut block, gamestate.get_block_menu_shape());
+            }
             gamestate
                 .player
                 .hotbar

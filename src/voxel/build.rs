@@ -215,6 +215,10 @@ fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
         return;
     }
 
+    if block.shape() != 0 {
+        return;
+    }
+
     if dir.y.abs() > dir.z.abs() && dir.y.abs() > dir.x.abs() && !block.rotate_y_only() {
         //Set orientation of the block
         if dir.y.signum() as i32 == -1 && block.can_rotate() {
@@ -235,6 +239,73 @@ fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
             block.set_orientation(4);
         } else if dir.x.signum() as i32 == 1 && block.can_rotate() {
             block.set_orientation(1);
+        }
+    }
+}
+
+//.fract() returns negative fractional parts for negative numbers, this
+//function will always return a positive number
+fn fraction(x: f32) -> f32 {
+    if x < 0.0 {
+        x.fract() + 1.0
+    } else {
+        x.fract()
+    }
+}
+
+fn set_slab_orietnation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, block: &mut Block) {
+    if block.shape() != 1 {
+        return;
+    }
+
+    //Horizontal slabs
+    if block.orientation() == 0 {
+        if fraction(y) < 0.5 {
+            block.set_orientation(0);
+        } else {
+            block.set_orientation(3);
+        }
+
+        if dir.y > 0.0 && (y.abs().fract() < 0.01 || y.abs().fract() > 0.99) {
+            block.set_orientation(3);
+        } else if dir.y < 0.0 && (y.abs().fract() < 0.01 || y.abs().fract() > 0.99) {
+            block.set_orientation(0);
+        }
+    } else {
+        //Vertical slabs
+        match axis {
+            Axis::X => {
+                if dir.x <= 0.0 {
+                    block.set_orientation(1);
+                } else if dir.x > 0.0 {
+                    block.set_orientation(4);
+                }
+            }
+            Axis::Y => {
+                let orientation = if (fraction(1.0 - x) > fraction(z) && fraction(1.0 - x) > fraction(1.0 - z)) 
+                    || (fraction(x) > fraction(z) && fraction(x) > fraction(1.0 - z)) 
+                {
+                    if fraction(x) < 0.5 {
+                        1
+                    } else {
+                        4
+                    }
+                } else {
+                    if fraction(z) < 0.5 {
+                        2
+                    } else {
+                        5
+                    }
+                };
+                block.set_orientation(orientation);
+            }
+            Axis::Z => {
+                if dir.z <= 0.0 {
+                    block.set_orientation(2);
+                } else if dir.z > 0.0 {
+                    block.set_orientation(5);
+                }
+            }
         }
     }
 }
@@ -286,6 +357,7 @@ pub fn place_block(
     }
 
     set_block_rotation(dir, &mut block);
+    set_slab_orietnation(x, y, z, dir, axis, &mut block);
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
 

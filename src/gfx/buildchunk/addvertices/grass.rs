@@ -15,15 +15,13 @@ pub fn add_block_vertices_grass(
     bot: u8,
 ) {
     let (x, y, z) = xyz;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
-    if blockid == EMPTY_BLOCK {
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
+    if block.id == EMPTY_BLOCK {
         return;
     }
 
-    let facex = FaceInfo::new(blockid, 0);
-    let facez = FaceInfo::new(blockid, 2);
+    let facex = FaceInfo::new(block.id, 0);
+    let facez = FaceInfo::new(block.id, 2);
     let topface = FaceInfo::new(top, 1);
     let botface = FaceInfo::new(bot, 1);
 
@@ -38,5 +36,5 @@ pub fn add_block_vertices_grass(
     #[rustfmt::skip]
     add_face(chunk, adj_chunks[4], xyz, (0, 0, -1), vert_data, &FRONT_FACE, facez);
     #[rustfmt::skip]
-    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez);
+    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez); 
 }

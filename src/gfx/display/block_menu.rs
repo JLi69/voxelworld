@@ -3,7 +3,7 @@ use crate::{
         assets::models::draw_elements,
         block_menu::{get_positions, get_selected, ICON_SIZE},
         input::convert_mouse_pos,
-        Game,
+        Game, set_block_shape,
     },
     voxel::{Block, Chunk},
 };
@@ -61,7 +61,11 @@ pub fn display_block_menu(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey:
 
         let transform = get_block_item_transform(size, position, Block::new_id(*block));
         orthographic_shader.uniform_matrix4f("transform", &transform);
-        display_block_item(&mut chunk, Block::new_id(*block));
+        let mut block_item = Block::new_id(*block);
+        if !block_item.is_flat_item() {
+            set_block_shape(&mut block_item, gamestate.get_block_menu_shape());
+        }
+        display_block_item(&mut chunk, block_item);
     }
 
     unsafe {

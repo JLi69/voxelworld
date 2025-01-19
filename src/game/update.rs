@@ -1,3 +1,4 @@
+use super::inventory::Item;
 use super::{Game, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
@@ -20,6 +21,25 @@ const HOTBAR_KEYS: [Key; 9] = [
 ];
 
 impl Game {
+    fn rotate_item(&mut self) {
+        //Rotate the block in the player's hand
+        if self.get_key_state(Key::R) == KeyState::JustPressed {
+            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() {
+                if b.shape() == 0 {
+                    return;
+                }
+                let mut rotated_block = b;
+                if rotated_block.orientation() == 0 {
+                    rotated_block.set_orientation(2);
+                } else if rotated_block.orientation() != 0 {
+                    rotated_block.set_orientation(0);
+                }
+                let new_item = Item::BlockItem(rotated_block, amt);
+                self.player.hotbar.set_selected(new_item);
+            }
+        }
+    }
+
     //Update player and camera
     pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) {
         if cursormode == CursorMode::Disabled {
@@ -60,6 +80,7 @@ impl Game {
             let keystate = self.get_key_state(*key);
             self.player.select_hotbar_item(keystate, i);
         }
+        self.rotate_item();
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {
@@ -144,7 +165,7 @@ impl Game {
         if self.get_key_state(Key::Tab) == KeyState::JustPressed {
             self.paused = !self.paused;
             self.display_block_menu = !self.display_block_menu;
-        }
+        } 
     }
 
     pub fn is_paused(&self) -> bool {
