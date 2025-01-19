@@ -197,6 +197,27 @@ fn grow_sapling(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     }
 }
 
+fn leaf_decay(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let block = world.get_block(x, y, z);
+    if block.geometry != 0 {
+        return;
+    }
+
+    for vx in (x - 3)..=(x + 3) {
+        for vy in (y - 3)..=(y + 3) {
+            for vz in (z - 3)..=(z + 3) {
+                //If within 3 blocks of a log, ignore
+                if world.get_block(vx, vy, vz).id == 8 {
+                    return;
+                }
+            }
+        }
+    }
+
+    //Decay
+    to_update.insert((x, y, z), Block::new());
+}
+
 impl World {
     fn rand_block_chunk_update(
         &self,
@@ -230,6 +251,8 @@ impl World {
                     1 => update_grass(self, x, y, z, to_update),
                     //Dirt
                     4 => update_dirt(self, x, y, z, to_update),
+                    //Leaves
+                    7 => leaf_decay(self, x, y, z, to_update),
                     //Wet farmland
                     43 => update_wet_farmland(self, x, y, z, to_update),
                     //Dry farmland

@@ -265,6 +265,16 @@ pub fn place_block(
         if block.is_fluid() {
             block.geometry = 7;
         }
+
+        //To prevent leaf decay, we will set the orientation of leaves to be
+        //1 if they are a full block and are placed by the player
+        //This should not have any visual effect other than a way for the game
+        //to differentiate between naturally generated leaves and 'artificial'
+        //leaves. This is kind of a hack but I don't want to come up with
+        //a better solution.
+        if block.id == 7 && block.geometry == 0 {
+            block.set_orientation(1);
+        }
     } else {
         return None;
     }
