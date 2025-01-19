@@ -11,8 +11,8 @@ pub mod save;
 pub mod update;
 
 use crate::impfile;
-use crate::voxel::Block;
 use crate::voxel::world::WorldGenType;
+use crate::voxel::Block;
 use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT, World};
 use assets::models::ModelManager;
 use assets::shaders::ShaderManager;

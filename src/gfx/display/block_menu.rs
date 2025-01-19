@@ -3,7 +3,7 @@ use crate::{
         assets::models::draw_elements,
         block_menu::{get_positions, get_selected, ICON_SIZE},
         input::convert_mouse_pos,
-        Game, set_block_shape,
+        set_block_shape, Game,
     },
     voxel::{Block, Chunk},
 };

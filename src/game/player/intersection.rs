@@ -16,15 +16,16 @@ impl Player {
         for x in (ix - 2)..=(ix + 2) {
             for y in (iy - 2)..=(iy + 2) {
                 for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id == EMPTY_BLOCK {
+                    let block = world.get_block(x, y, z);
+                    if block.id == EMPTY_BLOCK {
                         continue;
                     }
 
-                    if world.get_block(x, y, z).no_hitbox() {
+                    if block.no_hitbox() {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z);
+                    let block_hitbox = Hitbox::from_block_data(x, y, z, block);
 
                     if !self.get_hitbox().intersects(&block_hitbox) {
                         continue;

@@ -9,12 +9,12 @@ pub enum Item {
 fn item_to_string(item: Item) -> String {
     match item {
         Item::BlockItem(block, amt) => {
-            "block,".to_string() + 
-                &block.id.to_string() + 
-                "," + 
-                &block.geometry.to_string() + 
-                "," + 
-                &amt.to_string()
+            "block,".to_string()
+                + &block.id.to_string()
+                + ","
+                + &block.geometry.to_string()
+                + ","
+                + &amt.to_string()
         }
         Item::EmptyItem => "empty".to_string(),
     }

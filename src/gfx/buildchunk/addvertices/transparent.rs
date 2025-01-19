@@ -1,11 +1,11 @@
-use cgmath::{Vector3, InnerSpace};
-use super::{ChunkData, FaceInfo, Int3, slab};
+use super::{slab, ChunkData, FaceInfo, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
-use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK, Block, orientation_to_normal};
+use crate::voxel::{orientation_to_normal, out_of_bounds, wrap_coord, Block, Chunk, EMPTY_BLOCK};
+use cgmath::{InnerSpace, Vector3};
 
-fn skip_block_face_trans(adj_block: Block, offset: Int3, id: u8) -> bool { 
+fn skip_block_face_trans(adj_block: Block, offset: Int3, id: u8) -> bool {
     let (offx, offy, offz) = offset;
     match adj_block.shape() {
         //Full block

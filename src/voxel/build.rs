@@ -282,8 +282,9 @@ fn set_slab_orietnation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, b
                 }
             }
             Axis::Y => {
-                let orientation = if (fraction(1.0 - x) > fraction(z) && fraction(1.0 - x) > fraction(1.0 - z)) 
-                    || (fraction(x) > fraction(z) && fraction(x) > fraction(1.0 - z)) 
+                let orientation = if (fraction(1.0 - x) > fraction(z)
+                    && fraction(1.0 - x) > fraction(1.0 - z))
+                    || (fraction(x) > fraction(z) && fraction(x) > fraction(1.0 - z))
                 {
                     if fraction(x) < 0.5 {
                         1

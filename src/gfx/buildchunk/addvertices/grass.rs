@@ -36,5 +36,5 @@ pub fn add_block_vertices_grass(
     #[rustfmt::skip]
     add_face(chunk, adj_chunks[4], xyz, (0, 0, -1), vert_data, &FRONT_FACE, facez);
     #[rustfmt::skip]
-    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez); 
+    add_face(chunk, adj_chunks[5], xyz, (0, 0, 1), vert_data, &BACK_FACE, facez);
 }

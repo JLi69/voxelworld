@@ -13,7 +13,7 @@ pub fn decrease_by_half(x: u8) -> u8 {
 //index = 2 -> z
 fn half_positions(chunkdata: &mut ChunkData, pos: Int3, offset: i32, index: usize) {
     let (x, y, z) = pos;
-    let pos = [ x, y, z ];
+    let pos = [x, y, z];
     let face_count = chunkdata.len() / (6 * 5);
     for i in 0..6 {
         let current_idx = (face_count - 1) * 6 * 5 + 5 * i + index;
@@ -30,16 +30,11 @@ fn half_positions(chunkdata: &mut ChunkData, pos: Int3, offset: i32, index: usiz
     }
 }
 
-pub fn apply_slab_geometry(
-    chunkdata: &mut ChunkData,
-    pos: Int3,
-    shape: u8,
-    orientation: u8,
-) {
+pub fn apply_slab_geometry(chunkdata: &mut ChunkData, pos: Int3, shape: u8, orientation: u8) {
     if shape != 1 {
         return;
     }
-    
+
     match orientation {
         //Up
         0 => half_positions(chunkdata, pos, 1, 1),

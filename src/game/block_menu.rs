@@ -1,7 +1,7 @@
-use super::{inventory::Item, Game, KeyState, set_block_shape, BlockMenuShape};
+use super::{inventory::Item, set_block_shape, BlockMenuShape, Game, KeyState};
 use crate::voxel::Block;
 use cgmath::Vector2;
-use glfw::{MouseButton, Key};
+use glfw::{Key, MouseButton};
 
 pub const ICON_SIZE: f32 = 32.0;
 pub const ROW_LENGTH: usize = 12;

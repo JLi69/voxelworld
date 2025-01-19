@@ -1,4 +1,4 @@
-use crate::voxel::Block;
+use crate::voxel::{orientation_to_normal, Block};
 use cgmath::Vector3;
 
 //Axis aligned bounding box (this hitbox is aligned with the x, y, z axis)
@@ -48,7 +48,21 @@ impl Hitbox {
             let height = get_fluid_height(block.geometry);
             Hitbox::new(fx, fy - (1.0 - height) / 2.0, fz, 1.0, height, 1.0)
         } else {
-            Hitbox::new(fx, fy, fz, 1.0, 1.0, 1.0)
+            match block.shape() {
+                1 => {
+                    //Slab
+                    let norm = orientation_to_normal(block.orientation());
+                    Hitbox::new(
+                        fx - norm.x as f32 * 0.25,
+                        fy - norm.y as f32 * 0.25,
+                        fz - norm.z as f32 * 0.25,
+                        1.0 - norm.x.abs() as f32 * 0.5,
+                        1.0 - norm.y.abs() as f32 * 0.5,
+                        1.0 - norm.z.abs() as f32 * 0.5,
+                    )
+                }
+                _ => Hitbox::new(fx, fy, fz, 1.0, 1.0, 1.0),
+            }
         }
     }
 

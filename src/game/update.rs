@@ -165,7 +165,7 @@ impl Game {
         if self.get_key_state(Key::Tab) == KeyState::JustPressed {
             self.paused = !self.paused;
             self.display_block_menu = !self.display_block_menu;
-        } 
+        }
     }
 
     pub fn is_paused(&self) -> bool {
