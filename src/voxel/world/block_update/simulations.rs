@@ -1,5 +1,5 @@
 use super::rand_block_update::RANDOM_UPDATE_INTERVAL;
-use crate::voxel::{world::WorldGenType, Block, World};
+use crate::voxel::{world::WorldGenType, Block, World, EMPTY_BLOCK};
 
 /*
  * Test simulations for testing purposes
@@ -79,11 +79,46 @@ fn simulate_slow_wheat_growth(iterations: i32) -> f32 {
     total / iterations as f32
 }
 
+fn simulate_sugarcane_growth(iterations: i32) -> f32 {
+    eprintln!("SUGAR CANE GROWTH SIMULATION");
+    let mut total = 0.0f32;
+    for i in 0..iterations {
+        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut total_time = 0.0;
+        for x in 0..16 {
+            world.set_block(x, 1, 0, Block::new_id(1));
+            world.set_block(x, 2, 0, Block::new_id(69));
+            world.set_block(x, 1, 1, Block::new_fluid(12));
+        }
+        let mut done = false;
+        while !done {
+            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
+            total_time += RANDOM_UPDATE_INTERVAL;
+            done = true;
+            for x in 0..16 {
+                let block = world.get_block(x, 4, 0);
+                assert_eq!(world.get_block(x, 5, 0).id, EMPTY_BLOCK);
+                if block.id != 69 {
+                    done = false;
+                }
+            }
+        }
+        let minutes = total_time / 60.0;
+        total += minutes;
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat",
+            i + 1
+        );
+    }
+    total / iterations as f32
+}
+
 pub fn run_test_simulations(args: &[String]) {
     if !args.contains(&"--run-test-sims".to_string()) {
         return;
     }
     //Run simulations and then quit the program
+    let average_sugarcane_time = simulate_sugarcane_growth(100);
     let average_wheat_time = simulate_wheat_growth(100);
     let average_slow_wheat_time = simulate_slow_wheat_growth(100);
     //Output results
@@ -94,6 +129,10 @@ pub fn run_test_simulations(args: &[String]) {
     eprintln!(
         "Average time to grow all wheat (slow): {} min",
         average_slow_wheat_time
+    );
+    eprintln!(
+        "Average time to grow all sugarcane: {} min",
+        average_sugarcane_time
     );
     //Exit program once all simulations are completed
     std::process::exit(0);

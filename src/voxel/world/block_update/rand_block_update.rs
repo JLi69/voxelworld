@@ -103,6 +103,37 @@ fn update_wet_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut Up
     to_update.insert((x, y, z), Block::new_id(45));
 }
 
+//Have sugar cane grow
+fn grow_sugarcane(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    if fastrand::i32(0..5) >= 2 {
+        return;
+    }
+
+    if world.get_block(x, y + 1, z).id != EMPTY_BLOCK {
+        return;
+    }
+
+    let mut dy = -1;
+    while dy > -2 && world.get_block(x, y + dy, z).id == 69 {
+        dy -= 1;
+    }
+
+    //If the sugar cane is floating or too tall, then do not update it
+    let block = world.get_block(x, y + dy, z);
+    if block.id == EMPTY_BLOCK || block.id == 69 {
+        return;
+    }
+
+    //Check if the sugar cane is bordering water
+    const ADJ: [(i32, i32); 4] = [(0, 1), (0, -1), (1, 0), (-1, 0)];
+    for (dx, dz) in ADJ {
+        if world.get_block(x + dx, y + dy, z + dz).id == 12 {
+            to_update.insert((x, y + 1, z), Block::new_id(69));
+            return;
+        }
+    }
+}
+
 impl World {
     fn rand_block_chunk_update(
         &self,
@@ -142,6 +173,8 @@ impl World {
                     45 => update_dry_farmland(self, x, y, z, to_update),
                     //Growing wheat
                     50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
+                    //Sugar cane
+                    69 => grow_sugarcane(self, x, y, z, to_update),
                     _ => {}
                 }
             });

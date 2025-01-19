@@ -12,8 +12,8 @@ use self::{
     ore::{generate_magma_blocks, generate_ore},
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
 };
+use crossbeam::{queue::ArrayQueue, thread};
 use std::collections::HashMap;
-use crossbeam::{thread, queue::ArrayQueue};
 
 use super::{
     gen_more::{find_in_range, get_chunks_to_generate},
@@ -337,7 +337,7 @@ impl World {
             gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
-            gen_info_table.add_sugarcane(*chunkx, *chunkz); 
+            gen_info_table.add_sugarcane(*chunkx, *chunkz);
         }
 
         let generated = ArrayQueue::new(to_generate.len());
@@ -354,10 +354,13 @@ impl World {
                         gen_chunk(&mut new_chunk, gen_info, &self.world_generator);
                     }
                     //This should never fail
-                    generated.push(new_chunk).expect("Error: Failed to push onto ArrayQueue");
+                    generated
+                        .push(new_chunk)
+                        .expect("Error: Failed to push onto ArrayQueue");
                 });
             }
-        }).expect("Failed to generate new chunks!");
+        })
+        .expect("Failed to generate new chunks!");
 
         for chunk in generated {
             let chunkpos = chunk.get_chunk_pos();
