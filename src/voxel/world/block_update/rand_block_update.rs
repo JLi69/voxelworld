@@ -134,6 +134,69 @@ fn grow_sugarcane(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateL
     }
 }
 
+//Have sapling grow
+fn sapling_replaceable(block: Block) -> bool {
+    block.id == EMPTY_BLOCK || (block.transparent() && !block.is_fluid() && block.id != 9) || block.id == 8
+}
+
+fn sapling_place_leaves(world: &World, to_update: &mut UpdateList,x: i32, y: i32, z: i32) {
+    if world.get_block(x, y, z).id != EMPTY_BLOCK {
+        return;
+    }
+    to_update.insert((x, y, z), Block::new_id(7));
+}
+
+fn grow_leaves(world: &World, to_update: &mut UpdateList, starty: i32, x: i32, y: i32, z: i32, height: i32) {
+    if y == starty + height {
+        sapling_place_leaves(world, to_update, x, y, z);
+        sapling_place_leaves(world, to_update, x - 1, y, z);
+        sapling_place_leaves(world, to_update, x + 1, y, z);
+        sapling_place_leaves(world, to_update, x, y, z - 1);
+        sapling_place_leaves(world, to_update, x, y, z + 1);
+    } else if y == starty + height - 1 {
+        for ix in (x - 1)..=(x + 1) {
+            for iz in (z - 1)..=(z + 1) {
+                sapling_place_leaves(world, to_update, ix, y, iz);
+            }
+        }
+    } else if y >= starty + height - 3 {
+        for ix in (x - 2)..=(x + 2) {
+            for iz in (z - 2)..=(z + 2) {
+                sapling_place_leaves(world, to_update, ix, y, iz);
+            }
+        }
+    }
+}
+
+fn grow_sapling(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    if fastrand::i32(0..12) != 0 {
+        return;
+    }
+
+    let below = world.get_block(x, y - 1, z);
+    if below.id == EMPTY_BLOCK {
+        return;
+    }
+
+    for vx in (x - 2)..=(x + 2) {
+        for vz in (z - 2)..=(z + 2) {
+            for vy in (y + 1)..=(y + 5) {
+                if !sapling_replaceable(world.get_block(vx, vy, vz)) {
+                    return;
+                }
+            }
+        } 
+    }
+
+    let height = fastrand::i32(4..=6); 
+    for vy in y..(y + height + 1) {
+        grow_leaves(world, to_update, y, x, vy, z, height);
+    }
+    for vy in y..(y + height) {
+        to_update.insert((x, vy, z), Block::new_id(8));
+    }
+}
+
 impl World {
     fn rand_block_chunk_update(
         &self,
@@ -171,6 +234,8 @@ impl World {
                     43 => update_wet_farmland(self, x, y, z, to_update),
                     //Dry farmland
                     45 => update_dry_farmland(self, x, y, z, to_update),
+                    //Sapling
+                    47 => grow_sapling(self, x, y, z, to_update),
                     //Growing wheat
                     50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
                     //Sugar cane

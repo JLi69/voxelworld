@@ -106,7 +106,31 @@ fn simulate_sugarcane_growth(iterations: i32) -> f32 {
         let minutes = total_time / 60.0;
         total += minutes;
         eprintln!(
-            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat",
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all sugarcane",
+            i + 1
+        );
+    }
+    total / iterations as f32
+}
+
+fn simulate_sapling_growth(iterations: i32) -> f32 {
+    eprintln!("SAPLING GROWTH SIMULATION");
+    let mut total = 0.0f32;
+    for i in 0..iterations {
+        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut total_time = 0.0;
+        world.set_block(0, 2, 0, Block::new_id(47));
+        world.set_block(0, 1, 0, Block::new_id(1));
+        let mut done = false;
+        while !done {
+            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
+            total_time += RANDOM_UPDATE_INTERVAL;
+            done = world.get_block(0, 2, 0).id == 8;
+        }
+        let minutes = total_time / 60.0;
+        total += minutes;
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow sapling",
             i + 1
         );
     }
@@ -118,6 +142,7 @@ pub fn run_test_simulations(args: &[String]) {
         return;
     }
     //Run simulations and then quit the program
+    let average_sapling_time = simulate_sapling_growth(100);
     let average_sugarcane_time = simulate_sugarcane_growth(100);
     let average_wheat_time = simulate_wheat_growth(100);
     let average_slow_wheat_time = simulate_slow_wheat_growth(100);
@@ -134,6 +159,7 @@ pub fn run_test_simulations(args: &[String]) {
         "Average time to grow all sugarcane: {} min",
         average_sugarcane_time
     );
+    eprintln!("Average time to grow all sapling: {} min", average_sapling_time);
     //Exit program once all simulations are completed
     std::process::exit(0);
 }
