@@ -80,7 +80,12 @@ impl Game {
             let keystate = self.get_key_state(*key);
             self.player.select_hotbar_item(keystate, i);
         }
+        //Rotate current item in the hotbar (if it is rotatable
         self.rotate_item();
+        //Drop item
+        if self.get_key_state(Key::Q) == KeyState::JustPressed {
+            self.player.hotbar.set_selected(Item::EmptyItem);
+        }
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {

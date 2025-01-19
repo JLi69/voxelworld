@@ -291,12 +291,10 @@ fn set_slab_orietnation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, b
                     } else {
                         4
                     }
+                } else if fraction(z) < 0.5 {
+                    2
                 } else {
-                    if fraction(z) < 0.5 {
-                        2
-                    } else {
-                        5
-                    }
+                    5
                 };
                 block.set_orientation(orientation);
             }
