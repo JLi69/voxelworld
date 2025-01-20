@@ -35,7 +35,7 @@ fn display_shape_icons(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey: i3
         let sz = if selected == i {
             ICON_SIZE
         } else {
-            ICON_SIZE * 0.75
+            ICON_SIZE * 0.8
         };
         let transform = Matrix4::from_translation(Vector3::new(pos.x, pos.y, 0.0))
             * Matrix4::from_nonuniform_scale(sz, sz, 0.0);
