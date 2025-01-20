@@ -18,7 +18,7 @@ fn debug_info(
     fps: i32,
 ) {
     let playerx = gamestate.player.position.x;
-    let playery = gamestate.player.position.y;
+    let playery = gamestate.player.position.y - gamestate.player.dimensions.y / 2.0;
     let playerz = gamestate.player.position.z;
     let player_pos = format!("x = {playerx:.4}, y = {playery:.4}, z = {playerz:.4}");
 

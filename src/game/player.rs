@@ -1,6 +1,8 @@
 mod intersection;
 mod movement;
 
+use self::movement::JUMP_FORCE;
+
 use super::inventory::Hotbar;
 use super::Hitbox;
 use super::KeyState;
@@ -155,6 +157,45 @@ impl Player {
         true
     }
 
+    //if the jump height is low enough, just have the player autojump
+    fn autojump(&mut self, world: &World) {
+        //You cannot auto jump if you are crouching
+        if self.crouching {
+            return;
+        }
+
+        if self.falling {
+            return;
+        }
+
+        let position = self.position;
+        let vel = self.calculate_velocity();
+        if vel.magnitude() == 0.0 {
+            return;
+        }
+        self.position += vel.normalize() * 0.05;
+        if let Some(hitbox) = self.check_collision(world) {
+            self.position.y = hitbox.position.y + hitbox.dimensions.y / 2.0 + self.dimensions.y / 2.0 + 0.01;
+        } else {
+            self.position = position;
+            return;
+        }
+
+        if self.check_collision(world).is_some() {
+            self.position = position;
+            return;
+        }
+
+        if self.position.y - position.y > 0.6 {
+            self.position = position;
+            return;
+        }
+
+        self.position = position;
+        self.jump_cooldown = 0.0;
+        self.velocity_y = JUMP_FORCE * 0.75;
+    }
+
     //Translate player object, account for collisions with blocks
     fn translate(&mut self, dt: f32, world: &World) {
         //Move in the xz plane
@@ -205,6 +246,7 @@ impl Player {
 
             //Move in the x direction
             self.position.x += vx;
+            self.autojump(world);
             let block_hitbox = self.check_collision(world);
             if let Some(block_hitbox) = block_hitbox {
                 self.uncollide_x(&block_hitbox);
@@ -216,6 +258,7 @@ impl Player {
 
             //Move in the z direction
             self.position.z += vz;
+            self.autojump(world);
             let block_hitbox = self.check_collision(world);
             if let Some(block_hitbox) = block_hitbox {
                 self.uncollide_z(&block_hitbox);
