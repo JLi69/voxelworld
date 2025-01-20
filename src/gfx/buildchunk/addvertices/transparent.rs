@@ -137,6 +137,8 @@ pub fn add_block_vertices_trans(
     adj_chunks: [Option<&Chunk>; 6],
     xyz: Int3,
     vert_data: &mut ChunkData,
+    slab_side1: Option<u8>,
+    slab_side2: Option<u8>,
 ) {
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
@@ -144,9 +146,36 @@ pub fn add_block_vertices_trans(
         return;
     }
 
-    let facex = FaceInfo::new(block.id, 0);
-    let facey = FaceInfo::new(block.id, 1);
-    let facez = FaceInfo::new(block.id, 2);
+    let facex = if block.shape() == 1 {
+        match block.orientation() % 3 {
+            0 => FaceInfo::new(slab_side1.unwrap_or(block.id), 0),
+            1 => FaceInfo::new(block.id, 0),
+            2 => FaceInfo::new(slab_side2.unwrap_or(block.id), 0),
+            _ => FaceInfo::new(block.id, 0), //Unreachable
+        }
+    } else {
+        FaceInfo::new(block.id, 0)
+    };
+    let facey = if block.shape() == 1 {
+        match block.orientation() % 3 {
+            0 => FaceInfo::new(block.id, 1),
+            1 => FaceInfo::new(slab_side1.unwrap_or(block.id), 1),
+            2 => FaceInfo::new(slab_side2.unwrap_or(block.id), 1),
+            _ => FaceInfo::new(block.id, 1), //Unreachable
+        }
+    } else {
+        FaceInfo::new(block.id, 1)
+    };
+    let facez = if block.shape() == 1 {
+        match block.orientation() % 3 {
+            0 => FaceInfo::new(slab_side1.unwrap_or(block.id), 2),
+            1 => FaceInfo::new(slab_side2.unwrap_or(block.id), 2),
+            2 => FaceInfo::new(block.id, 2),
+            _ => FaceInfo::new(block.id, 2), //Unreachable
+        }
+    } else {
+        FaceInfo::new(block.id, 2)
+    };
 
     #[rustfmt::skip]
     add_face_transparent(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey);

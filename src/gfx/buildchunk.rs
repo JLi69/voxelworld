@@ -35,7 +35,7 @@ pub fn add_block_vertices(
     match blockid {
         1 => {
             //Grass
-            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 17, 4);
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 17, 4, 254);
         }
         8 => {
             //Log
@@ -51,11 +51,11 @@ pub fn add_block_vertices(
         }
         43 => {
             //Farmland
-            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 44, 43);
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 44, 43, 43);
         }
         45 => {
             //Dry Farmland
-            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 46, 45);
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 46, 45, 45);
         }
         _ => {
             //Everything else
@@ -82,14 +82,12 @@ pub fn add_block_vertices_transparent(
     }
 
     match block.id {
-        47..=56 | 69 => {
-            //Plants
-            add_block_vertices_plant(chunk, xyz, vert_data)
-        }
-        _ => {
-            //Everything else
-            add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data);
-        }
+        //Glass
+        9 => add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data, Some(252), Some(253)),
+        //Plants
+        47..=56 | 69 => add_block_vertices_plant(chunk, xyz, vert_data),
+        //Everything else
+        _ => add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data, None, None),
     }
 }
 
