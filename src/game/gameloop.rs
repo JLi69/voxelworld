@@ -195,6 +195,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
                 game::block_menu::get_positions(gamestate, -BLOCK_MENU_WIDTH, BLOCK_MENU_HEIGHT);
             let (mousex_f32, mousey_f32) = convert_mouse_pos(mousex, mousey, w, h);
             game::block_menu::select_block(gamestate, &menu, mousex_f32, mousey_f32);
+            let menu =
+                game::block_menu::get_shape_icon_positions(BLOCK_MENU_WIDTH, -BLOCK_MENU_HEIGHT);
+            game::block_menu::change_block_shape(gamestate, &menu, mousex_f32, mousey_f32);
         } else if gamestate.paused {
             pause_action = gui::run_pause_menu(&ctx, &mut input_state, &mut painter);
         }

@@ -175,7 +175,8 @@ impl Player {
         }
         self.position += vel.normalize() * 0.05;
         if let Some(hitbox) = self.check_collision(world) {
-            self.position.y = hitbox.position.y + hitbox.dimensions.y / 2.0 + self.dimensions.y / 2.0 + 0.01;
+            self.position.y =
+                hitbox.position.y + hitbox.dimensions.y / 2.0 + self.dimensions.y / 2.0 + 0.01;
         } else {
             self.position = position;
             return;

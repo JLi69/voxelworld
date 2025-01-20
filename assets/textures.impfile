@@ -17,3 +17,15 @@
 "black_bg" {
 	"path" = "assets/textures/black_bg.png";
 }
+
+"full_block_icon" {
+	"path" = "assets/textures/full_block_icon.png";
+}
+
+"half_slab_icon" {
+	"path" = "assets/textures/half_slab_icon.png";
+}
+
+"stair_icon" {
+	"path" = "assets/textures/stair_icon.png";
+}
