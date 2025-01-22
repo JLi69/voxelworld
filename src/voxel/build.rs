@@ -253,7 +253,7 @@ fn fraction(x: f32) -> f32 {
     }
 }
 
-fn set_slab_orietnation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, block: &mut Block) {
+fn set_slab_orientation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, block: &mut Block) {
     if block.shape() != 1 {
         return;
     }
@@ -309,6 +309,44 @@ fn set_slab_orietnation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, b
     }
 }
 
+fn set_torch_orientation(dir: Vector3<f32>, axis: Axis) -> u8 {
+    match axis {
+        Axis::X => {
+            if dir.x >= 0.0 {
+                4
+            } else {
+                1
+            }
+        }
+        Axis::Y => {
+            if dir.y >= 0.0 {
+                3
+            } else {
+                0
+            }
+        }
+        Axis::Z => {
+            if dir.z >= 0.0 {
+                5
+            } else {
+                2
+            }
+        }
+    }
+}
+
+fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
+    if !block.non_voxel_geometry() {
+        return;
+    }
+
+    let orientation = match block.id {
+        71..=74 => set_torch_orientation(dir, axis),
+        _ => 0,
+    };
+    block.set_orientation(orientation);
+}
+
 //Returns the (x, y, z) coordinate of the block placed as an option
 //Returns none if no block is placed
 pub fn place_block(
@@ -356,7 +394,8 @@ pub fn place_block(
     }
 
     set_block_rotation(dir, &mut block);
-    set_slab_orietnation(x, y, z, dir, axis, &mut block);
+    set_slab_orientation(x, y, z, dir, axis, &mut block);
+    set_non_voxel_orientation(dir, axis, &mut block);
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
 

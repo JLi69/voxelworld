@@ -5,6 +5,7 @@ mod log;
 mod plant;
 mod slab;
 mod transparent;
+mod nonvoxel;
 
 use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
@@ -18,6 +19,7 @@ pub use grass::add_block_vertices_grass;
 pub use log::add_block_vertices_log;
 pub use plant::add_block_vertices_plant;
 pub use transparent::add_block_vertices_trans;
+pub use nonvoxel::add_nonvoxel_vertices;
 
 #[derive(Copy, Clone)]
 struct FaceInfo {

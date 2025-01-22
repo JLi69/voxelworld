@@ -6,6 +6,7 @@ use addvertices::{
     add_block_vertices_default, add_block_vertices_furnace_rotated, add_block_vertices_grass,
     add_block_vertices_log, add_block_vertices_plant, add_block_vertices_trans, add_fluid_vertices,
 };
+pub use addvertices::add_nonvoxel_vertices;
 
 pub type Int3 = (i32, i32, i32);
 
@@ -18,21 +19,20 @@ pub fn add_block_vertices(
     vert_data: &mut ChunkData,
 ) {
     let (x, y, z) = xyz;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
-    if chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .transparent()
-    {
+    if block.transparent() {
+        return;
+    }
+
+    if block.non_voxel_geometry() {
         return;
     }
 
     //TODO: add a better way of specifying how the faces of the blocks are textured
     //(probably as some kind of resource file) additionally, the unlabelled constants
     //should probably be deleted at some point
-    match blockid {
+    match block.id {
         1 => {
             //Grass
             add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 17, 4, 254);
@@ -81,6 +81,10 @@ pub fn add_block_vertices_transparent(
         return;
     }
 
+    if block.non_voxel_geometry() {
+        return;
+    }
+
     match block.id {
         //Glass
         9 => add_block_vertices_trans(chunk, adj_chunks, xyz, vert_data, Some(252), Some(253)),
@@ -126,11 +130,11 @@ pub fn add_block_vertices_fluid(
  * 4 is the chunk to the front,
  * 5 is the chunk to the back
  * */
-pub fn generate_chunk_vertex_data(chunk: &Chunk, adj_chunks: [Option<&Chunk>; 6]) -> ChunkData {
+pub fn generate_chunk_vertex_data(chunk: &Chunk, adj_chunks: [Option<&Chunk>; 6]) -> (ChunkData, i32) {
     let mut chunk_vert_data = vec![];
 
     if chunk.is_empty() {
-        return chunk_vert_data;
+        return (chunk_vert_data, 5);
     }
 
     for x in 0..CHUNK_SIZE_I32 {
@@ -143,5 +147,5 @@ pub fn generate_chunk_vertex_data(chunk: &Chunk, adj_chunks: [Option<&Chunk>; 6]
         }
     }
 
-    chunk_vert_data
+    (chunk_vert_data, 5)
 }

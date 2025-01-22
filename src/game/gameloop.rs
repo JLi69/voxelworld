@@ -1,9 +1,7 @@
 use super::input::convert_mouse_pos;
 use super::{EventHandler, Game};
 use crate::assets::Texture;
-use crate::gfx::buildchunk::generate_chunk_vertex_data;
 use crate::gfx::display::block_menu::{BLOCK_MENU_HEIGHT, BLOCK_MENU_WIDTH};
-use crate::gfx::fluid::generate_fluid_vertex_data;
 use crate::gui;
 use crate::{game, gfx, gui::pause_menu::PauseMenuAction};
 use egui_backend::egui;
@@ -19,21 +17,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
 
     //Generate chunk vaos
     let mut chunktables = gfx::ChunkTables::new();
-    chunktables
-        .chunk_vaos
-        .generate_chunk_vaos(&gamestate.world, |chunk, world| {
-            generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
-        });
-    chunktables
-        .lava_vaos
-        .generate_chunk_vaos(&gamestate.world, |chunk, world| {
-            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
-        });
-    chunktables
-        .water_vaos
-        .generate_chunk_vaos(&gamestate.world, |chunk, world| {
-            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
-        });
+    chunktables.init_tables(&gamestate.world);
     //water framebuffer
     let mut water_framebuffer = 0u32;
     let mut water_frame_color = Texture::new();
@@ -160,6 +144,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             w,
             h,
         );
+        chunktables.non_voxel_vaos.display_chunks(gamestate, "nonvoxel");
 
         let stuck = gamestate.player.get_head_stuck_block(&gamestate.world);
         if gamestate.display_hud && stuck.is_none() {

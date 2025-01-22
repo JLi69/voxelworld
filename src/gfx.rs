@@ -3,6 +3,7 @@ pub mod chunktable;
 pub mod display;
 mod face_data;
 pub mod fluid;
+pub mod nonvoxel;
 pub mod frustum;
 pub mod models;
 

@@ -1,14 +1,15 @@
 //Array of voxel flags
-static mut VOXEL_FLAGS: [u8; 256] = [0; 256];
+static mut VOXEL_FLAGS: [u16; 256] = [0; 256];
 
-pub const TRANSPARENT_FLAG: u8 = 1 << 0;
-pub const CONNECT_FLAG: u8 = 1 << 1;
-pub const CAN_ROTATE_FLAG: u8 = 1 << 2;
-pub const NO_HITBOX: u8 = 1 << 3;
-pub const FLUID: u8 = 1 << 4;
-pub const ROTATE_Y_ONLY: u8 = 1 << 5;
-pub const FLAT_ITEM: u8 = 1 << 6;
-pub const FLUID_DESTRUCTIBLE: u8 = 1 << 7;
+pub const TRANSPARENT_FLAG: u16 = 1 << 0;
+pub const CONNECT_FLAG: u16 = 1 << 1;
+pub const CAN_ROTATE_FLAG: u16 = 1 << 2;
+pub const NO_HITBOX: u16 = 1 << 3;
+pub const FLUID: u16 = 1 << 4;
+pub const ROTATE_Y_ONLY: u16 = 1 << 5;
+pub const FLAT_ITEM: u16 = 1 << 6;
+pub const FLUID_DESTRUCTIBLE: u16 = 1 << 7;
+pub const NON_VOXEL: u16 = 1 << 8;
 
 unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
@@ -66,10 +67,20 @@ pub fn init_voxel_flags() {
         set_plant_flags(56);
         //Sugar cane
         set_plant_flags(69);
+        //Torches
+        //They obviously aren't plants but share a lot of block properties with them
+        set_plant_flags(71);
+        VOXEL_FLAGS[71] |= NON_VOXEL;
+        set_plant_flags(72);
+        VOXEL_FLAGS[72] |= NON_VOXEL;
+        set_plant_flags(73);
+        VOXEL_FLAGS[73] |= NON_VOXEL;
+        set_plant_flags(74);
+        VOXEL_FLAGS[74] |= NON_VOXEL;
     }
 }
 
 //Read only
-pub fn get_flag(id: u8) -> u8 {
+pub fn get_flag(id: u8) -> u16 {
     unsafe { VOXEL_FLAGS[id as usize] }
 }

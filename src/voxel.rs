@@ -9,7 +9,7 @@ pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
     get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NO_HITBOX,
-    ROTATE_Y_ONLY, TRANSPARENT_FLAG,
+    ROTATE_Y_ONLY, TRANSPARENT_FLAG, NON_VOXEL,
 };
 use cgmath::Vector3;
 pub use chunk::Chunk;
@@ -141,6 +141,11 @@ impl Block {
     //Returns if the voxel can be destroyed by fluid
     pub fn fluid_destructibe(&self) -> bool {
         get_flag(self.id) & FLUID_DESTRUCTIBLE != 0
+    }
+
+    //Returns if the voxel has a non-voxel geometry and needs to be handled uniquely
+    pub fn non_voxel_geometry(&self) -> bool {
+        get_flag(self.id) & NON_VOXEL != 0
     }
 }
 

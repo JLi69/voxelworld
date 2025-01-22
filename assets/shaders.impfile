@@ -32,3 +32,8 @@
 	"vert" = "assets/shaders/orthographic.glsl";
 	"frag" = "assets/shaders/chunkfrag.glsl";
 }
+
+"nonvoxel" {
+	"vert" = "assets/shaders/nonvoxelvert.glsl";
+	"frag" = "assets/shaders/nonvoxelfrag.glsl";
+}
