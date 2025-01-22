@@ -17,7 +17,7 @@ fn check_torch_valid(world: &World, x: i32, y: i32, z: i32) -> bool {
     let block = world.get_block(x, y, z);
     let dir = orientation_to_normal(block.orientation());
     let adj = world.get_block(x - dir.x, y - dir.y, z - dir.z);
-    return !(adj.id == EMPTY_BLOCK || adj.transparent() || adj.shape() != 0);
+    !(adj.id == EMPTY_BLOCK || adj.transparent() || adj.shape() != 0)
 }
 
 type ValidBlockFn = fn(&World, i32, i32, i32) -> bool;
@@ -41,7 +41,7 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
         //Sugar cane
         69 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17, 69])),
         //Torches
-        71..=74 => Some(|world, x, y, z| check_torch_valid(world, x, y, z)),
+        71..=74 => Some(check_torch_valid),
         _ => None,
     }
 }
