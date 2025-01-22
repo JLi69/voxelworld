@@ -8,8 +8,8 @@ pub mod world;
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
-    get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NO_HITBOX,
-    ROTATE_Y_ONLY, TRANSPARENT_FLAG, NON_VOXEL,
+    get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NON_VOXEL,
+    NO_HITBOX, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
 use cgmath::Vector3;
 pub use chunk::Chunk;

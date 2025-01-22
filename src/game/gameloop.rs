@@ -144,7 +144,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             w,
             h,
         );
-        chunktables.non_voxel_vaos.display_chunks(gamestate, "nonvoxel");
+        chunktables
+            .non_voxel_vaos
+            .display_chunks(gamestate, "nonvoxel");
 
         let stuck = gamestate.player.get_head_stuck_block(&gamestate.world);
         if gamestate.display_hud && stuck.is_none() {

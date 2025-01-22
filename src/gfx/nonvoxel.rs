@@ -1,5 +1,5 @@
+use super::buildchunk::{add_nonvoxel_vertices, ChunkData};
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
-use super::buildchunk::{ChunkData, add_nonvoxel_vertices};
 
 pub fn generate_non_voxel_vertex_data(chunk: &Chunk) -> (ChunkData, i32) {
     let mut vert_data = vec![];

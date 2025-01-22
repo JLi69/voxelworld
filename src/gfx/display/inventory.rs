@@ -43,7 +43,7 @@ pub fn display_block_item(chunk: &mut Chunk, block: Block) {
         add_block_vertices_transparent(chunk, adj_chunks, (1, 1, 1), &mut vert_data);
         add_block_vertices_fluid(chunk, adj_chunks, (1, 1, 1), &mut vert_data);
     }
-    
+
     if vert_data.is_empty() {
         return;
     }

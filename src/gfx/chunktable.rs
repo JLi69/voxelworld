@@ -461,22 +461,17 @@ impl ChunkTables {
     }
 
     pub fn init_tables(&mut self, world: &World) {
-        self.chunk_vaos
-            .generate_chunk_vaos(world, |chunk, world| {
-                generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
-            });
-       self.lava_vaos
-            .generate_chunk_vaos(world, |chunk, world| {
-                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
-            });
-        self.water_vaos
-            .generate_chunk_vaos(world, |chunk, world| {
-                generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
-            });
+        self.chunk_vaos.generate_chunk_vaos(world, |chunk, world| {
+            generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
+        });
+        self.lava_vaos.generate_chunk_vaos(world, |chunk, world| {
+            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
+        });
+        self.water_vaos.generate_chunk_vaos(world, |chunk, world| {
+            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
+        });
         self.non_voxel_vaos
-            .generate_chunk_vaos(world, |chunk, _| {
-                generate_non_voxel_vertex_data(chunk)
-            });
+            .generate_chunk_vaos(world, |chunk, _| generate_non_voxel_vertex_data(chunk));
     }
 
     pub fn update_tables(&mut self, gamestate: &Game) {

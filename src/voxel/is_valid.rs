@@ -1,4 +1,4 @@
-use super::{World, EMPTY_BLOCK, orientation_to_normal};
+use super::{orientation_to_normal, World, EMPTY_BLOCK};
 
 fn check_below_valid(world: &World, x: i32, y: i32, z: i32, valid_blocks: &[u8]) -> bool {
     let below = world.get_block(x, y - 1, z);

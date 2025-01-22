@@ -1,7 +1,7 @@
-use cgmath::{Vector3, Vector2, Matrix4, Deg, Vector4};
-use crate::voxel::{Chunk, Block};
 use crate::gfx::buildchunk::{ChunkData, Int3};
 use crate::gfx::models::{CUBE, CUBE_INDICES, CUBE_TEX_INDICES, TEX_COORDS};
+use crate::voxel::{Block, Chunk};
+use cgmath::{Deg, Matrix4, Vector2, Vector3, Vector4};
 
 fn fraction(x: f32) -> f32 {
     if x < 0.0 {
@@ -39,15 +39,15 @@ fn add_vertices_torch(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
         let norm = cgmath::Vector3::cross(
             torch_vertices[i * 3 + 1] - torch_vertices[i * 3],
             torch_vertices[i * 3 + 2] - torch_vertices[i * 3],
-        ); 
-    
+        );
+
         let index = *index as usize;
         let mut tc = Vector2::new(TEX_COORDS[index * 2], TEX_COORDS[index * 2 + 1]);
-        
+
         tc.x -= 0.5;
         tc.x *= 1.0 / 8.0;
         tc.x += 0.5;
-        if norm.y != 0.0 { 
+        if norm.y != 0.0 {
             tc.y -= 10.0 / 16.0;
             tc.y *= 1.0 / 8.0;
             tc.y += 10.0 / 16.0;
@@ -68,13 +68,13 @@ fn add_vertices_torch(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
         const TORCH_ROTATION: f32 = 35.0;
         const TORCH_OFFSET: f32 = 6.0 / 16.0;
         let mut transformed = match block.orientation() {
-            //We add the extra degree to prevent the torch from 
+            //We add the extra degree to prevent the torch from
             //appearing too thin when placed on one side of a block
             1 => Matrix4::from_angle_z(Deg(-TORCH_ROTATION + 1.0)) * v4,
-            2 => Matrix4::from_angle_x(Deg(TORCH_ROTATION - 1.0)) * v4, 
+            2 => Matrix4::from_angle_x(Deg(TORCH_ROTATION - 1.0)) * v4,
             3 => Matrix4::from_angle_x(Deg(180.0)) * v4,
-            4 => Matrix4::from_angle_z(Deg(TORCH_ROTATION)) * v4, 
-            5 => Matrix4::from_angle_x(Deg(-TORCH_ROTATION)) * v4, 
+            4 => Matrix4::from_angle_z(Deg(TORCH_ROTATION)) * v4,
+            5 => Matrix4::from_angle_x(Deg(-TORCH_ROTATION)) * v4,
             _ => v4,
         };
         match block.orientation() {
@@ -134,11 +134,7 @@ fn add_vertices_torch(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
     }
 }
 
-pub fn add_nonvoxel_vertices(
-    chunk: &Chunk,
-    xyz: Int3,
-    vert_data: &mut ChunkData,
-) {
+pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData) {
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 

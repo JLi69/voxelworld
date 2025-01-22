@@ -2,11 +2,11 @@ mod addvertices;
 
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
 pub use addvertices::add_block_vertices_flat;
+pub use addvertices::add_nonvoxel_vertices;
 use addvertices::{
     add_block_vertices_default, add_block_vertices_furnace_rotated, add_block_vertices_grass,
     add_block_vertices_log, add_block_vertices_plant, add_block_vertices_trans, add_fluid_vertices,
 };
-pub use addvertices::add_nonvoxel_vertices;
 
 pub type Int3 = (i32, i32, i32);
 
@@ -130,7 +130,10 @@ pub fn add_block_vertices_fluid(
  * 4 is the chunk to the front,
  * 5 is the chunk to the back
  * */
-pub fn generate_chunk_vertex_data(chunk: &Chunk, adj_chunks: [Option<&Chunk>; 6]) -> (ChunkData, i32) {
+pub fn generate_chunk_vertex_data(
+    chunk: &Chunk,
+    adj_chunks: [Option<&Chunk>; 6],
+) -> (ChunkData, i32) {
     let mut chunk_vert_data = vec![];
 
     if chunk.is_empty() {

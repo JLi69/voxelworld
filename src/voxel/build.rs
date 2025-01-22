@@ -407,11 +407,11 @@ pub fn place_block(
         let prev_block = world.get_block(ix, iy, iz);
         world.set_block(ix, iy, iz, block);
         if let Some(check_valid) = get_check_valid_fn(block.id) {
-            if !check_valid(world, ix, iy, iz) { 
+            if !check_valid(world, ix, iy, iz) {
                 world.set_block(ix, iy, iz, prev_block);
                 return None;
             }
-        } 
+        }
         let block_hitbox = Hitbox::from_block(ix, iy, iz);
         if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
             world.set_block(ix, iy, iz, prev_block);
