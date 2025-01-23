@@ -289,10 +289,8 @@ impl Player {
         let colliding = self.check_collision(world).is_some();
         self.position = pos;
 
-        if self.standing_on_block(world) {
-            if !self.is_intersecting(world, 75) {
-                return;
-            }
+        if self.standing_on_block(world) && !self.is_intersecting(world, 75) {
+            return;
         }
 
         if up_key.is_held() || colliding {
