@@ -18,6 +18,7 @@ pub const GRAVITY: f32 = 24.0;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
 const BLOCK_OFFSET: f32 = 0.01;
 const MAX_CROUCH_HEIGHT: f32 = 0.15;
+const CLIMB_SPEED: f32 = 2.0;
 
 pub struct Player {
     pub position: Vector3<f32>,
@@ -276,6 +277,31 @@ impl Player {
         }
     }
 
+    pub fn climbing(&self, world: &World) -> bool {
+        self.bot_intersecting(world, 75, 0.4)
+    }
+
+    pub fn climb(&mut self, up_key: KeyState, hold_key: KeyState, world: &World) {
+        self.velocity_y = -CLIMB_SPEED;
+
+        let pos = self.position;
+        self.position += self.calculate_velocity() * 0.05;
+        let colliding = self.check_collision(world).is_some();
+        self.position = pos;
+
+        if self.standing_on_block(world) {
+            if !self.is_intersecting(world, 75) {
+                return;
+            }
+        }
+
+        if up_key.is_held() || colliding {
+            self.velocity_y += CLIMB_SPEED * 2.0;
+        } else if hold_key.is_held() {
+            self.velocity_y = 0.0;
+        }
+    }
+
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
         if self.stuck(world) {
@@ -290,16 +316,29 @@ impl Player {
         let swimming =
             self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
 
+        //Is the player climbing a ladder?
+        let climbing = self.climbing(world);
+        if climbing {
+            self.falling = false;
+            self.velocity_y = self.velocity_y.clamp(-CLIMB_SPEED, CLIMB_SPEED);
+        }
+
         //Check if the player was falling in the previous frame
         let falling_prev = self.falling;
         //Move in y direction
         self.translate(dt * 0.5, world);
+        if climbing {
+            self.falling = false;
+        }
         //Apply gravity
         if self.falling {
             self.velocity_y -= dt * GRAVITY;
         }
         if swimming {
             self.velocity_y = self.velocity_y.max(-GRAVITY / 6.0);
+        }
+        if climbing {
+            self.falling = false;
         }
         self.translate(dt * 0.5, world);
         self.check_y_collision(world);

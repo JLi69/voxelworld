@@ -70,9 +70,13 @@ impl Game {
         let d = self.get_key_state(Key::D);
         self.player.strafe(a, d);
         self.player.move_forward(w, s);
+        //Jump or climb
         let space = self.get_key_state(Key::Space);
-        //Jump
-        self.player.jump(space);
+        if !self.player.climbing(&self.world) {
+            self.player.jump(space);
+        } else {
+            self.player.climb(space, lctrl, &self.world)
+        }
         //Swim
         self.player.swim(space, &self.world);
         //Select items from the hotbar

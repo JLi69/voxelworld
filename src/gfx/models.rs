@@ -72,10 +72,7 @@ pub const CUBE_INDICES: [u32; 36] = [
 ];
 
 //quad texture coordinates
-pub const QUAD_INDICES: [u32; 6] = [
-    0, 1, 2,
-    3, 2, 1,
-];
+pub const QUAD_INDICES: [u32; 6] = [0, 1, 2, 3, 2, 1];
 
 //2D quad vertex data
 #[rustfmt::skip]

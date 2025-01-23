@@ -1,5 +1,5 @@
 use crate::gfx::buildchunk::{ChunkData, Int3};
-use crate::gfx::models::{CUBE, CUBE_INDICES, CUBE_TEX_INDICES, TEX_COORDS, QUAD_INDICES};
+use crate::gfx::models::{CUBE, CUBE_INDICES, CUBE_TEX_INDICES, QUAD_INDICES, TEX_COORDS};
 use crate::voxel::{Block, Chunk};
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Vector4};
 
@@ -30,7 +30,7 @@ fn tc_to_u8(tc: f32) -> (u8, u8) {
     }
 }
 
-fn add_mesh_to_chunk(xyz: Int3, id: u8, vertices: &[Vert],  tc: &[Tc], vert_data: &mut ChunkData) {
+fn add_mesh_to_chunk(xyz: Int3, id: u8, vertices: &[Vert], tc: &[Tc], vert_data: &mut ChunkData) {
     let (x, y, z) = xyz;
     for (i, v) in vertices.iter().enumerate() {
         let vx = v.x + x as f32;
@@ -74,41 +74,52 @@ fn add_mesh_to_chunk(xyz: Int3, id: u8, vertices: &[Vert],  tc: &[Tc], vert_data
 }
 
 fn generate_mesh_vertices(data: &[f32], indices: &[u32]) -> Vec<Vert> {
-    indices.iter()
+    indices
+        .iter()
         .map(|index| *index as usize)
         .map(|index| Vector3::new(data[index * 3], data[index * 3 + 1], data[index * 3 + 2]))
         .collect()
 }
 
 fn generate_mesh_normals(vertices: &[Vector3<f32>]) -> Vec<Norm> {
-    vertices.iter()
+    vertices
+        .iter()
         .enumerate()
         .map(|(i, _)| {
             let i = i / 3;
             let v1 = vertices[i * 3];
             let v2 = vertices[i * 3 + 1];
             let v3 = vertices[i * 3 + 2];
-            cgmath::Vector3::cross(v3 - v1, v2 - v1) 
+            cgmath::Vector3::cross(v3 - v1, v2 - v1)
         })
         .collect()
 }
 
 fn generate_mesh_texcoords(tc: &[f32], indices: &[u32]) -> Vec<Tc> {
-    indices.iter()
+    indices
+        .iter()
         .map(|index| *index as usize)
         .map(|index| Vector2::new(tc[index * 2], tc[index * 2 + 1]))
         .collect()
 }
 
-fn transform_tc<T>(texcoords: &[Tc], transform_func: T) -> Vec<Tc> where T: Fn(Tc, usize) -> Tc {
-    texcoords.iter()
+fn transform_tc<T>(texcoords: &[Tc], transform_func: T) -> Vec<Tc>
+where
+    T: Fn(Tc, usize) -> Tc,
+{
+    texcoords
+        .iter()
         .enumerate()
         .map(|(i, tc)| transform_func(*tc, i))
         .collect()
 }
 
-fn transform_vertices<T>(vertices: &[Vert], transform: T) -> Vec<Vert> where T: Fn(Vert4) -> Vert4 {
-    vertices.iter()
+fn transform_vertices<T>(vertices: &[Vert], transform: T) -> Vec<Vert>
+where
+    T: Fn(Vert4) -> Vert4,
+{
+    vertices
+        .iter()
         .map(|v| Vector4::new(v.x, v.y, v.z, 1.0))
         .map(transform)
         .map(|v| Vert::new(v.x, v.y, v.z))
@@ -182,7 +193,7 @@ fn gen_ladder_vertices(block: Block) -> BlockMesh {
         let mut transformed = v;
         transformed = Matrix4::from_angle_x(Deg(90.0)) * transformed;
         match block.orientation() {
-            1 => { 
+            1 => {
                 transformed = Matrix4::from_angle_y(Deg(270.0)) * transformed;
                 transformed.x -= 15.0 / 16.0;
             }
@@ -199,17 +210,13 @@ fn gen_ladder_vertices(block: Block) -> BlockMesh {
             }
             _ => {}
         }
-        transformed  += Vert4::new(0.5, 0.5, 0.5, 0.0);
+        transformed += Vert4::new(0.5, 0.5, 0.5, 0.0);
         transformed
     });
     (ladder_vertices, texcoords)
 }
 
-pub fn add_nonvoxel_vertices(
-    chunk: &Chunk,
-    xyz: Int3,
-    vert_data: &mut ChunkData,
-) {
+pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData) {
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
@@ -222,7 +229,7 @@ pub fn add_nonvoxel_vertices(
         71..=74 => gen_torch_vertices(block),
         //Ladder
         75 => gen_ladder_vertices(block),
-        _ => (vec![], vec![])
+        _ => (vec![], vec![]),
     };
 
     add_mesh_to_chunk(xyz, block.id, &vert, &tc, vert_data);

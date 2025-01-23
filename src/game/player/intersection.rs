@@ -88,11 +88,12 @@ impl Player {
         for x in (ix - 2)..=(ix + 2) {
             for y in (iy - 2)..=(iy + 2) {
                 for z in (iz - 2)..=(iz + 2) {
-                    if world.get_block(x, y, z).id != block_id {
+                    let block = world.get_block(x, y, z);
+                    if block.id != block_id {
                         continue;
                     }
 
-                    let block_hitbox = Hitbox::from_block(x, y, z);
+                    let block_hitbox = Hitbox::from_block_data(x, y, z, block);
                     let hitbox = self.get_hitbox();
 
                     if block_hitbox.intersects(&hitbox) {
@@ -128,6 +129,41 @@ impl Player {
                     }
 
                     let block_hitbox = Hitbox::from_block(x, y, z);
+
+                    if block_hitbox.intersects(&hitbox) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    //Is the bottom `fract` portion of the player intersecting a block
+    pub fn bot_intersecting(&self, world: &World, block_id: u8, fract: f32) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        let hitbox = Hitbox::new(
+            self.position.x,
+            self.position.y - PLAYER_HEIGHT * (1.0 - fract) / 2.0,
+            self.position.z,
+            PLAYER_SIZE,
+            PLAYER_HEIGHT * fract,
+            PLAYER_SIZE,
+        );
+
+        for x in (ix - 2)..=(ix + 2) {
+            for y in (iy - 2)..=(iy + 2) {
+                for z in (iz - 2)..=(iz + 2) {
+                    let block = world.get_block(x, y, z);
+                    if block.id != block_id {
+                        continue;
+                    }
+
+                    let block_hitbox = Hitbox::from_block_data(x, y, z, block);
 
                     if block_hitbox.intersects(&hitbox) {
                         return true;
