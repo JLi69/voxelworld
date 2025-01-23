@@ -40,8 +40,8 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
         50..=53 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45])),
         //Sugar cane
         69 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17, 69])),
-        //Torches
-        71..=74 => Some(check_torch_valid),
+        //Torches and ladders
+        71..=75 => Some(check_torch_valid),
         _ => None,
     }
 }

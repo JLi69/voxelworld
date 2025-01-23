@@ -277,8 +277,8 @@ impl World {
                         13 => update_lava(self, x, y, z, to_update),
                         //Farmland
                         43 | 45 => update_farmland(self, x, y, z, to_update),
-                        //Plants and torches
-                        47..=56 | 69 | 71..=74 => update_plant(self, x, y, z, block.id, to_update),
+                        //Plants, torches, ladders
+                        47..=56 | 69 | 71..=75 => update_plant(self, x, y, z, block.id, to_update),
                         _ => {}
                     }
                 }

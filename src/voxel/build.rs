@@ -341,7 +341,7 @@ fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
     }
 
     let orientation = match block.id {
-        71..=74 => set_torch_orientation(dir, axis),
+        71..=75 => set_torch_orientation(dir, axis),
         _ => 0,
     };
     block.set_orientation(orientation);
@@ -396,6 +396,10 @@ pub fn place_block(
     set_block_rotation(dir, &mut block);
     set_slab_orientation(x, y, z, dir, axis, &mut block);
     set_non_voxel_orientation(dir, axis, &mut block);
+
+    if block.orientation() % 3 == 0 && block.rotate_y_only() {
+        return None;
+    }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
 

@@ -77,6 +77,13 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[73] |= NON_VOXEL;
         set_plant_flags(74);
         VOXEL_FLAGS[74] |= NON_VOXEL;
+        //Ladder
+        VOXEL_FLAGS[75] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[75] |= CAN_ROTATE_FLAG;
+        VOXEL_FLAGS[75] |= ROTATE_Y_ONLY;
+        VOXEL_FLAGS[75] |= FLAT_ITEM;
+        VOXEL_FLAGS[75] |= NO_HITBOX;
+        VOXEL_FLAGS[75] |= NON_VOXEL;
     }
 }
 
