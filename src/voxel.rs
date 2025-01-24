@@ -90,6 +90,16 @@ impl Block {
         self.geometry >> 5
     }
 
+    //reflection is 0 or 1
+    pub fn set_reflection(&mut self, reflection: u8) {
+        self.geometry &= !(1 << 3);
+        self.geometry |= reflection << 3;
+    }
+
+    pub fn reflection(&self) -> u8 {
+        (self.geometry >> 3) & 1
+    }
+
     //Block shape
     //0 = full block
     //1 = slab

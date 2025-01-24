@@ -309,6 +309,33 @@ fn set_slab_orientation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, b
     }
 }
 
+fn set_stair_rotation(dir: Vector3<f32>, block: &mut Block) {
+    if block.shape() != 2 {
+        return;
+    }
+
+    if dir.z.abs() >= dir.x.abs() {
+        //Set orientation of the block
+        if dir.z.signum() as i32 == -1 {
+            block.set_orientation(2);
+        } else if dir.z.signum() as i32 == 1 {
+            block.set_orientation(5);
+        }
+    } else if dir.x.abs() > dir.z.abs() {
+        //Set orientation of the block
+        if dir.x.signum() as i32 == -1 {
+            block.set_orientation(1);
+        } else if dir.x.signum() as i32 == 1 {
+            block.set_orientation(4);
+        }
+    }
+
+    //Reflect stairs
+    if dir.y > 0.0 {
+        block.set_reflection(1); 
+    }
+}
+
 fn set_torch_orientation(dir: Vector3<f32>, axis: Axis) -> u8 {
     match axis {
         Axis::X => {
@@ -396,6 +423,7 @@ pub fn place_block(
     set_block_rotation(dir, &mut block);
     set_slab_orientation(x, y, z, dir, axis, &mut block);
     set_non_voxel_orientation(dir, axis, &mut block);
+    set_stair_rotation(dir, &mut block);
 
     if block.orientation() % 3 == 0 && block.rotate_y_only() {
         return None;

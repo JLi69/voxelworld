@@ -7,7 +7,7 @@ pub const ICON_SIZE: f32 = 32.0;
 pub const ROW_LENGTH: usize = 12;
 
 pub fn get_shape_icon_positions(startx: f32, starty: f32) -> Vec<(BlockMenuShape, Vector2<f32>)> {
-    let shapes = [BlockMenuShape::Normal, BlockMenuShape::Slab];
+    let shapes = [BlockMenuShape::Normal, BlockMenuShape::Slab, BlockMenuShape::Stair];
     let start = Vector2::new(startx - ICON_SIZE, starty + ICON_SIZE);
     shapes
         .iter()

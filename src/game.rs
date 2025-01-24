@@ -32,6 +32,7 @@ pub use std::collections::HashMap;
 pub enum BlockMenuShape {
     Normal,
     Slab,
+    Stair,
 }
 
 //Application config values, these are not meant to be changed by normal users
@@ -215,6 +216,10 @@ impl Game {
 pub fn set_block_shape(block: &mut Block, shape: BlockMenuShape) {
     match shape {
         BlockMenuShape::Slab => block.set_shape(1),
+        BlockMenuShape::Stair => { 
+            block.set_shape(2);
+            block.set_orientation(2);
+        }
         BlockMenuShape::Normal => {}
     }
 }

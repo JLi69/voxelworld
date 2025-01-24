@@ -24,18 +24,20 @@ impl Game {
     fn rotate_item(&mut self) {
         //Rotate the block in the player's hand
         if self.get_key_state(Key::R) == KeyState::JustPressed {
-            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() {
-                if b.shape() == 0 {
-                    return;
+            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() { 
+                match b.shape() {
+                    1 => {
+                        let mut rotated_block = b;
+                        if rotated_block.orientation() == 0 {
+                            rotated_block.set_orientation(2);
+                        } else if rotated_block.orientation() != 0 {
+                            rotated_block.set_orientation(0);
+                        }
+                        let new_item = Item::BlockItem(rotated_block, amt);
+                        self.player.hotbar.set_selected(new_item);
+                    } 
+                    _ => {}
                 }
-                let mut rotated_block = b;
-                if rotated_block.orientation() == 0 {
-                    rotated_block.set_orientation(2);
-                } else if rotated_block.orientation() != 0 {
-                    rotated_block.set_orientation(0);
-                }
-                let new_item = Item::BlockItem(rotated_block, amt);
-                self.player.hotbar.set_selected(new_item);
             }
         }
     }

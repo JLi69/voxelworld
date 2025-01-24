@@ -1,86 +1,9 @@
-use super::{slab, ChunkData, FaceInfo, Int3};
+use super::{get_adj_block, add_stair_geometry};
+use super::{ChunkData, FaceInfo, Int3, apply_geometry, skipface::skip_face_trans};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
-use crate::voxel::{orientation_to_normal, out_of_bounds, wrap_coord, Block, Chunk, EMPTY_BLOCK};
-use cgmath::{InnerSpace, Vector3};
-
-fn skip_block_face_trans(adj_block: Block, offset: Int3, id: u8) -> bool {
-    let (offx, offy, offz) = offset;
-    match adj_block.shape() {
-        //Full block
-        0 => {
-            let show_face = (adj_block.transparent() && adj_block.id != id)
-                || (adj_block.transparent() && adj_block.id == id && !adj_block.can_connect());
-            !show_face && adj_block.id != EMPTY_BLOCK
-        }
-        //Slab
-        1 => {
-            let show_face = (adj_block.transparent() && adj_block.id != id)
-                || (adj_block.transparent() && adj_block.id == id && !adj_block.can_connect());
-            if show_face || adj_block.id == EMPTY_BLOCK {
-                return false;
-            }
-
-            let adj_norm = orientation_to_normal(adj_block.orientation());
-            let diff = Vector3::new(offx, offy, offz);
-            adj_norm == diff
-        }
-        _ => false,
-    }
-}
-
-fn skip_slab_face_trans(orientation: u8, adj_block: Block, offset: Int3, id: u8) -> bool {
-    let (offx, offy, offz) = offset;
-    match adj_block.shape() {
-        //Full block
-        0 => {
-            let show_face = (adj_block.transparent() && adj_block.id != id)
-                || (adj_block.transparent() && adj_block.id == id && !adj_block.can_connect());
-            if show_face || adj_block.id == EMPTY_BLOCK {
-                return false;
-            }
-
-            let norm = orientation_to_normal(orientation);
-            let diff = Vector3::new(offx, offy, offz);
-            let dot = norm.dot(diff);
-            dot == -1 || dot == 0
-        }
-        //Slab
-        1 => {
-            let show_face = (adj_block.transparent() && adj_block.id != id)
-                || (adj_block.transparent() && adj_block.id == id && !adj_block.can_connect());
-            if show_face || adj_block.id == EMPTY_BLOCK {
-                return false;
-            }
-
-            let norm = orientation_to_normal(orientation);
-            let adj_norm = orientation_to_normal(adj_block.orientation());
-            let diff = Vector3::new(offx, offy, offz);
-            let dot = norm.dot(diff);
-            if dot == 0 {
-                norm == adj_norm || adj_norm == diff
-            } else if dot == 1 {
-                false
-            } else if dot == -1 {
-                adj_norm == diff
-            } else {
-                false
-            }
-        }
-        _ => false,
-    }
-}
-
-fn skip_face_trans(block: Block, adj_block: Block, offset: Int3) -> bool {
-    match block.shape() {
-        //Full block
-        0 => skip_block_face_trans(adj_block, offset, block.id),
-        //Slab
-        1 => skip_slab_face_trans(block.orientation(), adj_block, offset, block.id),
-        _ => false,
-    }
-}
+use crate::voxel::{Chunk, EMPTY_BLOCK};
 
 fn add_face_transparent(
     chunk: &Chunk,
@@ -92,28 +15,18 @@ fn add_face_transparent(
     face_info: FaceInfo,
 ) {
     let (x, y, z) = xyz;
-    let (offx, offy, offz) = offset;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
-
-    let adj_x = wrap_coord(x + offx) as usize;
-    let adj_y = wrap_coord(y + offy) as usize;
-    let adj_z = wrap_coord(z + offz) as usize;
-    if let Some(adj_chunk) = adj_chunk {
-        let adj_block = adj_chunk.get_block_relative(adj_x, adj_y, adj_z);
-        if out_of_bounds(x, y, z, offx, offy, offz) && skip_face_trans(block, adj_block, offset) {
+ 
+    let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    if let Some(adj_block) = adj_block {
+        if skip_face_trans(block, adj_block, offset) {
+            let stair = add_stair_geometry(block, Some(adj_block), xyz, offset, face, face_info, skip_face_trans);
+            vert_data.extend(stair);
             return;
         }
-    }
-
-    if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
-        return;
-    }
-
-    let adj_x = (x + offx) as usize;
-    let adj_y = (y + offy) as usize;
-    let adj_z = (z + offz) as usize;
-    let adj_block = chunk.get_block_relative(adj_x, adj_y, adj_z);
-    if skip_face_trans(block, adj_block, offset) {
+    } else {
+        let stair = add_stair_geometry(block, adj_block, xyz, offset, face, face_info, skip_face_trans);
+        vert_data.extend(stair);
         return;
     }
 
@@ -128,8 +41,10 @@ fn add_face_transparent(
         vert_data.push(face_info.face_id);
     }
 
-    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
-    slab::apply_slab_geometry(vert_data, xyz, block.shape(), block.orientation());
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize); 
+    apply_geometry(block, xyz, vert_data);
+    let stair = add_stair_geometry(block, adj_block, xyz, offset, face, face_info, skip_face_trans);
+    vert_data.extend(stair);
 }
 
 pub fn add_block_vertices_trans(

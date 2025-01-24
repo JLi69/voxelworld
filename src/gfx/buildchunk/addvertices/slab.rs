@@ -30,11 +30,7 @@ fn half_positions(chunkdata: &mut ChunkData, pos: Int3, offset: i32, index: usiz
     }
 }
 
-pub fn apply_slab_geometry(chunkdata: &mut ChunkData, pos: Int3, shape: u8, orientation: u8) {
-    if shape != 1 {
-        return;
-    }
-
+pub fn apply_slab_geometry(chunkdata: &mut ChunkData, pos: Int3, orientation: u8) {
     match orientation {
         //Up
         0 => half_positions(chunkdata, pos, 1, 1),

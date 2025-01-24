@@ -30,6 +30,7 @@ fn display_shape_icons(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey: i3
         match shape {
             BlockMenuShape::Normal => gamestate.textures.bind("full_block_icon"),
             BlockMenuShape::Slab => gamestate.textures.bind("half_slab_icon"),
+            BlockMenuShape::Stair => gamestate.textures.bind("stair_icon"),
         }
 
         let sz = if selected == i {
