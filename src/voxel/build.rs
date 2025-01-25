@@ -310,7 +310,7 @@ fn set_slab_orientation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, b
 }
 
 fn set_stair_rotation(dir: Vector3<f32>, block: &mut Block) {
-    if block.shape() != 2 {
+    if !matches!(block.shape(), 2..=4) {
         return;
     }
 
@@ -332,7 +332,7 @@ fn set_stair_rotation(dir: Vector3<f32>, block: &mut Block) {
 
     //Reflect stairs
     if dir.y > 0.0 {
-        block.set_reflection(1); 
+        block.set_reflection(1);
     }
 }
 
@@ -368,6 +368,7 @@ fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
     }
 
     let orientation = match block.id {
+        //Torches and ladder
         71..=75 => set_torch_orientation(dir, axis),
         _ => 0,
     };

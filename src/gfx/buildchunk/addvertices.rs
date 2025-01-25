@@ -4,22 +4,24 @@ mod grass;
 mod log;
 mod nonvoxel;
 mod plant;
-mod slab;
-mod transparent;
 mod skipface;
+mod slab;
+mod stairgeometry;
+mod transparent;
 
 use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
 use crate::voxel::{out_of_bounds, wrap_coord, Block, Chunk, EMPTY_BLOCK};
-use skipface::skip_face;
 pub use fluid::add_fluid_vertices;
 pub use furnace::add_block_vertices_furnace_rotated;
 pub use grass::add_block_vertices_grass;
 pub use log::add_block_vertices_log;
 pub use nonvoxel::add_nonvoxel_vertices;
 pub use plant::add_block_vertices_plant;
+use skipface::skip_face;
+use stairgeometry::add_stair_geometry;
 pub use transparent::add_block_vertices_trans;
 
 #[derive(Copy, Clone)]
@@ -37,16 +39,12 @@ impl FaceInfo {
     }
 }
 
-fn apply_geometry(
-    block: Block,
-    xyz: Int3,
-    vert_data: &mut ChunkData,
-) {
+fn apply_geometry(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
     match block.shape() {
         1 => {
             slab::apply_slab_geometry(vert_data, xyz, block.orientation());
         }
-        2 => {
+        2..=4 => {
             if block.reflection() == 0 {
                 slab::apply_slab_geometry(vert_data, xyz, 0);
             } else {
@@ -57,50 +55,22 @@ fn apply_geometry(
     }
 }
 
-fn add_stair_geometry(
-    block: Block,
-    adj_block: Option<Block>,
-    xyz: Int3,
-    offset: Int3,
-    face: &Face,
-    face_info: FaceInfo,
-    skip_face_fn: fn(block: Block, adj_block: Block, offset: Int3) -> bool,
-) -> ChunkData {
-    let (x, y, z) = xyz;
-    let mut vert_data = vec![];
-    match block.shape() {
-        2 => {
-            if let Some(adj_block) = adj_block {
-                if skip_face_fn(block, adj_block, offset) {
-                    return vert_data;
-                }
-            } else {
-                return vert_data;
-            }
-            
-            for i in 0..6 {
-                let x = face[i * 3] + x as u8;
-                let y = face[i * 3 + 1] + y as u8;
-                let z = face[i * 3 + 2] + z as u8;
-                vert_data.push(x);
-                vert_data.push(y);
-                vert_data.push(z);
-                vert_data.push(face_info.block_texture_id);
-                vert_data.push(face_info.face_id);
-            }
-            if block.reflection() == 0 {
-                slab::apply_slab_geometry(&mut vert_data, xyz, 3);
-            } else {
-                slab::apply_slab_geometry(&mut vert_data, xyz, 0);
-            }
-            slab::apply_slab_geometry(&mut vert_data, xyz, block.orientation());
-        }
-        _ => {}
+fn rotate_orientation(orientation: u8) -> u8 {
+    match orientation {
+        1 => 5,
+        2 => 1,
+        4 => 2,
+        5 => 4,
+        _ => orientation,
     }
-    vert_data
 }
 
-fn get_adj_block(chunk: &Chunk, adj_chunk: Option<&Chunk>, xyz: Int3, offset: Int3) -> Option<Block> {
+fn get_adj_block(
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    xyz: Int3,
+    offset: Int3,
+) -> Option<Block> {
     let (x, y, z) = xyz;
     let (offx, offy, offz) = offset;
 
@@ -138,15 +108,14 @@ fn add_face(
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
     let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    add_stair_geometry(
+        vert_data, block, adj_block, xyz, offset, face, face_info, skip_face,
+    );
     if let Some(adj_block) = adj_block {
         if skip_face(block, adj_block, offset) {
-            let stair = add_stair_geometry(block, Some(adj_block), xyz, offset, face, face_info, skip_face);
-            vert_data.extend(stair);
             return;
         }
     } else {
-        let stair = add_stair_geometry(block, adj_block, xyz, offset, face, face_info, skip_face);
-        vert_data.extend(stair);
         return;
     }
 
@@ -162,8 +131,6 @@ fn add_face(
     }
 
     apply_geometry(block, xyz, vert_data);
-    let stair = add_stair_geometry(block, adj_block, xyz, offset, face, face_info, skip_face);
-    vert_data.extend(stair);
 }
 
 //Default function for adding block vertices, all faces have the same texture

@@ -17,7 +17,7 @@ pub fn display_selected_outline(gamestate: &Game) {
     outlineshader.uniform_vec4f("incolor", 0.1, 0.1, 0.1, 1.0);
     outlineshader.uniform_matrix4f("persp", &gamestate.persp);
     outlineshader.uniform_matrix4f("view", &gamestate.cam.get_view());
-    outlineshader.uniform_float("outlinesz", 0.0075);
+    outlineshader.uniform_float("outlinesz", 0.005);
 
     //Calculate the selected voxel position
     let pos = gamestate.cam.position;

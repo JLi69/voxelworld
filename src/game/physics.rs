@@ -68,7 +68,7 @@ impl Hitbox {
         if let Some(hitbox) = hitbox {
             return hitbox;
         }
-        
+
         match block.shape() {
             1 => {
                 //Slab

@@ -24,7 +24,7 @@ impl Game {
     fn rotate_item(&mut self) {
         //Rotate the block in the player's hand
         if self.get_key_state(Key::R) == KeyState::JustPressed {
-            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() { 
+            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() {
                 match b.shape() {
                     1 => {
                         let mut rotated_block = b;
@@ -35,7 +35,23 @@ impl Game {
                         }
                         let new_item = Item::BlockItem(rotated_block, amt);
                         self.player.hotbar.set_selected(new_item);
-                    } 
+                    }
+                    2..=4 => {
+                        let mut stair_block = b;
+                        let shape = b.shape();
+                        if shape == 4 {
+                            stair_block.set_shape(2);
+                            stair_block.set_orientation(2);
+                        } else if shape == 3 {
+                            stair_block.set_shape(4);
+                            stair_block.set_orientation(4);
+                        } else if shape == 2 {
+                            stair_block.set_shape(3);
+                            stair_block.set_orientation(4);
+                        }
+                        let new_item = Item::BlockItem(stair_block, amt);
+                        self.player.hotbar.set_selected(new_item);
+                    }
                     _ => {}
                 }
             }
@@ -195,6 +211,14 @@ impl Game {
     pub fn toggle_hud(&mut self) {
         if self.get_key_state(Key::F1) == KeyState::JustPressed {
             self.display_hud = !self.display_hud;
+        }
+    }
+
+    //Toggle backface
+    //For debug purposes
+    pub fn toggle_backface(&mut self) {
+        if self.get_key_state(Key::F12) == KeyState::JustPressed {
+            self.invert_backface_culling = !self.invert_backface_culling;
         }
     }
 

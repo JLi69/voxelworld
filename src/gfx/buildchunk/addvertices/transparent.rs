@@ -1,5 +1,5 @@
-use super::{get_adj_block, add_stair_geometry};
-use super::{ChunkData, FaceInfo, Int3, apply_geometry, skipface::skip_face_trans};
+use super::{add_stair_geometry, get_adj_block};
+use super::{apply_geometry, skipface::skip_face_trans, ChunkData, FaceInfo, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
@@ -16,17 +16,23 @@ fn add_face_transparent(
 ) {
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
- 
+
     let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    add_stair_geometry(
+        vert_data,
+        block,
+        adj_block,
+        xyz,
+        offset,
+        face,
+        face_info,
+        skip_face_trans,
+    );
     if let Some(adj_block) = adj_block {
         if skip_face_trans(block, adj_block, offset) {
-            let stair = add_stair_geometry(block, Some(adj_block), xyz, offset, face, face_info, skip_face_trans);
-            vert_data.extend(stair);
             return;
         }
     } else {
-        let stair = add_stair_geometry(block, adj_block, xyz, offset, face, face_info, skip_face_trans);
-        vert_data.extend(stair);
         return;
     }
 
@@ -41,10 +47,8 @@ fn add_face_transparent(
         vert_data.push(face_info.face_id);
     }
 
-    let block = chunk.get_block_relative(x as usize, y as usize, z as usize); 
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
     apply_geometry(block, xyz, vert_data);
-    let stair = add_stair_geometry(block, adj_block, xyz, offset, face, face_info, skip_face_trans);
-    vert_data.extend(stair);
 }
 
 pub fn add_block_vertices_trans(

@@ -158,6 +158,10 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             gfx::display::display_suffocation_screen(gamestate, w, h);
         }
 
+        //Clear depth buffer
+        unsafe {
+            gl::Clear(gl::DEPTH_BUFFER_BIT);
+        }
         if gamestate.display_hud {
             //Display crosshair
             gfx::display::display_crosshair(gamestate, w, h);
@@ -205,6 +209,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             }
         }
 
+        gamestate.toggle_backface();
         gamestate.toggle_hud();
         gamestate.pause();
         if !gamestate.paused || gamestate.display_block_menu {

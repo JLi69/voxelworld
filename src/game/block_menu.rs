@@ -7,7 +7,11 @@ pub const ICON_SIZE: f32 = 32.0;
 pub const ROW_LENGTH: usize = 12;
 
 pub fn get_shape_icon_positions(startx: f32, starty: f32) -> Vec<(BlockMenuShape, Vector2<f32>)> {
-    let shapes = [BlockMenuShape::Normal, BlockMenuShape::Slab, BlockMenuShape::Stair];
+    let shapes = [
+        BlockMenuShape::Normal,
+        BlockMenuShape::Slab,
+        BlockMenuShape::Stair,
+    ];
     let start = Vector2::new(startx - ICON_SIZE, starty + ICON_SIZE);
     shapes
         .iter()
@@ -77,6 +81,8 @@ pub fn change_block_shape(
         gamestate.set_block_menu_shape(BlockMenuShape::Normal);
     } else if gamestate.get_key_state(Key::Num2).is_held() {
         gamestate.set_block_menu_shape(BlockMenuShape::Slab);
+    } else if gamestate.get_key_state(Key::Num3).is_held() {
+        gamestate.set_block_menu_shape(BlockMenuShape::Stair);
     }
 
     if let Some(i) = get_selected(menu, mousex, mousey) {

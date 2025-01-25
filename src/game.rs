@@ -114,6 +114,7 @@ pub struct Game {
     cfg: Config,
     //Debug info
     display_debug: bool,
+    pub invert_backface_culling: bool,
     //Block menu
     display_block_menu: bool,
     block_menu_shape: BlockMenuShape,
@@ -146,6 +147,7 @@ impl Game {
             textures: TextureManager::new(),
             cfg: Config::default(),
             display_debug: false,
+            invert_backface_culling: false,
             block_menu_shape: BlockMenuShape::Normal,
             display_block_menu: false,
             display_hud: true,
@@ -158,6 +160,7 @@ impl Game {
         self.build_cooldown = 0.0;
         self.destroy_cooldown = 0.0;
         self.paused = false;
+        self.invert_backface_culling = false;
     }
 
     //Initialize game state
@@ -216,7 +219,7 @@ impl Game {
 pub fn set_block_shape(block: &mut Block, shape: BlockMenuShape) {
     match shape {
         BlockMenuShape::Slab => block.set_shape(1),
-        BlockMenuShape::Stair => { 
+        BlockMenuShape::Stair => {
             block.set_shape(2);
             block.set_orientation(2);
         }

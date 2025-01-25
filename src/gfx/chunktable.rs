@@ -325,6 +325,12 @@ impl ChunkVaoTable {
 
     //Displays all the chunk vaos
     pub fn display_chunks(&self, gamestate: &Game, shaderid: &str) -> u32 {
+        if gamestate.invert_backface_culling {
+            unsafe {
+                gl::CullFace(gl::FRONT);
+            }
+        }
+
         gamestate.textures.bind("blocks");
         //Calculate view frustum
         let view_frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
@@ -367,6 +373,12 @@ impl ChunkVaoTable {
             unsafe {
                 gl::BindVertexArray(vao.id);
                 gl::DrawArrays(gl::TRIANGLES, 0, vao.vert_count);
+            }
+        }
+
+        if gamestate.invert_backface_culling {
+            unsafe {
+                gl::CullFace(gl::BACK);
             }
         }
 
