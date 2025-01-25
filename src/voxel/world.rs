@@ -56,7 +56,6 @@ pub struct World {
     centerz: i32,
     //cache of chunks that have been unloaded
     chunk_cache: HashMap<(i32, i32, i32), Chunk>,
-    clear_cache: bool,
     world_generator: WorldGenerator,
     world_seed: u32,
     pub gen_type: WorldGenType,
@@ -71,6 +70,8 @@ pub struct World {
     ticks: u64,
     //Chunks that experienced block update and need to be saved
     to_save: HashSet<(i32, i32, i32)>,
+    //Chunks that are to be removed from cache and need to be saved
+    removed_from_cache: Vec<Chunk>,
 }
 
 impl World {
@@ -83,7 +84,6 @@ impl World {
             centery: 0,
             centerz: 0,
             chunk_cache: HashMap::new(),
-            clear_cache: false,
             world_generator: WorldGenerator::new(0),
             gen_type: WorldGenType::DefaultGen,
             world_seed: 0,
@@ -94,6 +94,7 @@ impl World {
             in_update_range: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
+            removed_from_cache: vec![],
         }
     }
 
@@ -116,7 +117,6 @@ impl World {
             centery: 0,
             centerz: 0,
             chunk_cache: HashMap::new(),
-            clear_cache: false,
             world_generator: WorldGenerator::new(seed),
             gen_type: generation,
             world_seed: seed,
@@ -127,6 +127,7 @@ impl World {
             in_update_range: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
+            removed_from_cache: vec![],
         }
     }
 
@@ -197,40 +198,42 @@ impl World {
         ((sz * sz * 8) as usize).max(4096)
     }
 
-    //Checks if the world should clear its chunk cache
-    pub fn check_for_cache_clear(&mut self) {
-        if self.chunk_cache.len() <= self.get_max_cache_sz() {
-            return;
-        }
-
-        eprintln!("Clearing chunk cache!");
-        self.clear_cache = true;
-    }
-
     //If the cache gets too large, attempt to delete some sections
     pub fn clean_cache(&mut self) {
-        if !self.clear_cache {
-            return;
+        if !self.removed_from_cache.is_empty() {
+            eprintln!("Cleaning cache...");
+            eprintln!(
+                "Chunks left to save: {} | Chunk cache size: {}",
+                self.removed_from_cache.len(),
+                self.chunk_cache.len()
+            );
         }
 
-        let max_cache_sz = self.get_max_cache_sz();
         let mut time_passed = 0.0;
         let start = std::time::Instant::now();
-        while self.chunk_cache.len() > max_cache_sz / 2 && time_passed < 0.01 {
-            let to_delete = self.chunk_cache.keys().next().copied();
-
-            if let Some(pos) = to_delete {
-                if let Some(chunk) = self.chunk_cache.get(&pos) {
-                    save::save_chunk(chunk, &self.path);
-                }
-                self.chunk_cache.remove(&pos);
+        while !self.removed_from_cache.is_empty() && time_passed < 0.0005 {
+            let chunk_to_save = self.removed_from_cache.last();
+            if let Some(chunk) = chunk_to_save {
+                save::save_chunk(chunk, &self.path);
+                self.removed_from_cache.pop();
             }
             let now = std::time::Instant::now();
             time_passed = (now - start).as_secs_f32();
         }
 
-        if self.chunk_cache.len() <= max_cache_sz / 2 {
-            self.clear_cache = false;
+        let max_cache_sz = self.get_max_cache_sz();
+        if self.chunk_cache.len() <= max_cache_sz {
+            return;
+        }
+
+        while self.chunk_cache.len() > max_cache_sz / 2 {
+            let to_delete = self.chunk_cache.keys().next().copied();
+            if let Some(pos) = to_delete {
+                if let Some(chunk) = self.chunk_cache.get(&pos) {
+                    self.removed_from_cache.push(chunk.clone());
+                    self.chunk_cache.remove(&pos);
+                }
+            }
         }
     }
 

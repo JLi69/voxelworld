@@ -1,6 +1,8 @@
+mod display;
+mod update;
+
 use super::input::convert_mouse_pos;
 use super::{EventHandler, Game};
-use crate::assets::Texture;
 use crate::gfx::display::block_menu::{BLOCK_MENU_HEIGHT, BLOCK_MENU_WIDTH};
 use crate::gui;
 use crate::{game, gfx, gui::pause_menu::PauseMenuAction};
@@ -19,54 +21,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     let mut chunktables = gfx::ChunkTables::new();
     chunktables.init_tables(&gamestate.world);
     //water framebuffer
-    let mut water_framebuffer = 0u32;
-    let mut water_frame_color = Texture::new();
-    let mut depth_rbo = 0u32;
-    water_frame_color.gen_texture();
-    unsafe {
-        //Create render buffer
-        gl::GenRenderbuffers(1, &mut depth_rbo);
-        gl::BindRenderbuffer(gl::RENDERBUFFER, depth_rbo);
-        gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, 960, 640);
-
-        //Initialize frame buffer
-        gl::GenFramebuffers(1, &mut water_framebuffer);
-        gl::BindFramebuffer(gl::FRAMEBUFFER, water_framebuffer);
-        water_frame_color.bind();
-        gl::TexImage2D(
-            gl::TEXTURE_2D,
-            0,
-            gl::RGBA as i32,
-            960,
-            640,
-            0,
-            gl::RGBA,
-            gl::UNSIGNED_BYTE,
-            std::ptr::null(),
-        );
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
-        gl::FramebufferTexture2D(
-            gl::FRAMEBUFFER,
-            gl::COLOR_ATTACHMENT0,
-            gl::TEXTURE_2D,
-            water_frame_color.get_id(),
-            0,
-        );
-        gl::FramebufferRenderbuffer(
-            gl::FRAMEBUFFER,
-            gl::DEPTH_STENCIL_ATTACHMENT,
-            gl::RENDERBUFFER,
-            depth_rbo,
-        );
-
-        //Check framebuffer status
-        if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
-            eprintln!("ERROR: framebuffer is not complete!");
-        }
-
-        gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
-    }
+    let (water_framebuffer, depth_rbo, water_frame_color) = display::setup_water_framebuff();
 
     //egui
     let font = gamestate.get_font();
@@ -95,27 +50,13 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
 
         //Get mouse position
         let (mousex, mousey) = window.get_cursor_pos();
-        let (mousex, mousey) = (mousex as i32, mousey as i32); //Convert to i32
-                                                               //Update render buffer and water frame dimensions
+        //Convert to i32
+        let (mousex, mousey) = (mousex as i32, mousey as i32);
+        //Get window dimensions
         let (w, h) = window.get_size();
-        unsafe {
-            gl::BindRenderbuffer(gl::RENDERBUFFER, depth_rbo);
-            gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH24_STENCIL8, w, h);
-            gl::BindRenderbuffer(gl::RENDERBUFFER, 0); //Unbind render buffer
-            water_frame_color.bind();
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                w,
-                h,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                std::ptr::null(),
-            );
-            gl::BindTexture(gl::TEXTURE_2D, 0); //Unbind texture
-        }
+
+        //Update render buffer and water frame dimensions
+        display::update_water_frame_dimensions(depth_rbo, &water_frame_color, w, h);
 
         //Display
         gfx::set_default_gl_state();
@@ -148,28 +89,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             .non_voxel_vaos
             .display_chunks(gamestate, "nonvoxel");
 
-        let stuck = gamestate.player.get_head_stuck_block(&gamestate.world);
-        if gamestate.display_hud && stuck.is_none() {
-            //Display selection outline
-            gfx::display::display_selected_outline(gamestate);
-        }
-
-        if gamestate.player.suffocating(&gamestate.world) {
-            gfx::display::display_suffocation_screen(gamestate, w, h);
-        }
-
-        //Clear depth buffer
-        unsafe {
-            gl::Clear(gl::DEPTH_BUFFER_BIT);
-        }
-        if gamestate.display_hud {
-            //Display crosshair
-            gfx::display::display_crosshair(gamestate, w, h);
-            //Display held item
-            gfx::display::display_hand_item(gamestate);
-            //Display hotbar
-            gfx::display::display_hotbar(gamestate, w, h);
-        }
+        display::display_hud(gamestate, w, h);
         //Display gui
         gui::set_ui_gl_state();
         gamestate.update_display_debug();
@@ -209,35 +129,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             }
         }
 
-        gamestate.toggle_backface();
-        gamestate.toggle_hud();
-        gamestate.pause();
-        if !gamestate.paused || gamestate.display_block_menu {
-            gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
-        }
-
-        if !gamestate.paused {
-            //Update gameobjects
-            gamestate.update_player(dt, window.get_cursor_mode());
-            //Destroy and place blocks
-            gamestate.build(&mut chunktables);
-            gamestate.update_build_cooldown(dt);
-            //Update hand animation
-            gamestate.update_hand_animation(dt);
-            //Update blocks
-            gamestate.world.update_sim_range(1);
-            gamestate.world.update_blocks(dt, &mut chunktables, 1);
-            gamestate
-                .world
-                .rand_block_update(dt, Some(&mut chunktables), 1);
-        }
-        //Generate new chunks
-        gamestate.world.check_for_cache_clear();
-        gamestate.world.clean_cache();
-        gamestate
-            .world
-            .generate_more(gamestate.player.position, &mut chunktables);
-        chunktables.update_tables(gamestate);
+        update::handle_input_actions(gamestate);
+        update::rotate_player(gamestate, 0.06, window);
+        update::update_game(gamestate, &mut chunktables, dt);
 
         //Handle save
         save_timer -= dt;
@@ -278,12 +172,12 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         dt = (end - start).as_secs_f32().min(1.0);
     }
 
+    //Clean up
     unsafe {
         gl::DeleteFramebuffers(1, &water_framebuffer);
         gl::DeleteRenderbuffers(1, &depth_rbo);
     }
     gamestate.save_entire_world();
     gamestate.reset();
-    //Clean up
     chunktables.clear();
 }

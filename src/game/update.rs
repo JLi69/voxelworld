@@ -3,8 +3,7 @@ use super::{Game, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
 use crate::voxel::{destroy_block, place_block};
-use glfw::{CursorMode, Key};
-use glfw::{MouseButtonLeft, MouseButtonRight};
+use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
 
@@ -58,14 +57,14 @@ impl Game {
         }
     }
 
-    //Update player and camera
-    pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) {
-        if cursormode == CursorMode::Disabled {
-            let (dmousex, dmousey) = self.get_mouse_diff();
-            //Rotate camera
-            self.cam.rotate(dmousex, dmousey, 0.06);
-        }
+    pub fn rotate_player(&mut self, sensitivity: f32) {
+        let (dmousex, dmousey) = self.get_mouse_diff();
+        //Rotate camera
+        self.cam.rotate(dmousex, dmousey, sensitivity);
+    }
 
+    //Update player and camera
+    pub fn update_player(&mut self, dt: f32) {
         //Set rotation of player
         self.player.rotation = self.cam.yaw;
         //Update player

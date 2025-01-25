@@ -113,7 +113,6 @@ impl World {
                 .parse::<i32>()
                 .unwrap_or(0),
             chunk_cache: HashMap::new(),
-            clear_cache: false,
             world_generator: WorldGenerator::new(seed),
             world_seed: seed,
             gen_type: string_to_gen_type(&world_metadata_entries[0].get_var("gen_type")),
@@ -124,6 +123,7 @@ impl World {
             in_update_range: HashSet::new(),
             ticks: 0,
             to_save: HashSet::new(),
+            removed_from_cache: vec![],
         }
     }
 
