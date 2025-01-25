@@ -1,5 +1,5 @@
-use crate::voxel::{orientation_to_normal, Block, rotate_orientation, World, EMPTY_BLOCK};
-use cgmath::{Vector3, InnerSpace};
+use crate::voxel::{orientation_to_normal, rotate_orientation, Block, World, EMPTY_BLOCK};
+use cgmath::{InnerSpace, Vector3};
 
 //Axis aligned bounding box (this hitbox is aligned with the x, y, z axis)
 pub struct Hitbox {
@@ -109,22 +109,14 @@ impl Hitbox {
             return CompositeHitbox::Single(hitbox);
         }
 
-        let reflection = if block.reflection() == 0 {
-            0
-        } else {
-            3
-        };
+        let reflection = if block.reflection() == 0 { 0 } else { 3 };
 
         match block.shape() {
-            1 => {
-                CompositeHitbox::Single(Self::slab_hitbox(block.orientation(), x, y, z))
-            },
-            2 => {
-                CompositeHitbox::Double(
-                    Self::slab_hitbox(reflection, x, y, z),
-                    Self::slab_hitbox(block.orientation(), x, y, z),
-                )
-            }
+            1 => CompositeHitbox::Single(Self::slab_hitbox(block.orientation(), x, y, z)),
+            2 => CompositeHitbox::Double(
+                Self::slab_hitbox(reflection, x, y, z),
+                Self::slab_hitbox(block.orientation(), x, y, z),
+            ),
             3 => {
                 let rotated = rotate_orientation(block.orientation());
                 CompositeHitbox::Double(
@@ -195,10 +187,13 @@ pub fn scan_block_hitbox<T>(
     iz: i32,
     range: i32,
     skip_fn: T,
-) -> Option<Hitbox> where T: Fn(Block) -> bool {
+) -> Option<Hitbox>
+where
+    T: Fn(Block) -> bool,
+{
     for x in (ix - range)..=(ix + range) {
         for y in (iy - range)..=(iy + range) {
-            for z in (iz - range)..=(iz + range) { 
+            for z in (iz - range)..=(iz + range) {
                 let block = world.get_block(x, y, z);
                 if skip_fn(block) {
                     continue;
@@ -211,7 +206,7 @@ pub fn scan_block_hitbox<T>(
                     continue;
                 }
 
-                return Some(block_hitbox)
+                return Some(block_hitbox);
             }
         }
     }
@@ -227,10 +222,13 @@ pub fn scan_block_full_hitbox<T>(
     iz: i32,
     range: i32,
     skip_fn: T,
-) -> Option<Hitbox> where T: Fn(Block) -> bool {
+) -> Option<Hitbox>
+where
+    T: Fn(Block) -> bool,
+{
     for x in (ix - range)..=(ix + range) {
         for y in (iy - range)..=(iy + range) {
-            for z in (iz - range)..=(iz + range) { 
+            for z in (iz - range)..=(iz + range) {
                 let block = world.get_block(x, y, z);
                 if skip_fn(block) {
                     continue;
@@ -242,7 +240,7 @@ pub fn scan_block_full_hitbox<T>(
                     continue;
                 }
 
-                return Some(block_hitbox)
+                return Some(block_hitbox);
             }
         }
     }

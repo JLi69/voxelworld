@@ -13,7 +13,7 @@ use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
-use crate::voxel::{out_of_bounds, wrap_coord, Block, Chunk, EMPTY_BLOCK, rotate_orientation};
+use crate::voxel::{out_of_bounds, rotate_orientation, wrap_coord, Block, Chunk, EMPTY_BLOCK};
 pub use fluid::add_fluid_vertices;
 pub use furnace::add_block_vertices_furnace_rotated;
 pub use grass::add_block_vertices_grass;

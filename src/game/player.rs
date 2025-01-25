@@ -311,8 +311,7 @@ impl Player {
         //Update swim cooldown
         self.swim_cooldown -= dt;
         //Check if the player is no longer swimming
-        let swimming =
-            self.is_swimming(world, 12, 0.95) || self.is_swimming(world, 13, 0.95);
+        let swimming = self.is_swimming(world, 12, 0.95) || self.is_swimming(world, 13, 0.95);
 
         //Is the player climbing a ladder?
         let climbing = self.climbing(world);

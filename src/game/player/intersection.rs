@@ -1,5 +1,7 @@
 use super::{Player, PLAYER_HEIGHT, PLAYER_SIZE};
-use crate::game::physics::{composite_to_hitbox, scan_block_hitbox, get_block_collision, scan_block_full_hitbox};
+use crate::game::physics::{
+    composite_to_hitbox, get_block_collision, scan_block_full_hitbox, scan_block_hitbox,
+};
 use crate::game::{Hitbox, World};
 use crate::voxel::EMPTY_BLOCK;
 
@@ -27,7 +29,8 @@ impl Player {
 
         scan_block_hitbox(&head_hitbox, world, ix, iy, iz, 2, |block| {
             block.id != block_id
-        }).is_some()
+        })
+        .is_some()
     }
 
     //Returns true if the player is intersecting a specific block type
@@ -37,9 +40,7 @@ impl Player {
         let iz = self.position.z.floor() as i32;
 
         let hitbox = self.get_hitbox();
-        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| {
-            block.id != block_id
-        }).is_some()
+        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| block.id != block_id).is_some()
     }
 
     //Is the top `fract` portion of the player intersecting a block
@@ -58,9 +59,7 @@ impl Player {
             PLAYER_SIZE,
         );
 
-        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| {
-            block.id != block_id
-        }).is_some()
+        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| block.id != block_id).is_some()
     }
 
     //Is the top `fract` portion of the player intersecting a block (but with swimming)
@@ -78,9 +77,8 @@ impl Player {
             PLAYER_SIZE,
         );
 
-        scan_block_full_hitbox(&hitbox, world, ix, iy, iz, 2, |block| {
-            block.id != block_id
-        }).is_some()
+        scan_block_full_hitbox(&hitbox, world, ix, iy, iz, 2, |block| block.id != block_id)
+            .is_some()
     }
 
     //Is the bottom `fract` portion of the player intersecting a block
@@ -98,9 +96,7 @@ impl Player {
             PLAYER_SIZE,
         );
 
-        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| {
-            block.id != block_id
-        }).is_some()
+        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| block.id != block_id).is_some()
     }
 
     //Is the player standing on a block?
@@ -191,7 +187,8 @@ impl Player {
             }
 
             false
-        }).is_some()
+        })
+        .is_some()
     }
 
     //Returns the block that the player's head is intersecting
