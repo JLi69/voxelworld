@@ -176,3 +176,13 @@ pub fn orientation_to_normal(orientation: u8) -> Vector3<i32> {
         _ => Vector3::new(0, 0, 0),
     }
 }
+
+pub fn rotate_orientation(orientation: u8) -> u8 {
+    match orientation {
+        1 => 5,
+        2 => 1,
+        4 => 2,
+        5 => 4,
+        _ => orientation,
+    }
+}

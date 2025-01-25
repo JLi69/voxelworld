@@ -31,7 +31,7 @@ impl Player {
             return;
         }
 
-        if !self.top_intersecting(world, 12, 0.9) && !self.top_intersecting(world, 13, 0.9) {
+        if !self.is_swimming(world, 12, 0.9) && !self.is_swimming(world, 13, 0.9) {
             return;
         }
 

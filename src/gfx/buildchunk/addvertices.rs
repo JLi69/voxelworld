@@ -13,7 +13,7 @@ use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
-use crate::voxel::{out_of_bounds, wrap_coord, Block, Chunk, EMPTY_BLOCK};
+use crate::voxel::{out_of_bounds, wrap_coord, Block, Chunk, EMPTY_BLOCK, rotate_orientation};
 pub use fluid::add_fluid_vertices;
 pub use furnace::add_block_vertices_furnace_rotated;
 pub use grass::add_block_vertices_grass;
@@ -52,16 +52,6 @@ fn apply_geometry(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
             }
         }
         _ => {}
-    }
-}
-
-fn rotate_orientation(orientation: u8) -> u8 {
-    match orientation {
-        1 => 5,
-        2 => 1,
-        4 => 2,
-        5 => 4,
-        _ => orientation,
     }
 }
 
