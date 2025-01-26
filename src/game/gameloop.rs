@@ -70,6 +70,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
 
         //Display chunks
         chunks_drawn += chunktables.chunk_vaos.display_chunks(gamestate, "chunk");
+        chunktables
+            .non_voxel_vaos
+            .display_chunks(gamestate, "nonvoxel");
         let fluid_shader = gamestate.shaders.get("fluid");
         fluid_shader.use_program();
         fluid_shader.uniform_float("timepassed", time_passed);
@@ -85,9 +88,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             w,
             h,
         );
-        chunktables
-            .non_voxel_vaos
-            .display_chunks(gamestate, "nonvoxel");
 
         display::display_hud(gamestate, w, h);
         //Display gui

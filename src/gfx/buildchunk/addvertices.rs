@@ -68,9 +68,8 @@ fn get_adj_block(
         let adj_x = wrap_coord(x + offx) as usize;
         let adj_y = wrap_coord(y + offy) as usize;
         let adj_z = wrap_coord(z + offz) as usize;
-        let adj_block = adj_chunk.get_block_relative(adj_x, adj_y, adj_z);
         if out_of_bounds(x, y, z, offx, offy, offz) {
-            return Some(adj_block);
+            return Some(adj_chunk.get_block_relative(adj_x, adj_y, adj_z));
         }
     }
 

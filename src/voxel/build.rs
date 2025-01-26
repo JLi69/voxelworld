@@ -2,7 +2,7 @@ use super::is_valid::get_check_valid_fn;
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::inventory::Item;
-use crate::game::physics::{Hitbox, composite_to_hitbox};
+use crate::game::physics::{composite_to_hitbox, Hitbox};
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
 
@@ -384,6 +384,7 @@ pub fn place_block(
     player: &Player,
 ) -> Option<(i32, i32, i32)> {
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
+    //The id of the block we are placing another block on
     let blockid = {
         let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
         let block = world.get_block(ix, iy, iz);
@@ -415,10 +416,13 @@ pub fn place_block(
         return None;
     }
 
-    match axis {
-        Axis::X => ix -= dir.x.signum() as i32,
-        Axis::Y => iy -= dir.y.signum() as i32,
-        Axis::Z => iz -= dir.z.signum() as i32,
+    let raycast_block = world.get_block(ix, iy, iz);
+    if !(raycast_block.replaceable() && raycast_block.id != block.id) {
+        match axis {
+            Axis::X => ix -= dir.x.signum() as i32,
+            Axis::Y => iy -= dir.y.signum() as i32,
+            Axis::Z => iz -= dir.z.signum() as i32,
+        }
     }
 
     set_block_rotation(dir, &mut block);
@@ -431,12 +435,13 @@ pub fn place_block(
     }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
-
     if replace.is_fluid() && block.fluid_destructibe() {
         return None;
     }
 
-    if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
+    if (replace.id == EMPTY_BLOCK || replace.is_fluid() || replace.replaceable())
+        && blockid != EMPTY_BLOCK
+    {
         let prev_block = world.get_block(ix, iy, iz);
         world.set_block(ix, iy, iz, block);
         if let Some(check_valid) = get_check_valid_fn(block.id) {

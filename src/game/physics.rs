@@ -103,9 +103,7 @@ impl Hitbox {
                 ))
             }
             //Fence
-            76 => {
-                Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0))
-            }
+            76 => Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0)),
             _ => None,
         };
 

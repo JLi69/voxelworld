@@ -259,10 +259,10 @@ impl ChunkVaoTable {
         if let Some(chunk) = chunk {
             let chunkpos = chunk.get_chunk_pos();
             let (chunkdata, values_per_vert) = gen_verts(chunk, world);
-            let chunk = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
-            if let Some(chunk) = chunk {
-                chunk.vert_count = chunkdata.len() as i32 / values_per_vert;
-                send_chunk_data_to_vao(chunk, values_per_vert, &chunkdata);
+            let chunkvao = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
+            if let Some(chunkvao) = chunkvao {
+                chunkvao.vert_count = chunkdata.len() as i32 / values_per_vert;
+                send_chunk_data_to_vao(chunkvao, values_per_vert, &chunkdata);
             }
         }
     }
@@ -320,6 +320,65 @@ impl ChunkVaoTable {
         self.update_chunk_vao(chunk, world, gen_verts);
         if chunk.is_some() {
             self.update_adjacent(x, y, z, world, gen_verts);
+        }
+    }
+
+    //Ignores the corners
+    fn update_adjacent_fast(
+        &mut self,
+        x: i32,
+        y: i32,
+        z: i32,
+        world: &World,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+    ) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let x = wrap_coord(x % CHUNK_SIZE_I32);
+        let y = wrap_coord(y % CHUNK_SIZE_I32);
+        let z = wrap_coord(z % CHUNK_SIZE_I32);
+        for dx in -1i32..=1 {
+            for dy in -1i32..=1 {
+                for dz in -1i32..=1 {
+                    if dx.abs() == 1 && dy.abs() == 1 && dz.abs() == 1 {
+                        continue;
+                    }
+
+                    if dx == 0 && dy == 0 && dz == 0 {
+                        continue;
+                    }
+
+                    if (dx == -1 && x != 0) || (dx == 1 && x != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    if (dy == -1 && y != 0) || (dy == 1 && y != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    if (dz == -1 && z != 0) || (dz == 1 && z != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    let chunk = world.get_chunk(chunkx + dx, chunky + dy, chunkz + dz);
+                    self.update_chunk_vao(chunk, world, gen_verts);
+                }
+            }
+        }
+    }
+
+    pub fn update_chunk_with_adj_fast(
+        &mut self,
+        x: i32,
+        y: i32,
+        z: i32,
+        world: &World,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+    ) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let chunk = world.get_chunk(chunkx, chunky, chunkz);
+        self.update_chunk_vao(chunk, world, gen_verts);
+        if chunk.is_some() {
+            self.update_adjacent_fast(x, y, z, world, gen_verts);
         }
     }
 
@@ -434,7 +493,7 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
     if let Some((x, y, z)) = pos {
         chunks
             .chunk_vaos
-            .update_chunk_with_adj(x, y, z, world, |chunk, world| {
+            .update_chunk_with_adj_fast(x, y, z, world, |chunk, world| {
                 generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
             });
         chunks
@@ -447,11 +506,12 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
             .update_chunk_with_adj(x, y, z, world, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
-        chunks
-            .non_voxel_vaos
-            .update_chunk_with_adj(x, y, z, world, |chunk, _| {
-                generate_non_voxel_vertex_data(chunk)
-            });
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        chunks.non_voxel_vaos.update_chunk_vao(
+            world.get_chunk(chunkx, chunky, chunkz),
+            world,
+            |chunk, _| generate_non_voxel_vertex_data(chunk),
+        );
     }
 }
 

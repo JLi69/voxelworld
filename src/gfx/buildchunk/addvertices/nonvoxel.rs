@@ -218,7 +218,15 @@ fn gen_ladder_vertices(block: Block) -> BlockMesh {
     (ladder_vertices, texcoords)
 }
 
-fn gen_fence_rail(cube: &[Vert], tc: &[Tc], normals: &[Norm], x: f32, z: f32,  sx: f32, sz: f32) -> BlockMesh {
+fn gen_fence_rail(
+    cube: &[Vert],
+    tc: &[Tc],
+    normals: &[Norm],
+    x: f32,
+    z: f32,
+    sx: f32,
+    sz: f32,
+) -> BlockMesh {
     let mut fence_rail = vec![];
     let top = transform_vertices(cube, |v| {
         let mut transformed = v;
@@ -241,7 +249,7 @@ fn gen_fence_rail(cube: &[Vert], tc: &[Tc], normals: &[Norm], x: f32, z: f32,  s
 
     let mut fence_tc = vec![];
     let tc = transform_tc(tc, |v, i| {
-        let mut tc = v; 
+        let mut tc = v;
         if normals[i].y != 0.0 && sz > sx {
             tc.x *= 1.0 / 4.0;
             tc.x += 6.0 / 16.0;
@@ -260,7 +268,7 @@ fn gen_fence_rail(cube: &[Vert], tc: &[Tc], normals: &[Norm], x: f32, z: f32,  s
     (fence_rail, fence_tc)
 }
 
-fn gen_fence_vertices(block: Block) -> BlockMesh { 
+fn gen_fence_vertices(block: Block) -> BlockMesh {
     let vertices = generate_mesh_vertices(&CUBE, &CUBE_INDICES);
     let normals = generate_mesh_normals(&vertices);
     let texcoords = generate_mesh_texcoords(&TEX_COORDS, &CUBE_TEX_INDICES);
@@ -311,7 +319,12 @@ fn gen_fence_vertices(block: Block) -> BlockMesh {
     (fence_vertices, fence_texcoords)
 }
 
-pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData, cached_meshes: &mut HashMap<(u8, u8), BlockMesh>) {
+pub fn add_nonvoxel_vertices(
+    chunk: &Chunk,
+    xyz: Int3,
+    vert_data: &mut ChunkData,
+    cached_meshes: &mut HashMap<(u8, u8), BlockMesh>,
+) {
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
@@ -337,7 +350,7 @@ pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData
         //Fence
         76 => gen_fence_vertices(block),
         _ => (vec![], vec![]),
-    }; 
+    };
 
     add_mesh_to_chunk(xyz, id, &vert, &tc, vert_data);
     cached_meshes.insert(key, (vert, tc));

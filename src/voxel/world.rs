@@ -154,9 +154,9 @@ impl World {
         let ix = wrap_coord(x);
         let iy = wrap_coord(y);
         let iz = wrap_coord(z);
-        for dx in -1..=1 {
-            for dy in -1..=1 {
-                for dz in -1..=1 {
+        for dx in -1i32..=1 {
+            for dy in -1i32..=1 {
+                for dz in -1i32..=1 {
                     if (dx == -1 && ix != 0) || (dx == 1 && ix != CHUNK_SIZE_I32 - 1) {
                         continue;
                     }

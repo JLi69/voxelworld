@@ -10,6 +10,7 @@ pub const ROTATE_Y_ONLY: u16 = 1 << 5;
 pub const FLAT_ITEM: u16 = 1 << 6;
 pub const FLUID_DESTRUCTIBLE: u16 = 1 << 7;
 pub const NON_VOXEL: u16 = 1 << 8;
+pub const REPLACEABLE: u16 = 1 << 9;
 
 unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
@@ -54,6 +55,7 @@ pub fn init_voxel_flags() {
         set_plant_flags(48);
         //Tall grass
         set_plant_flags(49);
+        VOXEL_FLAGS[49] |= REPLACEABLE;
         //Wheat
         set_plant_flags(50);
         set_plant_flags(51);

@@ -9,7 +9,7 @@ pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
     get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NON_VOXEL,
-    NO_HITBOX, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
+    NO_HITBOX, REPLACEABLE, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
 use cgmath::Vector3;
 pub use chunk::Chunk;
@@ -156,6 +156,11 @@ impl Block {
     //Returns if the voxel has a non-voxel geometry and needs to be handled uniquely
     pub fn non_voxel_geometry(&self) -> bool {
         get_flag(self.id) & NON_VOXEL != 0
+    }
+
+    //Returns if the voxel can by replaced by player placing a block
+    pub fn replaceable(&self) -> bool {
+        get_flag(self.id) & REPLACEABLE != 0
     }
 }
 
