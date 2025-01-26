@@ -113,6 +113,8 @@ pub fn update_chunk_tables(
     update_chunk_vao_table(lava_vaos, x, y, z, range, chunks, to_generate);
     let water_vaos = &mut chunktables.water_vaos;
     update_chunk_vao_table(water_vaos, x, y, z, range, chunks, to_generate);
+    let nonvoxel_vaos = &mut chunktables.non_voxel_vaos;
+    update_chunk_vao_table(nonvoxel_vaos, x, y, z, range, chunks, to_generate);
 }
 
 impl World {
