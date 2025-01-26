@@ -25,7 +25,9 @@ void main() {
 	fragpos = pos.xyz;
 	chunkfragpos = vec3(x, y, z);
 	vec4 transformed = transform * pos;
-	gl_Position = screen * vec4(transformed.x, transformed.y, 0.0, 1.0);
+	vec4 screenPos = screen * vec4(transformed.xyz, 1.0);
+	screenPos.z -= offset.z;
+	gl_Position = screenPos;
 	blockid = id;
 	faceid = data & 3u;
 }

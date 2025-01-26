@@ -92,12 +92,16 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
+        gl::Enable(gl::DEPTH_TEST);
     }
 
     gamestate.textures.bind("blocks");
     gamestate.shaders.use_program("orthographic");
     let orthographic_shader = gamestate.shaders.get("orthographic");
-    orthographic_shader.uniform_matrix4f("screen", &screen_mat);
+    let half_w = w as f32 / 2.0;
+    let half_h = h as f32 / 2.0;
+    let orthographic = cgmath::ortho(-half_w, half_w, -half_h, half_h, 0.01, 100.0);
+    orthographic_shader.uniform_matrix4f("screen", &orthographic);
     orthographic_shader.uniform_vec3f("offset", -1.5, -1.5, -1.5);
     let mut chunk = Chunk::new(0, 0, 0);
     for (i, item) in gamestate.player.hotbar.items.iter().enumerate() {
@@ -121,9 +125,5 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
             }
             Item::EmptyItem => {}
         }
-    }
-
-    unsafe {
-        gl::Enable(gl::DEPTH_TEST);
     }
 }
