@@ -102,6 +102,10 @@ impl Hitbox {
                     1.0 - norm.z.abs() as f32 * 0.6,
                 ))
             }
+            //Fence
+            76 => {
+                Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0))
+            }
             _ => None,
         };
 

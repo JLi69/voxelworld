@@ -2,7 +2,7 @@ use super::is_valid::get_check_valid_fn;
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::inventory::Item;
-use crate::game::physics::Hitbox;
+use crate::game::physics::{Hitbox, composite_to_hitbox};
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
 
@@ -445,7 +445,8 @@ pub fn place_block(
                 return None;
             }
         }
-        let block_hitbox = Hitbox::from_block(ix, iy, iz);
+        let composite_hitbox = Hitbox::from_block_data(ix, iy, iz, block);
+        let block_hitbox = composite_to_hitbox(composite_hitbox, &player.get_hitbox());
         if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
             world.set_block(ix, iy, iz, prev_block);
             return None;

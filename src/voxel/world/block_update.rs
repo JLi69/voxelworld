@@ -250,6 +250,36 @@ fn update_plant(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut U
     }
 }
 
+//Connect fences
+fn update_fence(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let mut block = world.get_block(x, y, z);
+
+    let geometry = block.geometry;
+    block.geometry = 0;
+    ADJ.iter()
+        .map(|(dx, dy, dz)| (x + dx, y + dy, z + dz))
+        .map(|(x, y, z)| world.get_block(x, y, z))
+        .enumerate()
+        .for_each(|(i, b)| {
+            if b.id == EMPTY_BLOCK {
+                return;
+            }
+            if b.shape() != 0 {
+                return;
+            }
+            if b.transparent() && b.id != block.id {
+                return;
+            }
+            block.geometry |= 1 << i;
+        });
+
+    if block.geometry == geometry {
+        return;
+    }
+
+    to_update.insert((x, y, z), block);
+}
+
 impl World {
     //Returns true if at least one block updated, otherwise false
     fn update_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32, to_update: &mut UpdateList) {
@@ -279,6 +309,8 @@ impl World {
                         43 | 45 => update_farmland(self, x, y, z, to_update),
                         //Plants, torches, ladders
                         47..=56 | 69 | 71..=75 => update_plant(self, x, y, z, block.id, to_update),
+                        //Fence
+                        76 => update_fence(self, x, y, z, to_update),
                         _ => {}
                     }
                 }

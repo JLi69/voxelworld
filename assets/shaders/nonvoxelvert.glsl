@@ -7,7 +7,6 @@ uniform mat4 persp;
 uniform mat4 view;
 uniform vec3 chunkpos;
 
-flat out uint faceid;
 out vec2 texcoord;
 out vec3 fragpos;
 
@@ -41,7 +40,6 @@ void main() {
 	float y = float(vertdata.y & 0x3Fu) + fy;
 	float z = iz + fz;
 	uint id = vertdata.w;
-	faceid = data.x & 3u;
 	float tcx = float((data.z & 0xFu) | (((data.y >> 6) & 1u) << 4)) / 16.0;
 	float tcy = float(((data.z >> 4) & 0xFu) | (((data.y >> 7) & 1u) << 4)) / 16.0;
 	vec2 tc = vec2(tcx, 1.0 - tcy);

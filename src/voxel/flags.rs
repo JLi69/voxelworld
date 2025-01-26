@@ -84,6 +84,10 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[75] |= FLAT_ITEM;
         VOXEL_FLAGS[75] |= NO_HITBOX;
         VOXEL_FLAGS[75] |= NON_VOXEL;
+        //Fence
+        VOXEL_FLAGS[76] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[76] |= FLAT_ITEM;
+        VOXEL_FLAGS[76] |= NON_VOXEL;
     }
 }
 

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::gfx::buildchunk::{ChunkData, Int3};
 use crate::gfx::models::{CUBE, CUBE_INDICES, CUBE_TEX_INDICES, QUAD_INDICES, TEX_COORDS};
 use crate::voxel::{Block, Chunk};
@@ -67,7 +69,7 @@ fn add_mesh_to_chunk(xyz: Int3, id: u8, vertices: &[Vert], tc: &[Tc], vert_data:
         vert_data.push(verty | (fy1 << 6));
         vert_data.push(vertz | (fz1 << 6));
         vert_data.push(id);
-        vert_data.push(1);
+        vert_data.push(0xff); //Meaningless data
         vert_data.push(fraction | (tcx1 << 6) | (tcy1 << 7));
         vert_data.push((tcy2 << 4) | tcx2);
     }
@@ -216,7 +218,100 @@ fn gen_ladder_vertices(block: Block) -> BlockMesh {
     (ladder_vertices, texcoords)
 }
 
-pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData) {
+fn gen_fence_rail(cube: &[Vert], tc: &[Tc], normals: &[Norm], x: f32, z: f32,  sx: f32, sz: f32) -> BlockMesh {
+    let mut fence_rail = vec![];
+    let top = transform_vertices(cube, |v| {
+        let mut transformed = v;
+        transformed.x *= sx;
+        transformed.y *= 1.0 / 8.0;
+        transformed.z *= sz;
+        transformed += Vert4::new(0.5 + x, 0.5 + 5.0 / 16.0, 0.5 + z, 0.0);
+        transformed
+    });
+    let bot = transform_vertices(cube, |v| {
+        let mut transformed = v;
+        transformed.x *= sx;
+        transformed.y *= 1.0 / 8.0;
+        transformed.z *= sz;
+        transformed += Vert4::new(0.5 + x, 0.5 - 2.0 / 16.0, 0.5 + z, 0.0);
+        transformed
+    });
+    fence_rail.extend(top);
+    fence_rail.extend(bot);
+
+    let mut fence_tc = vec![];
+    let tc = transform_tc(tc, |v, i| {
+        let mut tc = v; 
+        if normals[i].y != 0.0 && sz > sx {
+            tc.x *= 1.0 / 4.0;
+            tc.x += 6.0 / 16.0;
+            tc.y *= sx.max(sz);
+            std::mem::swap(&mut tc.x, &mut tc.y);
+        } else {
+            tc.x *= sx.max(sz);
+            tc.y *= 1.0 / 4.0;
+            tc.y += 6.0 / 16.0;
+        }
+        tc
+    });
+    fence_tc.extend(tc.clone());
+    fence_tc.extend(tc);
+
+    (fence_rail, fence_tc)
+}
+
+fn gen_fence_vertices(block: Block) -> BlockMesh { 
+    let vertices = generate_mesh_vertices(&CUBE, &CUBE_INDICES);
+    let normals = generate_mesh_normals(&vertices);
+    let texcoords = generate_mesh_texcoords(&TEX_COORDS, &CUBE_TEX_INDICES);
+    let mut fence_vertices = transform_vertices(&vertices, |v| {
+        let mut transformed = v;
+        transformed.x *= 1.0 / 4.0;
+        transformed.z *= 1.0 / 4.0;
+        transformed += Vert4::new(0.5, 0.5, 0.5, 0.0);
+        transformed
+    });
+    let mut fence_texcoords = transform_tc(&texcoords, |v, i| {
+        let mut tc = v;
+        if normals[i].y != 0.0 {
+            tc *= 2.0 / 16.0;
+            tc.y += 7.0 / 16.0;
+            tc.x += 6.0 / 16.0;
+            return tc;
+        }
+        tc.x *= 4.0 / 16.0;
+        tc.x += 6.0 / 16.0;
+        tc
+    });
+
+    let (verts, tc) = if block.geometry & 1 << 0 != 0 && block.geometry & 1 << 2 != 0 {
+        gen_fence_rail(&vertices, &texcoords, &normals, 0.0, 0.0, 1.0, 1.0 / 8.0)
+    } else if block.geometry & 1 << 0 != 0 {
+        gen_fence_rail(&vertices, &texcoords, &normals, 0.25, 0.0, 0.5, 1.0 / 8.0)
+    } else if block.geometry & 1 << 2 != 0 {
+        gen_fence_rail(&vertices, &texcoords, &normals, -0.25, 0.0, 0.5, 1.0 / 8.0)
+    } else {
+        (vec![], vec![])
+    };
+    fence_vertices.extend(verts);
+    fence_texcoords.extend(tc);
+
+    let (verts, tc) = if block.geometry & 1 << 1 != 0 && block.geometry & 1 << 3 != 0 {
+        gen_fence_rail(&vertices, &texcoords, &normals, 0.0, 0.0, 1.0 / 8.0, 1.0)
+    } else if block.geometry & 1 << 1 != 0 {
+        gen_fence_rail(&vertices, &texcoords, &normals, 0.0, 0.25, 1.0 / 8.0, 0.5)
+    } else if block.geometry & 1 << 3 != 0 {
+        gen_fence_rail(&vertices, &texcoords, &normals, 0.0, -0.25, 1.0 / 8.0, 0.5)
+    } else {
+        (vec![], vec![])
+    };
+    fence_vertices.extend(verts);
+    fence_texcoords.extend(tc);
+
+    (fence_vertices, fence_texcoords)
+}
+
+pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData, cached_meshes: &mut HashMap<(u8, u8), BlockMesh>) {
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
@@ -224,13 +319,26 @@ pub fn add_nonvoxel_vertices(chunk: &Chunk, xyz: Int3, vert_data: &mut ChunkData
         return;
     }
 
+    let id = match block.id {
+        76 => 6,
+        _ => block.id,
+    };
+
+    let key = (block.id, block.geometry);
+    if let Some((vert, tc)) = cached_meshes.get(&key) {
+        add_mesh_to_chunk(xyz, id, vert, tc, vert_data);
+    }
+
     let (vert, tc) = match block.id {
         //Torch
         71..=74 => gen_torch_vertices(block),
         //Ladder
         75 => gen_ladder_vertices(block),
+        //Fence
+        76 => gen_fence_vertices(block),
         _ => (vec![], vec![]),
-    };
+    }; 
 
-    add_mesh_to_chunk(xyz, block.id, &vert, &tc, vert_data);
+    add_mesh_to_chunk(xyz, id, &vert, &tc, vert_data);
+    cached_meshes.insert(key, (vert, tc));
 }

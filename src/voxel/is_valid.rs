@@ -17,6 +17,10 @@ fn check_torch_valid(world: &World, x: i32, y: i32, z: i32) -> bool {
     let block = world.get_block(x, y, z);
     let dir = orientation_to_normal(block.orientation());
     let adj = world.get_block(x - dir.x, y - dir.y, z - dir.z);
+    //Torches can be placed on top of fences
+    if dir.y != 0 && adj.id == 76 {
+        return true;
+    }
     !(adj.id == EMPTY_BLOCK || adj.transparent() || adj.shape() != 0)
 }
 
