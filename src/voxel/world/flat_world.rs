@@ -14,7 +14,7 @@ fn gen_flat_chunk(chunk: &mut Chunk) {
     let posy = chunkpos.y * CHUNK_SIZE_I32;
     let posz = chunkpos.z * CHUNK_SIZE_I32;
 
-    if chunkpos.y > 1 || chunkpos.y < -2 {
+    if chunkpos.y > 1 || chunkpos.y < -4 {
         return;
     }
 

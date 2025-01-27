@@ -251,7 +251,7 @@ impl World {
         let startx = chunkx * CHUNK_SIZE_I32;
         let starty = chunky * CHUNK_SIZE_I32;
         let startz = chunkz * CHUNK_SIZE_I32;
-        let block_count = fastrand::i32(80..96);
+        let block_count = fastrand::i32(10..12);
         (0..block_count)
             .map(|_| fastrand::i32(0..CHUNK_SIZE_I32.pow(3)))
             .map(|index| {

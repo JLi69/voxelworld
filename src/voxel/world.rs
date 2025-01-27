@@ -195,7 +195,7 @@ impl World {
 
     fn get_max_cache_sz(&self) -> usize {
         let sz = self.range * 2 + 1;
-        ((sz * sz * 8) as usize).max(4096)
+        ((sz * sz * 16) as usize).max(8192)
     }
 
     //If the cache gets too large, attempt to delete some sections

@@ -14,7 +14,7 @@ fn gen_tree_positions(
 ) {
     let xz = [chunkx as f64 / 3.0 + 0.5, 0.0, chunkz as f64 / 3.0 + 0.5];
     let noise_val = (tree_noise.get(xz) + 1.0) / 2.0;
-    let tree_count = (noise_val * noise_val * 24.0).floor() as u32;
+    let tree_count = (noise_val * noise_val * 6.0).floor() as u32;
     let xu32 = chunkx as u32;
     let zu32 = chunkz as u32;
     let seed = ((xu32 as u64) << 32) | (zu32 as u64);
@@ -22,8 +22,10 @@ fn gen_tree_positions(
     let mut rng = fastrand::Rng::with_seed(seed + world_seed as u64);
     let mut generated = HashSet::<(i32, i32)>::new();
     for _ in 0..tree_count {
-        let treex = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
-        let treez = (tree_generator.i32(0..32) + rng.i32(0..32)) % 32;
+        let treex =
+            (tree_generator.i32(0..CHUNK_SIZE_I32) + rng.i32(0..CHUNK_SIZE_I32)) % CHUNK_SIZE_I32;
+        let treez =
+            (tree_generator.i32(0..CHUNK_SIZE_I32) + rng.i32(0..CHUNK_SIZE_I32)) % CHUNK_SIZE_I32;
         if generated.contains(&(treex, treez)) {
             continue;
         }

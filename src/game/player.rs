@@ -201,10 +201,10 @@ impl Player {
     //Translate player object, account for collisions with blocks
     fn translate(&mut self, dt: f32, world: &World) {
         //Move in the xz plane
-        let velocity = if self.is_intersecting(world, 13) {
+        let velocity = if self.is_swimming(world, 13, 1.0) {
             //Slow down in lava
             self.calculate_velocity() * 0.4
-        } else if self.is_intersecting(world, 12) {
+        } else if self.is_swimming(world, 12, 1.0) {
             //Slow down in water
             self.calculate_velocity() * 0.6
         } else {
@@ -218,10 +218,10 @@ impl Player {
         };
 
         let mut dy = dt * self.velocity_y;
-        if self.is_intersecting(world, 13) {
+        if self.is_swimming(world, 13, 1.0) {
             //Slow down in lava
             dy *= 0.4;
-        } else if self.is_intersecting(world, 12) {
+        } else if self.is_swimming(world, 12, 1.0) {
             //Slow down in water
             dy *= 0.5;
         }

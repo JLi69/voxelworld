@@ -21,7 +21,7 @@ impl Player {
 
     //Swim up in the y direction
     pub fn swim(&mut self, swim_key: KeyState, world: &World) {
-        let swimming = self.is_intersecting(world, 12) || self.is_intersecting(world, 13);
+        let swimming = self.is_swimming(world, 12, 1.0) || self.is_swimming(world, 13, 1.0);
         if (!self.can_move_in_x(world) || !self.can_move_in_z(world))
             && swimming
             && swim_key == KeyState::Held

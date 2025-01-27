@@ -39,9 +39,9 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     //Update hand animation
     gamestate.update_hand_animation(dt);
     //Update blocks
-    gamestate.world.update_sim_range(1);
-    gamestate.world.update_blocks(dt, chunktables, 1);
-    gamestate.world.rand_block_update(dt, Some(chunktables), 1);
+    gamestate.world.update_sim_range(3);
+    gamestate.world.update_blocks(dt, chunktables, 3);
+    gamestate.world.rand_block_update(dt, Some(chunktables), 3);
 
     //Generate new chunks
     gamestate.world.clean_cache();

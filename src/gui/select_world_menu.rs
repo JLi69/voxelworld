@@ -50,6 +50,7 @@ impl SelectWorldMenuState {
                 eprintln!("{msg}");
             }
         }
+        self.worlds.sort();
     }
 }
 

@@ -180,7 +180,7 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     let posy = chunkpos.y * CHUNK_SIZE_I32;
     let posz = chunkpos.z * CHUNK_SIZE_I32;
 
-    if chunkpos.y < -2 || chunkpos.y > 2 {
+    if chunkpos.y < -4 || chunkpos.y > 4 {
         return;
     }
 
@@ -194,12 +194,12 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
             let height = gen_info.heights[index];
+            let h = (height + 1).max(SEA_LEVEL + 1);
 
-            if height < posy {
+            if h < posy {
                 continue;
             }
 
-            let h = (height + 1).max(SEA_LEVEL + 1);
             for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
                 let indestructible = (y == BOTTOM_OF_WORLD)
                     || (y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2)
@@ -212,7 +212,9 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
 
                 if y > BOTTOM_OF_WORLD && y <= LAVA_LEVEL {
                     chunk.set_block(x, y, z, Block::new_fluid(13));
-                } else if y <= SEA_LEVEL && y > height {
+                }
+
+                if y <= SEA_LEVEL && y > height {
                     chunk.set_block(x, y, z, Block::new_fluid(12));
                 }
 
