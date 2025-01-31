@@ -227,6 +227,17 @@ fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
             add_water_tile(px, py, pz, block.geometry, block.id, to_update);
         }
     } else if !update_list.is_empty() {
+        let mut updated = false;
+        for ((x, y, z), block) in update_list {
+            if world.get_block(x, y, z) != block {
+                updated = true;
+            }
+        }
+
+        if !updated {
+            return;
+        }
+
         let mut block2 = world.get_block(x, y, z);
         block2.geometry |= 1 << 7;
         to_update.insert((x, y, z), block2);
@@ -308,7 +319,7 @@ impl World {
                         //Farmland
                         43 | 45 => update_farmland(self, x, y, z, to_update),
                         //Plants, torches, ladders
-                        47..=56 | 69 | 71..=75 => update_plant(self, x, y, z, block.id, to_update),
+                        47..=56 | 69 | 71..=75 | 77 => update_plant(self, x, y, z, block.id, to_update),
                         //Fence
                         76 => update_fence(self, x, y, z, to_update),
                         _ => {}

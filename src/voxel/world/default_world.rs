@@ -324,30 +324,44 @@ impl World {
         let start = std::time::Instant::now();
         for (chunkx, chunky, chunkz) in &to_generate {
             let pos = (*chunkx, *chunky, *chunkz);
-            if self.chunk_cache.contains_key(&pos) {
-                let new_chunk = self.chunk_cache.get(&pos);
-                if let Some(new_chunk) = new_chunk {
-                    self.chunks.insert(pos, new_chunk.clone());
-                    self.chunk_cache.remove(&pos);
-                }
-                continue;
+            if let Some(new_chunk) = self.chunk_cache.get(&pos) {
+                self.chunks.insert(pos, new_chunk.clone());
+                self.chunk_cache.remove(&pos);
             } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) {
                 self.chunks.insert(pos, chunk);
+            }
+        }
+        eprintln!(
+            "Took {} ms to load chunks",
+            start.elapsed().as_millis()
+        );
+
+        let start = std::time::Instant::now();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&pos) {
                 continue;
             }
-
             gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
             gen_info_table.add_sugarcane(*chunkx, *chunkz);
         }
+        eprintln!(
+            "Took {} ms to generate chunk info",
+            start.elapsed().as_millis()
+        );
 
+        let start = std::time::Instant::now();
         let generated = ArrayQueue::new(to_generate.len());
+        let mut generated_count = 0;
         thread::scope(|s| {
             for (chunkx, chunky, chunkz) in &to_generate {
                 if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
                     continue;
                 }
+
+                generated_count += 1;
 
                 s.spawn(|_| {
                     let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
@@ -371,8 +385,8 @@ impl World {
         }
 
         eprintln!(
-            "Took {} ms to generate new chunks",
-            start.elapsed().as_millis()
+            "Took {} ms to generate {generated_count} new chunks",
+            start.elapsed().as_millis() 
         );
 
         //Set the center position

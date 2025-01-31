@@ -41,7 +41,7 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
             !below.transparent() && below.id != EMPTY_BLOCK
         }),
         //Wheat
-        50..=53 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45])),
+        50..=53 | 77 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45])),
         //Sugar cane
         69 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17, 69])),
         //Torches and ladders

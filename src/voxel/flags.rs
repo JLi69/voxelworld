@@ -90,6 +90,11 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[76] |= TRANSPARENT_FLAG;
         VOXEL_FLAGS[76] |= FLAT_ITEM;
         VOXEL_FLAGS[76] |= NON_VOXEL;
+        //Seeds
+        VOXEL_FLAGS[77] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[77] |= FLAT_ITEM;
+        VOXEL_FLAGS[77] |= NO_HITBOX;
+        VOXEL_FLAGS[77] |= NON_VOXEL;
     }
 }
 

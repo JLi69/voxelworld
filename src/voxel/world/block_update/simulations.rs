@@ -15,7 +15,7 @@ fn simulate_wheat_growth(iterations: i32) -> f32 {
         let mut total_time = 0.0;
         for x in 0..9 {
             for z in 0..9 {
-                world.set_block(x, 0, z, Block::new_id(50));
+                world.set_block(x, 0, z, Block::new_id(77));
                 world.set_block(x, -1, z, Block::new_id(43));
             }
         }
