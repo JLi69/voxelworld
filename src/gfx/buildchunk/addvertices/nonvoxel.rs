@@ -326,7 +326,7 @@ fn gen_seed_vertices(_block: Block) -> BlockMesh {
         let mut transformed = v;
         transformed = Matrix4::from_angle_x(Deg(90.0)) * transformed;
         transformed = Matrix4::from_angle_x(Deg(90.0)) * transformed;
-        transformed.y -= 15.0 / 16.0; 
+        transformed.y -= 15.0 / 16.0;
         transformed += Vert4::new(0.5, 0.5, 0.5, 0.0);
         transformed
     });

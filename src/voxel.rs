@@ -3,6 +3,7 @@ pub mod chunk;
 pub mod coordinates;
 pub mod flags;
 pub mod is_valid;
+pub mod region;
 pub mod world;
 
 pub use self::build::{destroy_block, place_block};

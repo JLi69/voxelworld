@@ -156,7 +156,7 @@ impl Game {
 
     pub fn reset(&mut self) {
         self.cam = Camera::new(0.0, 1.7, 0.0);
-        self.player = Player::new(15.5, 0.0, 15.5);
+        self.player = Player::new(7.5, 0.0, 7.5);
         self.build_cooldown = 0.0;
         self.destroy_cooldown = 0.0;
         self.paused = false;
@@ -166,7 +166,7 @@ impl Game {
     //Initialize game state
     pub fn init(&mut self) {
         self.cam = Camera::new(0.0, 1.7, 0.0);
-        self.player = Player::new(15.5, 0.9, 15.5);
+        self.player = Player::new(7.5, 0.9, 7.5);
         self.mousex = 0.0;
         self.mousey = 0.0;
     }

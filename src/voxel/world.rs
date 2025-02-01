@@ -4,7 +4,10 @@ mod flat_world;
 mod gen_more;
 mod save;
 
-use super::{world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32};
+use super::{
+    region::{chunkpos_to_regionpos, get_region_chunks, get_region_chunks_remove, Region},
+    world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32,
+};
 use crate::gfx::ChunkTables;
 use cgmath::Vector3;
 use noise::{Fbm, Perlin};
@@ -71,7 +74,7 @@ pub struct World {
     //Chunks that experienced block update and need to be saved
     to_save: HashSet<(i32, i32, i32)>,
     //Chunks that are to be removed from cache and need to be saved
-    removed_from_cache: Vec<Chunk>,
+    removed_from_cache: Vec<Region>,
 }
 
 impl World {
@@ -195,46 +198,73 @@ impl World {
 
     fn get_max_cache_sz(&self) -> usize {
         let sz = self.range * 2 + 1;
-        ((sz * sz * 16) as usize).max(8192)
+        (sz * sz * 40) as usize
     }
 
     //If the cache gets too large, attempt to delete some sections
     pub fn clean_cache(&mut self) {
         if !self.removed_from_cache.is_empty() {
             eprintln!("Cleaning cache...");
-            eprintln!(
-                "Chunks left to save: {} | Chunk cache size: {}",
-                self.removed_from_cache.len(),
-                self.chunk_cache.len()
-            );
+            eprintln!("Regions left to save: {}", self.removed_from_cache.len());
         }
 
+        //Keep track of the loaded regions
+        let mut active_regions = HashSet::new();
+        for (x, y, z) in self.chunks.keys() {
+            let regionpos = chunkpos_to_regionpos(*x, *y, *z);
+            active_regions.insert(regionpos);
+        }
+
+        //Remove regions and save them to the harddrive
         let mut time_passed = 0.0;
         let start = std::time::Instant::now();
         while !self.removed_from_cache.is_empty() && time_passed < 0.0005 {
-            let chunk_to_save = self.removed_from_cache.last();
-            if let Some(chunk) = chunk_to_save {
-                save::save_chunk(chunk, &self.path);
+            let region_to_save = self.removed_from_cache.last();
+            if let Some(region_to_save) = region_to_save {
+                save::save_region(region_to_save, &self.path);
                 self.removed_from_cache.pop();
             }
             let now = std::time::Instant::now();
             time_passed = (now - start).as_secs_f32();
         }
 
-        let max_cache_sz = self.get_max_cache_sz();
-        if self.chunk_cache.len() <= max_cache_sz {
+        //If we have not hit our maximum cache size, then don't bother attempting
+        //to remove anything
+        if self.chunk_cache.len() <= self.get_max_cache_sz() {
             return;
         }
 
-        while self.chunk_cache.len() > max_cache_sz / 2 {
-            let to_delete = self.chunk_cache.keys().next().copied();
-            if let Some(pos) = to_delete {
-                if let Some(chunk) = self.chunk_cache.get(&pos) {
-                    self.removed_from_cache.push(chunk.clone());
-                    self.chunk_cache.remove(&pos);
-                }
+        //Figure out which regions to remove
+        let mut removed_regions = HashSet::new();
+        let mut removed_count = 0;
+        for (x, y, z) in self.chunk_cache.keys() {
+            //Calculate the region position
+            let regionpos = chunkpos_to_regionpos(*x, *y, *z);
+            //If the region is loaded, do not attempt to remove it
+            if active_regions.contains(&regionpos) {
+                continue;
+            }
+            removed_regions.insert(regionpos);
+            removed_count += 1;
+            //Once we have removed half of the regions, we are done
+            if removed_count >= self.get_max_cache_sz() / 2 {
+                break;
             }
         }
+
+        eprintln!("Starting cache size: {}", self.chunk_cache.len());
+        //Generate region data and save it into the removed_from_cache list to
+        //be saved to the disk later
+        for (rx, ry, rz) in removed_regions {
+            let mut region = Region::new(rx, ry, rz);
+            //This should not run
+            get_region_chunks(&mut region, &self.chunks);
+            //This will take chunks from the cache and add it to the region
+            //while also removing those chunks from the cache.
+            get_region_chunks_remove(&mut region, &mut self.chunk_cache);
+            self.removed_from_cache.push(region);
+        }
+        eprintln!("Final cache size: {}", self.chunk_cache.len());
     }
 
     //When a chunk gets unloaded, add it to a cache in case it needs to be reloaded

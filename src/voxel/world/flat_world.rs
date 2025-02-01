@@ -1,10 +1,15 @@
+use std::collections::HashSet;
+
 use super::{
     gen_more::{find_in_range, get_chunks_to_generate, update_chunk_tables},
     World,
 };
 use crate::{
     gfx::ChunkTables,
-    voxel::{Block, Chunk, CHUNK_SIZE_F32, CHUNK_SIZE_I32, INDESTRUCTIBLE},
+    voxel::{
+        region::{chunkpos_to_regionpos, Region},
+        Block, Chunk, CHUNK_SIZE_F32, CHUNK_SIZE_I32, INDESTRUCTIBLE,
+    },
 };
 use cgmath::Vector3;
 
@@ -64,7 +69,11 @@ impl World {
         //Delete old chunks
         self.delete_out_of_range(&out_of_range);
 
-        //Generate new chunks
+        //Set the center position
+        self.centerx = x;
+        self.centery = y;
+        self.centerz = z;
+        //Load chunks from cache
         for (chunkx, chunky, chunkz) in &to_generate {
             let pos = (*chunkx, *chunky, *chunkz);
             if self.chunk_cache.contains_key(&pos) {
@@ -73,21 +82,36 @@ impl World {
                     self.chunks.insert(pos, new_chunk.clone());
                     self.chunk_cache.remove(&pos);
                 }
-                continue;
-            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) {
-                self.chunks.insert(pos, chunk);
+            }
+        }
+
+        //Load chunks from filesystem
+        let mut loaded = HashSet::new();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
                 continue;
             }
 
+            let (rx, ry, rz) = chunkpos_to_regionpos(*chunkx, *chunky, *chunkz);
+            if !loaded.contains(&(rx, ry, rz)) {
+                if let Some(region) = Region::load_region(&self.path, rx, ry, rz) {
+                    self.add_region(region);
+                    loaded.insert((rx, ry, rz));
+                    continue;
+                }
+            }
+        }
+
+        //Generate new chunks
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&pos) {
+                continue;
+            }
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             gen_flat_chunk(&mut new_chunk);
             self.chunks.insert(pos, new_chunk);
         }
-
-        //Set the center position
-        self.centerx = x;
-        self.centery = y;
-        self.centerz = z;
 
         update_chunk_tables(
             chunktables,

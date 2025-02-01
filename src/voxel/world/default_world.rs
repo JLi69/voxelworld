@@ -13,14 +13,16 @@ use self::{
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
 };
 use crossbeam::{queue::ArrayQueue, thread};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use super::{
     gen_more::{find_in_range, get_chunks_to_generate},
     World, WorldGenerator,
 };
 use crate::voxel::{
-    world::gen_more::update_chunk_tables, Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE,
+    region::{chunkpos_to_regionpos, Region},
+    world::gen_more::update_chunk_tables,
+    Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE,
 };
 use crate::{gfx::ChunkTables, voxel::CHUNK_SIZE_I32};
 use cgmath::Vector3;
@@ -319,27 +321,59 @@ impl World {
         //Delete old chunks
         self.delete_out_of_range(&out_of_range);
 
-        let mut gen_info_table = GenInfoTable::new();
-        //Generate new chunks
+        //Set the center position
+        self.centerx = x;
+        self.centery = y;
+        self.centerz = z;
+
+        //Load chunks from cache
         let start = std::time::Instant::now();
         for (chunkx, chunky, chunkz) in &to_generate {
             let pos = (*chunkx, *chunky, *chunkz);
             if let Some(new_chunk) = self.chunk_cache.get(&pos) {
                 self.chunks.insert(pos, new_chunk.clone());
                 self.chunk_cache.remove(&pos);
-            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) {
-                self.chunks.insert(pos, chunk);
             }
         }
         eprintln!(
-            "Took {} ms to load chunks",
+            "Took {} ms to load chunks from cache",
             start.elapsed().as_millis()
         );
 
+        //Load regions from file system
+        let start = std::time::Instant::now();
+        let mut regions_loaded = 0;
+        let mut loaded = HashSet::new();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let (rx, ry, rz) = chunkpos_to_regionpos(*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
+                continue;
+            }
+
+            if loaded.contains(&(rx, ry, rz)) {
+                continue;
+            }
+            loaded.insert((rx, ry, rz));
+
+            if let Some(region) = Region::load_region(&self.path, rx, ry, rz) {
+                regions_loaded += 1;
+                self.add_region(region);
+            }
+        }
+        eprintln!(
+            "Took {} ms to load {regions_loaded} regions from filesystem",
+            start.elapsed().as_millis()
+        );
+
+        //Generate new chunks
+        let mut gen_info_table = GenInfoTable::new();
         let start = std::time::Instant::now();
         for (chunkx, chunky, chunkz) in &to_generate {
             let pos = (*chunkx, *chunky, *chunkz);
             if self.chunks.contains_key(&pos) {
+                continue;
+            }
+            if *chunky < -4 || *chunky > 4 {
                 continue;
             }
             gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
@@ -383,16 +417,10 @@ impl World {
             let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
             self.chunks.insert(pos, chunk);
         }
-
         eprintln!(
             "Took {} ms to generate {generated_count} new chunks",
-            start.elapsed().as_millis() 
+            start.elapsed().as_millis()
         );
-
-        //Set the center position
-        self.centerx = x;
-        self.centery = y;
-        self.centerz = z;
 
         update_chunk_tables(
             chunktables,

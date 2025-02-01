@@ -319,7 +319,9 @@ impl World {
                         //Farmland
                         43 | 45 => update_farmland(self, x, y, z, to_update),
                         //Plants, torches, ladders
-                        47..=56 | 69 | 71..=75 | 77 => update_plant(self, x, y, z, block.id, to_update),
+                        47..=56 | 69 | 71..=75 | 77 => {
+                            update_plant(self, x, y, z, block.id, to_update)
+                        }
                         //Fence
                         76 => update_fence(self, x, y, z, to_update),
                         _ => {}
