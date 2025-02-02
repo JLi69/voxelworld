@@ -5,10 +5,11 @@ mod inventory;
 use super::ChunkTables;
 use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
+use crate::game::physics::Hitbox;
 use crate::voxel;
 use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
-use cgmath::{Matrix4, SquareMatrix, Vector3};
+use cgmath::{Matrix4, SquareMatrix};
 pub use hand::display_hand_item;
 pub use inventory::display_hotbar;
 
@@ -24,13 +25,19 @@ pub fn display_selected_outline(gamestate: &Game) {
     let dir = gamestate.cam.forward();
     let (x, y, z, axis) = voxel::build::raycast(pos, dir, BLOCK_REACH, &gamestate.world);
     let (ix, iy, iz) = voxel::build::get_raycast_voxel(x, y, z, dir, axis);
-    let (fx, fy, fz) = (ix as f32 + 0.5, iy as f32 + 0.5, iz as f32 + 0.5);
-    let selectedv = Vector3::<f32>::new(fx, fy, fz);
+    let block = gamestate.world.get_block(ix, iy, iz);
+    let bbox = Hitbox::from_block_bbox(ix, iy, iz, block);
 
     let mut transform: Matrix4<f32> = cgmath::Matrix4::identity();
-    transform = transform * Matrix4::from_translation(selectedv);
-    transform = transform * Matrix4::from_scale(1.001);
+    transform = transform * Matrix4::from_translation(bbox.position);
+    let (sx, sy, sz) = (
+        bbox.dimensions.x * 1.005,
+        bbox.dimensions.y * 1.005,
+        bbox.dimensions.z * 1.005,
+    );
+    transform = transform * Matrix4::from_nonuniform_scale(sx, sy, sz);
     outlineshader.uniform_matrix4f("transform", &transform);
+    outlineshader.uniform_vec3f("scale", sx, sy, sz);
     if gamestate.world.get_block(ix, iy, iz).id != EMPTY_BLOCK
         && !gamestate.world.get_block(ix, iy, iz).is_fluid()
     {

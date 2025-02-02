@@ -138,6 +138,90 @@ impl Hitbox {
         }
     }
 
+    fn from_block_orientation(x: i32, y: i32, z: i32, sz: f32, block: Block) -> Self {
+        let fx = x as f32 + 0.5;
+        let fy = y as f32 + 0.5;
+        let fz = z as f32 + 0.5;
+        let norm = orientation_to_normal(block.orientation());
+        Self::new(
+            fx - norm.x as f32 * sz / 2.0,
+            fy - norm.y as f32 * sz / 2.0,
+            fz - norm.z as f32 * sz / 2.0,
+            1.0 - norm.x.abs() as f32 * sz,
+            1.0 - norm.y.abs() as f32 * sz,
+            1.0 - norm.z.abs() as f32 * sz,
+        )
+    }
+
+    //Returns a block's bounding box
+    pub fn from_block_bbox(x: i32, y: i32, z: i32, block: Block) -> Self {
+        let fx = x as f32 + 0.5;
+        let fy = y as f32 + 0.5;
+        let fz = z as f32 + 0.5;
+        match block.id {
+            //Ladder and seeds
+            75 | 77 => Self::from_block_orientation(x, y, z, 0.9, block),
+            //Wheat
+            50..=52 => {
+                let sz = 1.0 / 16.0 * 2.0f32.powi(block.id as i32 - 50 + 1);
+                let mut bbox = Self::from_block_orientation(x, y, z, 1.0 - sz, block);
+                bbox.dimensions.x *= 0.8;
+                bbox.dimensions.z *= 0.8;
+                bbox
+            }
+            //Fully grown wheat, sapling, grass
+            47 | 49 | 53 => {
+                let sz = 15.0 / 16.0;
+                let mut bbox = Self::from_block_orientation(x, y, z, 1.0 - sz, block);
+                bbox.dimensions.x *= 0.8;
+                bbox.dimensions.z *= 0.8;
+                bbox
+            }
+            //Mushroom, flowers
+            48 | 55 => {
+                let mut bbox = Self::from_block_orientation(x, y, z, 0.5, block);
+                bbox.dimensions.x *= 0.3;
+                bbox.dimensions.z *= 0.3;
+                bbox
+            }
+            54 | 56 => {
+                let mut bbox = Self::from_block_orientation(x, y, z, 0.2, block);
+                bbox.dimensions.x *= 0.3;
+                bbox.dimensions.z *= 0.3;
+                bbox
+            }
+            //Sugar cane
+            69 => Self::new(fx, fy, fz, 0.8, 1.0, 0.8),
+            //Torches
+            71..=74 => {
+                match block.orientation() {
+                    0 | 3 => {
+                        let mut bbox = Self::from_block_orientation(x, y, z, 5.5 / 16.0, block);
+                        bbox.dimensions.x *= 3.0 / 16.0;
+                        bbox.dimensions.z *= 3.0 / 16.0;
+                        bbox
+                    }
+                    1 | 4 => {
+                        let mut bbox = Self::from_block_orientation(x, y, z, 10.0 / 16.0, block);
+                        bbox.dimensions.y *= 10.5 / 16.0;
+                        bbox.dimensions.z *= 4.0 / 16.0;
+                        bbox
+                    }
+                    2 | 5 => {
+                        let mut bbox = Self::from_block_orientation(x, y, z, 10.0 / 16.0, block);
+                        bbox.dimensions.y *= 10.5 / 16.0;
+                        bbox.dimensions.x *= 4.0 / 16.0;
+                        bbox
+                    }
+                    _ => Self::from_block(x, y, z),
+                }
+            }
+            //Fence
+            76 => Self::new(fx, fy, fz, 0.5, 1.0, 0.5),
+            _ => composite_to_bbox(Hitbox::from_block_data(x, y, z, block))
+        } 
+    }
+
     //Create a hitbox from Vector3, we assume that size has positive dimensions
     pub fn from_vecs(pos: Vector3<f32>, size: Vector3<f32>) -> Self {
         assert!(size.x > 0.0);
@@ -177,6 +261,45 @@ pub fn composite_to_hitbox(composite_hitbox: CompositeHitbox, hitbox: &Hitbox) -
             } else {
                 b1
             }
+        }
+    }
+}
+
+//Converts a composite hitbox into a bounding box
+pub fn composite_to_bbox(composite_hitbox: CompositeHitbox) -> Hitbox {
+    match composite_hitbox {
+        CompositeHitbox::Single(b) => b,
+        CompositeHitbox::Double(b1, b2) => {
+            let minx = b1.position.x.min(b2.position.x);
+            let miny = b1.position.y.min(b2.position.y);
+            let minz = b1.position.z.min(b2.position.z);
+            let maxx = b1.position.x.max(b2.position.x);
+            let maxy = b1.position.y.max(b2.position.y);
+            let maxz = b1.position.z.max(b2.position.z);
+            Hitbox::new(
+                (minx + maxx) / 2.0,
+                (miny + maxy) / 2.0,
+                (minz + maxz) / 2.0,
+                maxx - minx,
+                maxy - miny,
+                maxz - minz,
+            )
+        }
+        CompositeHitbox::Triple(b1, b2, b3) => {
+            let minx = b1.position.x.min(b2.position.x).min(b3.position.x);
+            let miny = b1.position.y.min(b2.position.y).min(b3.position.y);
+            let minz = b1.position.z.min(b2.position.z).min(b3.position.z);
+            let maxx = b1.position.x.max(b2.position.x).min(b3.position.x);
+            let maxy = b1.position.y.max(b2.position.y).min(b3.position.y);
+            let maxz = b1.position.z.max(b2.position.z).min(b3.position.z);
+            Hitbox::new(
+                (minx + maxx) / 2.0,
+                (miny + maxy) / 2.0,
+                (minz + maxz) / 2.0,
+                maxx - minx,
+                maxy - miny,
+                maxz - minz,
+            )
         }
     }
 }

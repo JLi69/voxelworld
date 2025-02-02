@@ -8,16 +8,20 @@ in vec3 fragpos;
 uniform vec4 incolor;
 uniform float outlinesz;
 out vec4 color;
+uniform vec3 scale;
+in vec3 untransformedpos;
+in float z;
 
-bool atEdge(float x) {
-	return fract(x) < outlinesz || fract(x) > 1.0 - outlinesz;
+bool atEdge(float x, float s) {
+	float depth = min(z, 1.0);
+	return fract(x) < outlinesz * depth / s || fract(x) > 1.0 - outlinesz * depth / s;
 }
 
 bool outline() {
 	return 
-		(atEdge(fragpos.x) || atEdge(fragpos.y)) &&
-		(atEdge(fragpos.x) || atEdge(fragpos.z)) &&
-		(atEdge(fragpos.y) || atEdge(fragpos.z));
+		(atEdge(untransformedpos.x, scale.x) || atEdge(untransformedpos.y, scale.y)) &&
+		(atEdge(untransformedpos.x, scale.x) || atEdge(untransformedpos.z, scale.z)) &&
+		(atEdge(untransformedpos.y, scale.y) || atEdge(untransformedpos.z, scale.z));
 }
 
 void main() {

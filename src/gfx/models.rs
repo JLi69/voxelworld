@@ -158,7 +158,7 @@ pub fn gen_cube_vao() -> Vao {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, cube_vao.buffers[1]);
         gl::BufferData(
             gl::ELEMENT_ARRAY_BUFFER,
-            (CUBE_INDICES.len() * size_of::<f32>()) as isize,
+            (CUBE_INDICES.len() * size_of::<u32>()) as isize,
             &CUBE_INDICES[0] as *const u32 as *const c_void,
             gl::STATIC_DRAW,
         );
@@ -200,7 +200,7 @@ pub fn gen_quad2d_vao() -> Vao {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, quad_vao.buffers[1]);
         gl::BufferData(
             gl::ELEMENT_ARRAY_BUFFER,
-            (QUAD_2D_INDICES.len() * size_of::<f32>()) as isize,
+            (QUAD_2D_INDICES.len() * size_of::<u32>()) as isize,
             &QUAD_2D_INDICES[0] as *const u32 as *const c_void,
             gl::STATIC_DRAW,
         );

@@ -73,6 +73,11 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         chunktables
             .non_voxel_vaos
             .display_chunks(gamestate, "nonvoxel");
+
+        unsafe {
+            gl::Enable(gl::POLYGON_OFFSET_FILL);
+            gl::PolygonOffset(-1.0, -1.0);
+        }
         let fluid_shader = gamestate.shaders.get("fluid");
         fluid_shader.use_program();
         fluid_shader.uniform_float("timepassed", time_passed);
@@ -88,6 +93,10 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             w,
             h,
         );
+        unsafe {
+            gl::Disable(gl::POLYGON_OFFSET_FILL);
+            gl::PolygonOffset(0.0, 0.0);
+        }
 
         display::display_hud(gamestate, w, h);
         //Display gui
