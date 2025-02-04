@@ -160,7 +160,14 @@ impl Hitbox {
         let fz = z as f32 + 0.5;
         match block.id {
             //Ladder and seeds
-            75 | 77 => Self::from_block_orientation(x, y, z, 0.9, block),
+            75 => Self::from_block_orientation(x, y, z, 0.9, block),
+            //Seeds
+            77 => {
+                let mut bbox = Self::from_block_orientation(x, y, z, 0.9, block);
+                bbox.dimensions.x *= 0.8;
+                bbox.dimensions.z *= 0.8;
+                bbox
+            }
             //Wheat
             50..=52 => {
                 let sz = 1.0 / 16.0 * 2.0f32.powi(block.id as i32 - 50 + 1);
@@ -193,33 +200,31 @@ impl Hitbox {
             //Sugar cane
             69 => Self::new(fx, fy, fz, 0.8, 1.0, 0.8),
             //Torches
-            71..=74 => {
-                match block.orientation() {
-                    0 | 3 => {
-                        let mut bbox = Self::from_block_orientation(x, y, z, 5.5 / 16.0, block);
-                        bbox.dimensions.x *= 3.0 / 16.0;
-                        bbox.dimensions.z *= 3.0 / 16.0;
-                        bbox
-                    }
-                    1 | 4 => {
-                        let mut bbox = Self::from_block_orientation(x, y, z, 10.0 / 16.0, block);
-                        bbox.dimensions.y *= 10.5 / 16.0;
-                        bbox.dimensions.z *= 4.0 / 16.0;
-                        bbox
-                    }
-                    2 | 5 => {
-                        let mut bbox = Self::from_block_orientation(x, y, z, 10.0 / 16.0, block);
-                        bbox.dimensions.y *= 10.5 / 16.0;
-                        bbox.dimensions.x *= 4.0 / 16.0;
-                        bbox
-                    }
-                    _ => Self::from_block(x, y, z),
+            71..=74 => match block.orientation() {
+                0 | 3 => {
+                    let mut bbox = Self::from_block_orientation(x, y, z, 5.5 / 16.0, block);
+                    bbox.dimensions.x *= 3.0 / 16.0;
+                    bbox.dimensions.z *= 3.0 / 16.0;
+                    bbox
                 }
-            }
+                1 | 4 => {
+                    let mut bbox = Self::from_block_orientation(x, y, z, 10.0 / 16.0, block);
+                    bbox.dimensions.y *= 10.5 / 16.0;
+                    bbox.dimensions.z *= 4.0 / 16.0;
+                    bbox
+                }
+                2 | 5 => {
+                    let mut bbox = Self::from_block_orientation(x, y, z, 10.0 / 16.0, block);
+                    bbox.dimensions.y *= 10.5 / 16.0;
+                    bbox.dimensions.x *= 4.0 / 16.0;
+                    bbox
+                }
+                _ => Self::from_block(x, y, z),
+            },
             //Fence
             76 => Self::new(fx, fy, fz, 0.5, 1.0, 0.5),
-            _ => composite_to_bbox(Hitbox::from_block_data(x, y, z, block))
-        } 
+            _ => composite_to_bbox(Hitbox::from_block_data(x, y, z, block)),
+        }
     }
 
     //Create a hitbox from Vector3, we assume that size has positive dimensions
@@ -240,6 +245,14 @@ impl Hitbox {
                 < (self.dimensions.y + other.dimensions.y) / 2.0
             && (self.position.z - other.position.z).abs()
                 < (self.dimensions.z + other.dimensions.z) / 2.0
+    }
+
+    pub fn min(&self) -> Vector3<f32> {
+        self.position - self.dimensions
+    }
+
+    pub fn max(&self) -> Vector3<f32> {
+        self.position + self.dimensions
     }
 }
 
@@ -270,35 +283,35 @@ pub fn composite_to_bbox(composite_hitbox: CompositeHitbox) -> Hitbox {
     match composite_hitbox {
         CompositeHitbox::Single(b) => b,
         CompositeHitbox::Double(b1, b2) => {
-            let minx = b1.position.x.min(b2.position.x);
-            let miny = b1.position.y.min(b2.position.y);
-            let minz = b1.position.z.min(b2.position.z);
-            let maxx = b1.position.x.max(b2.position.x);
-            let maxy = b1.position.y.max(b2.position.y);
-            let maxz = b1.position.z.max(b2.position.z);
+            let minx = b1.min().x.min(b2.min().x);
+            let miny = b1.min().y.min(b2.min().y);
+            let minz = b1.min().z.min(b2.min().z);
+            let maxx = b1.max().x.max(b2.max().x);
+            let maxy = b1.max().y.max(b2.max().y);
+            let maxz = b1.max().z.max(b2.max().z);
             Hitbox::new(
                 (minx + maxx) / 2.0,
                 (miny + maxy) / 2.0,
                 (minz + maxz) / 2.0,
-                maxx - minx,
-                maxy - miny,
-                maxz - minz,
+                (maxx - minx) / 2.0,
+                (maxy - miny) / 2.0,
+                (maxz - minz) / 2.0,
             )
         }
         CompositeHitbox::Triple(b1, b2, b3) => {
-            let minx = b1.position.x.min(b2.position.x).min(b3.position.x);
-            let miny = b1.position.y.min(b2.position.y).min(b3.position.y);
-            let minz = b1.position.z.min(b2.position.z).min(b3.position.z);
-            let maxx = b1.position.x.max(b2.position.x).min(b3.position.x);
-            let maxy = b1.position.y.max(b2.position.y).min(b3.position.y);
-            let maxz = b1.position.z.max(b2.position.z).min(b3.position.z);
+            let minx = b1.min().x.min(b2.min().x).min(b3.min().x);
+            let miny = b1.min().y.min(b2.min().y).min(b3.min().y);
+            let minz = b1.min().z.min(b2.min().z).min(b3.min().z);
+            let maxx = b1.max().x.max(b2.max().x).max(b3.max().x);
+            let maxy = b1.max().y.max(b2.max().y).max(b3.max().y);
+            let maxz = b1.max().z.max(b2.max().z).max(b3.max().z);
             Hitbox::new(
                 (minx + maxx) / 2.0,
                 (miny + maxy) / 2.0,
                 (minz + maxz) / 2.0,
-                maxx - minx,
-                maxy - miny,
-                maxz - minz,
+                (maxx - minx) / 2.0,
+                (maxy - miny) / 2.0,
+                (maxz - minz) / 2.0,
             )
         }
     }
@@ -410,4 +423,32 @@ pub fn get_block_collision(world: &World, hitbox: &Hitbox) -> Option<Hitbox> {
     }
 
     hit
+}
+
+pub fn least_dist(pos: Vector3<f32>, hitbox: &Hitbox) -> f32 {
+    let maxpoint = hitbox.position + hitbox.dimensions / 2.0;
+    let minpoint = hitbox.position - hitbox.dimensions / 2.0;
+    let dx = (pos.x - maxpoint.x).max(minpoint.x - pos.x).max(0.0);
+    let dy = (pos.y - maxpoint.y).max(minpoint.y - pos.y).max(0.0);
+    let dz = (pos.z - maxpoint.z).max(minpoint.z - pos.z).max(0.0);
+    (dx * dx + dy * dy + dz * dz).sqrt()
+}
+
+//This function uses ray marching to determine if a ray starting from a position
+//going in a direction intersects a hitbox
+pub fn ray_intersects_box(pos: Vector3<f32>, dir: Vector3<f32>, hitbox: &Hitbox) -> bool {
+    if dir.magnitude() == 0.0 {
+        return false;
+    }
+
+    let mut current_pos = pos;
+    let mut dist = least_dist(current_pos, hitbox);
+    let mut min_dist = least_dist(current_pos, hitbox);
+    while min_dist >= dist && dist > 0.01 {
+        current_pos += dir.normalize() * dist;
+        min_dist = min_dist.min(least_dist(current_pos, hitbox));
+        dist = least_dist(current_pos, hitbox);
+    }
+
+    dist <= 0.01
 }

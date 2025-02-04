@@ -2,7 +2,7 @@ use super::is_valid::get_check_valid_fn;
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::inventory::Item;
-use crate::game::physics::{composite_to_hitbox, Hitbox};
+use crate::game::physics::{composite_to_hitbox, ray_intersects_box, CompositeHitbox, Hitbox};
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
 
@@ -35,6 +35,37 @@ pub fn get_raycast_voxel(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis) 
     }
 }
 
+fn ray_intersects_block(
+    pos: Vector3<f32>,
+    dir: Vector3<f32>,
+    x: i32,
+    y: i32,
+    z: i32,
+    world: &World,
+) -> bool {
+    let block = world.get_block(x, y, z);
+    let hit = match Hitbox::from_block_data(x, y, z, block) {
+        CompositeHitbox::Single(_) => {
+            let bbox = Hitbox::from_block_bbox(x, y, z, block);
+            ray_intersects_box(pos, dir, &bbox)
+        }
+        CompositeHitbox::Double(b1, b2) => {
+            ray_intersects_box(pos, dir, &b1) || ray_intersects_box(pos, dir, &b2)
+        }
+        CompositeHitbox::Triple(b1, b2, b3) => {
+            ray_intersects_box(pos, dir, &b1)
+                || ray_intersects_box(pos, dir, &b2)
+                || ray_intersects_box(pos, dir, &b3)
+        }
+    };
+
+    if !hit {
+        return false;
+    }
+
+    !(block.id == EMPTY_BLOCK || block.is_fluid())
+}
+
 //Scan to see if we hit a voxel in the x direction
 fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Vector3<f32> {
     if dir.x == 0.0 {
@@ -55,8 +86,7 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = convert_coord_to_voxel(current_pos.x, dir.x);
     let mut y = current_pos.y.floor() as i32;
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range
-        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
     {
         current_pos += diff;
         x = convert_coord_to_voxel(current_pos.x, dir.x);
@@ -87,8 +117,7 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = convert_coord_to_voxel(current_pos.y, dir.y);
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range
-        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -119,8 +148,7 @@ fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = current_pos.y.floor() as i32;
     let mut z = convert_coord_to_voxel(current_pos.z, dir.z);
-    while (current_pos - pos).magnitude() < range
-        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
