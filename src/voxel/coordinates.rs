@@ -66,3 +66,8 @@ pub fn wrap_coord(x: i32) -> i32 {
 
     value % CHUNK_SIZE_I32
 }
+
+//Takes in a vector position and returns the integer coordinates
+pub fn f32coord_to_int(x: f32, y: f32, z: f32) -> (i32, i32, i32) {
+    (x.floor() as i32, y.floor() as i32, z.floor() as i32)
+}

@@ -20,6 +20,15 @@ unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= FLUID_DESTRUCTIBLE;
 }
 
+unsafe fn set_door_flags(voxel_id: usize) {
+    VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
+    VOXEL_FLAGS[voxel_id] |= CAN_ROTATE_FLAG;
+    VOXEL_FLAGS[voxel_id] |= ROTATE_Y_ONLY;
+    VOXEL_FLAGS[voxel_id] |= FLAT_ITEM;
+    VOXEL_FLAGS[voxel_id] |= NON_VOXEL;
+    VOXEL_FLAGS[voxel_id] |= CAN_USE;
+}
+
 //TODO: Have a better way of configuring block flags other than hardcoding
 //This function should be called at the start of the game
 pub fn init_voxel_flags() {
@@ -97,12 +106,10 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[77] |= NO_HITBOX;
         VOXEL_FLAGS[77] |= NON_VOXEL;
         //Gate
-        VOXEL_FLAGS[78] |= TRANSPARENT_FLAG;
-        VOXEL_FLAGS[78] |= CAN_ROTATE_FLAG;
-        VOXEL_FLAGS[78] |= ROTATE_Y_ONLY;
-        VOXEL_FLAGS[78] |= FLAT_ITEM;
-        VOXEL_FLAGS[78] |= NON_VOXEL;
-        VOXEL_FLAGS[78] |= CAN_USE;
+        set_door_flags(78);
+        //Door
+        set_door_flags(79);
+        set_door_flags(81);
     }
 }
 

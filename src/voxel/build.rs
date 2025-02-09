@@ -1,3 +1,4 @@
+use super::coordinates::f32coord_to_int;
 use super::is_valid::get_check_valid_fn;
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
@@ -185,6 +186,16 @@ pub fn raycast(
     }
 }
 
+pub fn get_selected(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32, i32, i32) {
+    let (posx, posy, posz) = f32coord_to_int(pos.x, pos.y, pos.z);
+    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
+    if ray_intersects_block(pos, dir, posx, posy, posz, world) {
+        (posx, posy, posz)
+    } else {
+        get_raycast_voxel(x, y, z, dir, axis)
+    }
+}
+
 //Returns the (x, y, z) coordinate of the block destroyed as an option
 //Returns none if no block destroyed
 pub fn destroy_block(
@@ -192,8 +203,7 @@ pub fn destroy_block(
     dir: Vector3<f32>,
     world: &mut World,
 ) -> Option<(i32, i32, i32)> {
-    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
-    let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
+    let (ix, iy, iz) = get_selected(pos, dir, world);
     let block = world.get_block(ix, iy, iz);
     if block.id == INDESTRUCTIBLE {
         return None;
@@ -204,6 +214,20 @@ pub fn destroy_block(
         return None;
     }
 
+    match block.id {
+        //Door
+        79 => {
+            if world.get_block(ix, iy + 1, iz).id == 81 {
+                world.set_block(ix, iy + 1, iz, Block::new_id(0));
+            }
+        }
+        81 => {
+            if world.get_block(ix, iy - 1, iz).id == 79 {
+                world.set_block(ix, iy - 1, iz, Block::new_id(0));
+            }
+        }
+        _ => {}
+    }
     world.set_block(ix, iy, iz, Block::new_id(0));
     if block.id != EMPTY_BLOCK {
         return Some((ix, iy, iz));
@@ -229,6 +253,20 @@ pub fn destroy_block_suffocating(
             return None;
         }
 
+        match block.id {
+            //Door
+            79 => {
+                if world.get_block(ix, iy + 1, iz).id == 81 {
+                    world.set_block(ix, iy + 1, iz, Block::new_id(0));
+                }
+            }
+            81 => {
+                if world.get_block(ix, iy - 1, iz).id == 79 {
+                    world.set_block(ix, iy - 1, iz, Block::new_id(0));
+                }
+            }
+            _ => {}
+        }
         world.set_block(ix, iy, iz, Block::new_id(0));
         if block.id != EMPTY_BLOCK {
             return Some((ix, iy, iz));
@@ -406,10 +444,10 @@ fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
 fn place(
     world: &mut World,
     player: &Player,
-    ix: i32, 
+    ix: i32,
     iy: i32,
     iz: i32,
-    block: Block
+    block: Block,
 ) -> Option<(i32, i32, i32)> {
     let prev_block = world.get_block(ix, iy, iz);
     world.set_block(ix, iy, iz, block);
@@ -447,7 +485,7 @@ pub fn place_block(
             block.id
         }
     };
-    let (mut ix, mut iy, mut iz) = get_raycast_voxel(x, y, z, dir, axis);
+    let (mut ix, mut iy, mut iz) = get_selected(pos, dir, world);
 
     let mut block;
     if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
@@ -494,8 +532,8 @@ pub fn place_block(
 
     if raycast_block.can_use() && !player.is_crouching() {
         block = match raycast_block.id {
-            //Open gates
-            78 => {
+            //Open gates/door
+            78 | 79 | 81 => {
                 let mut b = raycast_block;
                 let is_open = b.reflection();
                 if is_open == 1 {
@@ -508,7 +546,42 @@ pub fn place_block(
             _ => block,
         };
 
-        return place(world, player, ix, iy, iz, block);
+        match block.id {
+            //Open door
+            79 => {
+                let prev_block = world.get_block(ix, iy, iz);
+                let ret = if place(world, player, ix, iy, iz, block).is_some() {
+                    let mut top = block;
+                    top.id = 81;
+                    place(world, player, ix, iy + 1, iz, top)
+                } else {
+                    None
+                };
+
+                if ret.is_none() {
+                    world.set_block(ix, iy, iz, prev_block);
+                }
+
+                return ret;
+            }
+            81 => {
+                let prev_block = world.get_block(ix, iy, iz);
+                let ret = if place(world, player, ix, iy, iz, block).is_some() {
+                    let mut bot = block;
+                    bot.id = 79;
+                    place(world, player, ix, iy - 1, iz, bot)
+                } else {
+                    None
+                };
+
+                if ret.is_none() {
+                    world.set_block(ix, iy, iz, prev_block);
+                }
+
+                return ret;
+            }
+            _ => return place(world, player, ix, iy, iz, block),
+        }
     }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
@@ -532,5 +605,31 @@ pub fn place_block(
         return None;
     }
 
-    place(world, player, ix, iy, iz, block)
+    if block.id == 79 {
+        //Place door
+        let prev_block = world.get_block(ix, iy, iz);
+        let ret = if place(world, player, ix, iy, iz, block).is_some() {
+            let mut top = block;
+            top.id = 81;
+            let top_replace = world.get_block(ix, iy + 1, iz);
+            if top_replace.id != EMPTY_BLOCK
+                && !top_replace.is_fluid()
+                && !top_replace.replaceable()
+            {
+                None
+            } else {
+                place(world, player, ix, iy + 1, iz, top)
+            }
+        } else {
+            None
+        };
+
+        if ret.is_none() {
+            world.set_block(ix, iy, iz, prev_block);
+        }
+
+        ret
+    } else {
+        place(world, player, ix, iy, iz, block)
+    }
 }

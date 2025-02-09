@@ -506,12 +506,11 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
             .update_chunk_with_adj(x, y, z, world, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
-        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
-        chunks.non_voxel_vaos.update_chunk_vao(
-            world.get_chunk(chunkx, chunky, chunkz),
-            world,
-            |chunk, _| generate_non_voxel_vertex_data(chunk),
-        );
+        chunks
+            .non_voxel_vaos
+            .update_chunk_with_adj_fast(x, y, z, world, |chunk, _| {
+                generate_non_voxel_vertex_data(chunk)
+            });
     }
 }
 

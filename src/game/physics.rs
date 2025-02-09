@@ -1,4 +1,7 @@
-use crate::voxel::{orientation_to_normal, rotate_orientation, Block, World, EMPTY_BLOCK};
+use crate::voxel::{
+    orientation_to_normal, rotate_orientation, rotate_orientation_reverse, Block, World,
+    EMPTY_BLOCK,
+};
 use cgmath::{InnerSpace, Vector3};
 
 //Axis aligned bounding box (this hitbox is aligned with the x, y, z axis)
@@ -106,6 +109,22 @@ impl Hitbox {
             76 => Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0)),
             //Gate
             78 => Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0)),
+            //Doors
+            79 | 81 => {
+                let norm = if block.reflection() == 0 {
+                    orientation_to_normal(block.orientation())
+                } else {
+                    orientation_to_normal(rotate_orientation_reverse(block.orientation()))
+                };
+                Some(Self::new(
+                    fx - norm.x as f32 * 7.0 / 16.0,
+                    fy - norm.y as f32 * 7.0 / 16.0,
+                    fz - norm.z as f32 * 7.0 / 16.0,
+                    1.0 - norm.x.abs() as f32 * 7.0 / 8.0,
+                    1.0 - norm.y.abs() as f32 * 7.0 / 8.0,
+                    1.0 - norm.z.abs() as f32 * 7.0 / 8.0,
+                ))
+            }
             _ => None,
         };
 

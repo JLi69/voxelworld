@@ -24,6 +24,11 @@ fn check_torch_valid(world: &World, x: i32, y: i32, z: i32) -> bool {
     !(adj.id == EMPTY_BLOCK || adj.transparent() || adj.shape() != 0)
 }
 
+fn check_door_valid(world: &World, x: i32, y: i32, z: i32) -> bool {
+    let below = world.get_block(x, y - 1, z);
+    !(below.id == EMPTY_BLOCK || below.is_fluid() || below.shape() != 0)
+}
+
 type ValidBlockFn = fn(&World, i32, i32, i32) -> bool;
 
 //Returns a function that checks if a block in a position (x, y, z) is valid
@@ -46,6 +51,8 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
         69 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17, 69])),
         //Torches and ladders
         71..=75 => Some(check_torch_valid),
+        //Door
+        79 => Some(check_door_valid),
         _ => None,
     }
 }

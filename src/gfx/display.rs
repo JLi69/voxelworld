@@ -7,7 +7,7 @@ use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
 use crate::game::physics::Hitbox;
 use crate::voxel;
-use crate::{game::Game, BLOCK_REACH, EMPTY_BLOCK};
+use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
 use cgmath::{Matrix4, SquareMatrix};
 pub use hand::display_hand_item;
@@ -23,8 +23,7 @@ pub fn display_selected_outline(gamestate: &Game) {
     //Calculate the selected voxel position
     let pos = gamestate.cam.position;
     let dir = gamestate.cam.forward();
-    let (x, y, z, axis) = voxel::build::raycast(pos, dir, BLOCK_REACH, &gamestate.world);
-    let (ix, iy, iz) = voxel::build::get_raycast_voxel(x, y, z, dir, axis);
+    let (ix, iy, iz) = voxel::build::get_selected(pos, dir, &gamestate.world);
     let block = gamestate.world.get_block(ix, iy, iz);
     let bbox = Hitbox::from_block_bbox(ix, iy, iz, block);
 

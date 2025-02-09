@@ -9,7 +9,7 @@ mod voxel;
 
 use game::{save, Game};
 use gui::main_menu::MainMenuOutput;
-use voxel::{build::BLOCK_REACH, flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
+use voxel::{flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
