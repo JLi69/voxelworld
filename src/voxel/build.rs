@@ -398,7 +398,7 @@ fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
     let orientation = match block.id {
         //Torches and ladder
         71..=75 => set_torch_orientation(dir, axis),
-        _ => 0,
+        _ => block.orientation(),
     };
     block.set_orientation(orientation);
 }

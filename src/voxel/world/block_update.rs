@@ -278,7 +278,7 @@ fn update_fence(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
             if b.shape() != 0 {
                 return;
             }
-            if b.transparent() && b.id != block.id {
+            if b.transparent() && b.id != block.id && b.id != 78 {
                 return;
             }
             block.geometry |= 1 << i;

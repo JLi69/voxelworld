@@ -333,6 +333,118 @@ fn gen_seed_vertices(_block: Block) -> BlockMesh {
     (ladder_vertices, texcoords)
 }
 
+fn gen_gate_door(cube: &[Vert], tc: &[Tc], normals: &[Norm]) -> BlockMesh {
+    let mut door_verts = vec![];
+    let top = transform_vertices(cube, |v| {
+        let mut transformed = v;
+        transformed.y *= 1.0 / 8.0;
+        transformed.z *= 1.0 / 8.0;
+        transformed.y += 5.0 / 16.0;
+        transformed
+    });
+    let bot = transform_vertices(cube, |v| {
+        let mut transformed = v;
+        let y = transformed.y;
+        transformed.y *= 1.0 / 8.0;
+        transformed.z *= 1.0 / 8.0;
+        transformed.y -= 2.0 / 16.0;
+        if transformed.x > 0.0 {
+            if y > 0.0 { 
+                transformed.y += 5.0 / 16.0;
+                transformed.x -= 4.0 / 16.0;
+            } else {
+                transformed.y += 7.0 / 16.0;
+            }
+        } else {
+            transformed.y -= 1.0 / 16.0;
+        }
+        transformed
+    });
+    door_verts.extend(top);
+    door_verts.extend(bot);
+
+    let mut door_tc = vec![];
+    let tc = transform_tc(tc, |v, i| {
+        let mut tc = v;
+        if normals[i].x != 0.0 {
+            tc.x *= 1.0 / 4.0;
+            tc.y *= 1.0 / 4.0;
+        } else {
+            tc.y *= 1.0 / 4.0;
+        }
+        tc.y += 6.0 / 16.0;
+        tc
+    });
+    door_tc.extend(tc.clone());
+    door_tc.extend(tc.clone());
+
+    (door_verts, door_tc)
+}
+
+fn gen_gate_vertices(block: Block) -> BlockMesh {
+    let vertices = generate_mesh_vertices(&CUBE, &CUBE_INDICES);
+    let normals = generate_mesh_normals(&vertices);
+    let texcoords = generate_mesh_texcoords(&TEX_COORDS, &CUBE_TEX_INDICES);
+    let post = transform_vertices(&vertices, |v| {
+        let mut transformed = v;
+        transformed.x *= 1.0 / 4.0;
+        transformed.z *= 1.0 / 4.0;
+        transformed += Vert4::new(0.5, 0.5, 0.5, 0.0);
+        transformed
+    });
+    let tc = transform_tc(&texcoords, |v, i| {
+        let mut tc = v;
+        if normals[i].y != 0.0 {
+            tc *= 2.0 / 16.0;
+            tc.y += 7.0 / 16.0;
+            tc.x += 6.0 / 16.0;
+            return tc;
+        }
+        tc.x *= 4.0 / 16.0;
+        tc.x += 6.0 / 16.0;
+        tc
+    });
+    let mut gate_vertices = vec![];
+    let mut gate_texcoords = vec![];
+    gate_vertices.extend(transform_vertices(&post, |v| {
+        let mut transformed = v;
+        match block.orientation() {
+            1 | 4 => transformed.z -= 8.0 / 16.0,
+            2 | 5 => transformed.x -= 8.0 / 16.0,
+            _ => {}
+        }
+        transformed
+    }));
+    gate_texcoords.extend(tc.clone());
+    gate_vertices.extend(transform_vertices(&post, |v| {
+        let mut transformed = v;
+        match block.orientation() {
+            1 | 4 => transformed.z += 8.0 / 16.0,
+            2 | 5 => transformed.x += 8.0 / 16.0,
+            _ => {}
+        }
+        transformed
+    }));
+    gate_texcoords.extend(tc);
+
+    let (door_verts, door_tc) = gen_gate_door(&vertices, &texcoords, &normals);
+    let door_verts_trans = transform_vertices(&door_verts, |v| {
+        let mut transformed = v;
+        match block.orientation() {
+            1 => transformed = Matrix4::from_angle_y(Deg(270.0)) * transformed,
+            2 => transformed = Matrix4::from_angle_y(Deg(180.0)) * transformed,
+            4 => transformed = Matrix4::from_angle_y(Deg(90.0)) * transformed,
+            _ => {}
+        }
+        transformed += Vert4::new(0.5, 0.5, 0.5, 0.0);
+        transformed
+    });
+    gate_vertices.extend(door_verts_trans);
+    gate_texcoords.extend(door_tc);
+
+    (gate_vertices, gate_texcoords)
+}
+
 pub fn add_nonvoxel_vertices(
     chunk: &Chunk,
     xyz: Int3,
@@ -347,7 +459,7 @@ pub fn add_nonvoxel_vertices(
     }
 
     let id = match block.id {
-        76 => 6,
+        76 | 78 => 6,
         _ => block.id,
     };
 
@@ -365,6 +477,8 @@ pub fn add_nonvoxel_vertices(
         76 => gen_fence_vertices(block),
         //Seed
         77 => gen_seed_vertices(block),
+        //Gate
+        78 => gen_gate_vertices(block),
         _ => (vec![], vec![]),
     };
 

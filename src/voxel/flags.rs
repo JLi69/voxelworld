@@ -95,6 +95,12 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[77] |= FLAT_ITEM;
         VOXEL_FLAGS[77] |= NO_HITBOX;
         VOXEL_FLAGS[77] |= NON_VOXEL;
+        //Gate
+        VOXEL_FLAGS[78] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[78] |= CAN_ROTATE_FLAG;
+        VOXEL_FLAGS[78] |= ROTATE_Y_ONLY;
+        VOXEL_FLAGS[78] |= FLAT_ITEM;
+        VOXEL_FLAGS[78] |= NON_VOXEL;
     }
 }
 

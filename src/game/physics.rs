@@ -104,6 +104,8 @@ impl Hitbox {
             }
             //Fence
             76 => Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0)),
+            //Gate
+            78 => Some(Self::new(fx, fy + 0.25, fz, 1.0, 1.5, 1.0)),
             _ => None,
         };
 
@@ -159,7 +161,7 @@ impl Hitbox {
         let fy = y as f32 + 0.5;
         let fz = z as f32 + 0.5;
         match block.id {
-            //Ladder and seeds
+            //Ladder
             75 => Self::from_block_orientation(x, y, z, 0.9, block),
             //Seeds
             77 => {
@@ -223,6 +225,14 @@ impl Hitbox {
             },
             //Fence
             76 => Self::new(fx, fy, fz, 0.5, 1.0, 0.5),
+            //Gate
+            78 => {
+                match block.orientation() {
+                    1 | 4 => Self::new(fx, fy, fz, 0.5, 1.0, 1.0),
+                    2 | 5 => Self::new(fx, fy, fz, 1.0, 1.0, 0.5),
+                    _ => Self::new(fx, fy, fz, 1.0, 1.0, 1.0),
+                }
+            }
             _ => composite_to_bbox(Hitbox::from_block_data(x, y, z, block)),
         }
     }
