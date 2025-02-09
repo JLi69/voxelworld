@@ -69,7 +69,7 @@ pub fn generate_plants(
 }
 
 fn is_adjacent_to_water(x: i32, z: i32, h: i32, heights: &[i32]) -> bool {
-    if h != SEA_LEVEL - 1 {
+    if h != SEA_LEVEL {
         return false;
     }
 
@@ -79,7 +79,7 @@ fn is_adjacent_to_water(x: i32, z: i32, h: i32, heights: &[i32]) -> bool {
             continue;
         }
         let index = ((z + dz) * CHUNK_SIZE_I32 + x + dx) as usize;
-        if heights[index] < SEA_LEVEL - 1 {
+        if heights[index] < SEA_LEVEL {
             return true;
         }
     }
@@ -105,13 +105,13 @@ pub fn get_water_adjacent(chunkx: i32, chunkz: i32, heights: &[i32]) -> Vec<(i32
 
 pub fn generate_sugarcane(chunk: &mut Chunk, water_adjacent: &[(i32, i32)], rng: &mut Rng) {
     for (x, z) in water_adjacent {
-        if rng.i32(0..80) != 0 {
+        if rng.i32(0..60) != 0 {
             continue;
         }
 
         let height = rng.i32(1..=3);
         for i in 0..height {
-            let y = SEA_LEVEL + i;
+            let y = SEA_LEVEL + 1 + i;
             if chunk.get_block(*x, y, *z).id != EMPTY_BLOCK {
                 break;
             }
