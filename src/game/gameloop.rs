@@ -70,7 +70,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
 
         //Display chunks
         chunks_drawn += chunktables.chunk_vaos.display_chunks(gamestate, "chunk");
-       
+
         unsafe {
             gl::Enable(gl::POLYGON_OFFSET_FILL);
             gl::PolygonOffset(1.0, -1.0);
@@ -78,7 +78,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         chunktables
             .non_voxel_vaos
             .display_chunks(gamestate, "nonvoxel");
-    
+
         unsafe {
             gl::PolygonOffset(-1.0, -1.0);
         }

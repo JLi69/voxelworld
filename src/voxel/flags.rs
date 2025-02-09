@@ -11,6 +11,7 @@ pub const FLAT_ITEM: u16 = 1 << 6;
 pub const FLUID_DESTRUCTIBLE: u16 = 1 << 7;
 pub const NON_VOXEL: u16 = 1 << 8;
 pub const REPLACEABLE: u16 = 1 << 9;
+pub const CAN_USE: u16 = 1 << 10;
 
 unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
@@ -101,6 +102,7 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[78] |= ROTATE_Y_ONLY;
         VOXEL_FLAGS[78] |= FLAT_ITEM;
         VOXEL_FLAGS[78] |= NON_VOXEL;
+        VOXEL_FLAGS[78] |= CAN_USE;
     }
 }
 

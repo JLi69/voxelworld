@@ -7,6 +7,10 @@ const SPRINT_AMT: f32 = 1.33;
 const CROUCH_AMT: f32 = 0.33;
 
 impl Player {
+    pub fn is_crouching(&self) -> bool {
+        self.crouching
+    }
+
     //Jump up in the y direction
     pub fn jump(&mut self, jump_key: KeyState) {
         if self.falling || self.jump_cooldown > 0.0 || self.velocity_y != 0.0 {

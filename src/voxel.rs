@@ -9,8 +9,8 @@ pub mod world;
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
-    get_flag, CAN_ROTATE_FLAG, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE, NON_VOXEL,
-    NO_HITBOX, REPLACEABLE, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
+    get_flag, CAN_ROTATE_FLAG, CAN_USE, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE,
+    NON_VOXEL, NO_HITBOX, REPLACEABLE, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
 use cgmath::Vector3;
 pub use chunk::Chunk;
@@ -131,6 +131,16 @@ impl Block {
 
     //Returns if the voxel has no hitbox
     pub fn no_hitbox(&self) -> bool {
+        match self.id {
+            //Gate
+            78 => {
+                //Open means no hitbox
+                if self.reflection() == 1 {
+                    return true;
+                }
+            }
+            _ => {}
+        }
         get_flag(self.id) & NO_HITBOX != 0
     }
 
@@ -162,6 +172,11 @@ impl Block {
     //Returns if the voxel can by replaced by player placing a block
     pub fn replaceable(&self) -> bool {
         get_flag(self.id) & REPLACEABLE != 0
+    }
+
+    //Returns if the voxel can be used (right clicked on)
+    pub fn can_use(&self) -> bool {
+        get_flag(self.id) & CAN_USE != 0
     }
 }
 

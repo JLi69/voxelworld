@@ -226,13 +226,11 @@ impl Hitbox {
             //Fence
             76 => Self::new(fx, fy, fz, 0.5, 1.0, 0.5),
             //Gate
-            78 => {
-                match block.orientation() {
-                    1 | 4 => Self::new(fx, fy, fz, 0.5, 1.0, 1.0),
-                    2 | 5 => Self::new(fx, fy, fz, 1.0, 1.0, 0.5),
-                    _ => Self::new(fx, fy, fz, 1.0, 1.0, 1.0),
-                }
-            }
+            78 => match block.orientation() {
+                1 | 4 => Self::new(fx, fy, fz, 0.5, 1.0, 1.0),
+                2 | 5 => Self::new(fx, fy, fz, 1.0, 1.0, 0.5),
+                _ => Self::new(fx, fy, fz, 1.0, 1.0, 1.0),
+            },
             _ => composite_to_bbox(Hitbox::from_block_data(x, y, z, block)),
         }
     }

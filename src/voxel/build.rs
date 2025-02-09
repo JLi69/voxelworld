@@ -445,7 +445,9 @@ pub fn place_block(
     }
 
     let raycast_block = world.get_block(ix, iy, iz);
-    if !(raycast_block.replaceable() && raycast_block.id != block.id) {
+    if !(raycast_block.replaceable() && raycast_block.id != block.id)
+        && !(raycast_block.can_use() && !player.is_crouching())
+    {
         match axis {
             Axis::X => ix -= dir.x.signum() as i32,
             Axis::Y => iy -= dir.y.signum() as i32,
@@ -460,6 +462,39 @@ pub fn place_block(
 
     if block.orientation() % 3 == 0 && block.rotate_y_only() {
         return None;
+    }
+
+    if raycast_block.can_use() && !player.is_crouching() {
+        block = match raycast_block.id {
+            //Open gates
+            78 => {
+                let mut b = raycast_block;
+                let is_open = b.reflection();
+                if is_open == 1 {
+                    b.set_reflection(0);
+                } else {
+                    b.set_reflection(1);
+                };
+                b
+            }
+            _ => block,
+        };
+
+        let prev_block = world.get_block(ix, iy, iz);
+        world.set_block(ix, iy, iz, block);
+        if let Some(check_valid) = get_check_valid_fn(block.id) {
+            if !check_valid(world, ix, iy, iz) {
+                world.set_block(ix, iy, iz, prev_block);
+                return None;
+            }
+        }
+        let composite_hitbox = Hitbox::from_block_data(ix, iy, iz, block);
+        let block_hitbox = composite_to_hitbox(composite_hitbox, &player.get_hitbox());
+        if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
+            world.set_block(ix, iy, iz, prev_block);
+            return None;
+        }
+        return Some((ix, iy, iz));
     }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced

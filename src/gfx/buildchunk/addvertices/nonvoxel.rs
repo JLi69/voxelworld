@@ -349,7 +349,7 @@ fn gen_gate_door(cube: &[Vert], tc: &[Tc], normals: &[Norm]) -> BlockMesh {
         transformed.z *= 1.0 / 8.0;
         transformed.y -= 2.0 / 16.0;
         if transformed.x > 0.0 {
-            if y > 0.0 { 
+            if y > 0.0 {
                 transformed.y += 5.0 / 16.0;
                 transformed.x -= 4.0 / 16.0;
             } else {
@@ -430,6 +430,11 @@ fn gen_gate_vertices(block: Block) -> BlockMesh {
     let (door_verts, door_tc) = gen_gate_door(&vertices, &texcoords, &normals);
     let door_verts_trans = transform_vertices(&door_verts, |v| {
         let mut transformed = v;
+        if block.reflection() == 1 {
+            transformed = Matrix4::from_angle_y(Deg(90.0)) * transformed;
+            transformed.z -= 0.5;
+            transformed.x -= 0.5;
+        }
         match block.orientation() {
             1 => transformed = Matrix4::from_angle_y(Deg(270.0)) * transformed,
             2 => transformed = Matrix4::from_angle_y(Deg(180.0)) * transformed,
