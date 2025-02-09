@@ -1,8 +1,9 @@
-use super::{ChunkData, FaceInfo, Int3};
+use super::{add_stair_geometry, get_adj_block};
+use super::{apply_geometry, skipface::skip_face_trans, ChunkData, FaceInfo, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
-use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK};
+use crate::voxel::{Chunk, EMPTY_BLOCK};
 
 fn add_face_transparent(
     chunk: &Chunk,
@@ -14,34 +15,24 @@ fn add_face_transparent(
     face_info: FaceInfo,
 ) {
     let (x, y, z) = xyz;
-    let (offx, offy, offz) = offset;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
-    let adj_x = wrap_coord(x + offx) as usize;
-    let adj_y = wrap_coord(y + offy) as usize;
-    let adj_z = wrap_coord(z + offz) as usize;
-    if let Some(adj_chunk) = adj_chunk {
-        let block = adj_chunk.get_block_relative(adj_x, adj_y, adj_z);
-        let show_face = (block.transparent() && block.id != blockid)
-            || (block.transparent() && block.id == blockid && !block.can_connect());
-        if out_of_bounds(x, y, z, offx, offy, offz) && block.id != EMPTY_BLOCK && !show_face {
+    let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    add_stair_geometry(
+        vert_data,
+        block,
+        adj_block,
+        xyz,
+        offset,
+        face,
+        face_info,
+        skip_face_trans,
+    );
+    if let Some(adj_block) = adj_block {
+        if skip_face_trans(block, adj_block, offset) {
             return;
         }
-    }
-
-    if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
-        return;
-    }
-
-    let adj_x = (x + offx) as usize;
-    let adj_y = (y + offy) as usize;
-    let adj_z = (z + offz) as usize;
-    let block = chunk.get_block_relative(adj_x, adj_y, adj_z);
-    let show_face = (block.transparent() && block.id != blockid)
-        || (block.transparent() && block.id == blockid && !block.can_connect());
-    if chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK && !show_face {
+    } else {
         return;
     }
 
@@ -55,6 +46,9 @@ fn add_face_transparent(
         vert_data.push(face_info.block_texture_id);
         vert_data.push(face_info.face_id);
     }
+
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
+    apply_geometry(block, xyz, vert_data);
 }
 
 pub fn add_block_vertices_trans(
@@ -62,18 +56,45 @@ pub fn add_block_vertices_trans(
     adj_chunks: [Option<&Chunk>; 6],
     xyz: Int3,
     vert_data: &mut ChunkData,
+    slab_side1: Option<u8>,
+    slab_side2: Option<u8>,
 ) {
     let (x, y, z) = xyz;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
-    if blockid == EMPTY_BLOCK {
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
+    if block.id == EMPTY_BLOCK {
         return;
     }
 
-    let facex = FaceInfo::new(blockid, 0);
-    let facey = FaceInfo::new(blockid, 1);
-    let facez = FaceInfo::new(blockid, 2);
+    let facex = if block.shape() == 1 {
+        match block.orientation() % 3 {
+            0 => FaceInfo::new(slab_side1.unwrap_or(block.id), 0),
+            1 => FaceInfo::new(block.id, 0),
+            2 => FaceInfo::new(slab_side2.unwrap_or(block.id), 0),
+            _ => FaceInfo::new(block.id, 0), //Unreachable
+        }
+    } else {
+        FaceInfo::new(block.id, 0)
+    };
+    let facey = if block.shape() == 1 {
+        match block.orientation() % 3 {
+            0 => FaceInfo::new(block.id, 1),
+            1 => FaceInfo::new(slab_side1.unwrap_or(block.id), 1),
+            2 => FaceInfo::new(slab_side2.unwrap_or(block.id), 1),
+            _ => FaceInfo::new(block.id, 1), //Unreachable
+        }
+    } else {
+        FaceInfo::new(block.id, 1)
+    };
+    let facez = if block.shape() == 1 {
+        match block.orientation() % 3 {
+            0 => FaceInfo::new(slab_side1.unwrap_or(block.id), 2),
+            1 => FaceInfo::new(slab_side2.unwrap_or(block.id), 2),
+            2 => FaceInfo::new(block.id, 2),
+            _ => FaceInfo::new(block.id, 2), //Unreachable
+        }
+    } else {
+        FaceInfo::new(block.id, 2)
+    };
 
     #[rustfmt::skip]
     add_face_transparent(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey);

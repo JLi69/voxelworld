@@ -1,6 +1,8 @@
 mod intersection;
 mod movement;
 
+use self::movement::JUMP_FORCE;
+
 use super::inventory::Hotbar;
 use super::Hitbox;
 use super::KeyState;
@@ -16,6 +18,7 @@ pub const GRAVITY: f32 = 24.0;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
 const BLOCK_OFFSET: f32 = 0.01;
 const MAX_CROUCH_HEIGHT: f32 = 0.15;
+const CLIMB_SPEED: f32 = 2.0;
 
 pub struct Player {
     pub position: Vector3<f32>,
@@ -155,13 +158,53 @@ impl Player {
         true
     }
 
+    //if the jump height is low enough, just have the player autojump
+    fn autojump(&mut self, world: &World) {
+        //You cannot auto jump if you are crouching
+        if self.crouching {
+            return;
+        }
+
+        if self.falling {
+            return;
+        }
+
+        let position = self.position;
+        let vel = self.calculate_velocity();
+        if vel.magnitude() == 0.0 {
+            return;
+        }
+        self.position += vel.normalize() * 0.05;
+        if let Some(hitbox) = self.check_collision(world) {
+            self.position.y =
+                hitbox.position.y + hitbox.dimensions.y / 2.0 + self.dimensions.y / 2.0 + 0.01;
+        } else {
+            self.position = position;
+            return;
+        }
+
+        if self.check_collision(world).is_some() {
+            self.position = position;
+            return;
+        }
+
+        if self.position.y - position.y > 0.6 {
+            self.position = position;
+            return;
+        }
+
+        self.position = position;
+        self.jump_cooldown = 0.0;
+        self.velocity_y = JUMP_FORCE * 0.75;
+    }
+
     //Translate player object, account for collisions with blocks
     fn translate(&mut self, dt: f32, world: &World) {
         //Move in the xz plane
-        let velocity = if self.is_intersecting(world, 13) {
+        let velocity = if self.is_swimming(world, 13, 1.0) {
             //Slow down in lava
             self.calculate_velocity() * 0.4
-        } else if self.is_intersecting(world, 12) {
+        } else if self.is_swimming(world, 12, 1.0) {
             //Slow down in water
             self.calculate_velocity() * 0.6
         } else {
@@ -175,10 +218,10 @@ impl Player {
         };
 
         let mut dy = dt * self.velocity_y;
-        if self.is_intersecting(world, 13) {
+        if self.is_swimming(world, 13, 1.0) {
             //Slow down in lava
             dy *= 0.4;
-        } else if self.is_intersecting(world, 12) {
+        } else if self.is_swimming(world, 12, 1.0) {
             //Slow down in water
             dy *= 0.5;
         }
@@ -205,6 +248,7 @@ impl Player {
 
             //Move in the x direction
             self.position.x += vx;
+            self.autojump(world);
             let block_hitbox = self.check_collision(world);
             if let Some(block_hitbox) = block_hitbox {
                 self.uncollide_x(&block_hitbox);
@@ -216,6 +260,7 @@ impl Player {
 
             //Move in the z direction
             self.position.z += vz;
+            self.autojump(world);
             let block_hitbox = self.check_collision(world);
             if let Some(block_hitbox) = block_hitbox {
                 self.uncollide_z(&block_hitbox);
@@ -232,6 +277,29 @@ impl Player {
         }
     }
 
+    pub fn climbing(&self, world: &World) -> bool {
+        self.bot_intersecting(world, 75, 0.4)
+    }
+
+    pub fn climb(&mut self, up_key: KeyState, hold_key: KeyState, world: &World) {
+        self.velocity_y = -CLIMB_SPEED;
+
+        let pos = self.position;
+        self.position += self.calculate_velocity() * 0.05;
+        let colliding = self.check_collision(world).is_some();
+        self.position = pos;
+
+        if self.standing_on_block(world) && !self.is_intersecting(world, 75) {
+            return;
+        }
+
+        if up_key.is_held() || colliding {
+            self.velocity_y += CLIMB_SPEED * 2.0;
+        } else if hold_key.is_held() {
+            self.velocity_y = 0.0;
+        }
+    }
+
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
         if self.stuck(world) {
@@ -243,19 +311,31 @@ impl Player {
         //Update swim cooldown
         self.swim_cooldown -= dt;
         //Check if the player is no longer swimming
-        let swimming =
-            self.top_intersecting(world, 12, 0.95) || self.top_intersecting(world, 13, 0.95);
+        let swimming = self.is_swimming(world, 12, 0.95) || self.is_swimming(world, 13, 0.95);
+
+        //Is the player climbing a ladder?
+        let climbing = self.climbing(world);
+        if climbing {
+            self.falling = false;
+            self.velocity_y = self.velocity_y.clamp(-CLIMB_SPEED, CLIMB_SPEED);
+        }
 
         //Check if the player was falling in the previous frame
         let falling_prev = self.falling;
         //Move in y direction
         self.translate(dt * 0.5, world);
+        if climbing {
+            self.falling = false;
+        }
         //Apply gravity
         if self.falling {
             self.velocity_y -= dt * GRAVITY;
         }
         if swimming {
             self.velocity_y = self.velocity_y.max(-GRAVITY / 6.0);
+        }
+        if climbing {
+            self.falling = false;
         }
         self.translate(dt * 0.5, world);
         self.check_y_collision(world);

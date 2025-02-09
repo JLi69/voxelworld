@@ -50,7 +50,7 @@ pub fn generate_ore(chunk: &mut Chunk, x: i32, y: i32, z: i32, rng: &mut Rng) {
 
     //Generate coal ore
     //Generates where ever stone generates
-    if y < 0 && rng.i32(0..2_000) == 0 {
+    if y < -16 && rng.i32(0..2_000) == 0 {
         gen_vein(chunk, (x, y, z), 2, 2, 18, 0.05, rng);
     } else if y >= 0 && rng.i32(0..1_000) == 0 {
         gen_vein(chunk, (x, y, z), 1, 1, 18, 0.2, rng);
@@ -70,7 +70,7 @@ pub fn generate_ore(chunk: &mut Chunk, x: i32, y: i32, z: i32, rng: &mut Rng) {
 
     //Generate gold ore
     //Generates below y = -32
-    if rng.f64() < get_probability(y, -32, BOTTOM_OF_WORLD, 1.0 / 5_000.0, 1.0 / 4_000.0) {
+    if rng.f64() < get_probability(y, -32, BOTTOM_OF_WORLD, 1.0 / 4_500.0, 1.0 / 3_000.0) {
         gen_vein(chunk, (x, y, z), 0, 1, 20, 0.33, rng);
     }
 

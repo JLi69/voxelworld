@@ -7,7 +7,7 @@ use std::mem::size_of;
 
 //Cube vertex data
 #[rustfmt::skip]
-const CUBE: [f32; 24] = [
+pub const CUBE: [f32; 24] = [
     -0.5, -0.5, -0.5,
     0.5, -0.5, -0.5,
     -0.5, -0.5, 0.5,
@@ -19,9 +19,39 @@ const CUBE: [f32; 24] = [
     0.5, 0.5, 0.5,
 ];
 
+#[rustfmt::skip]
+pub const TEX_COORDS: [f32; 8] = [
+    0.0, 0.0,
+    1.0, 0.0,
+    0.0, 1.0,
+    1.0, 1.0,
+];
+
+#[rustfmt::skip]
+//Texture coordinates for a cube
+pub const CUBE_TEX_INDICES: [u32; 36] = [
+    0, 1, 2,
+    3, 2, 1,
+
+    0, 2, 3,
+    3, 1, 0,
+
+    0, 1, 2,
+    3, 2, 1,
+
+    2, 0, 1,
+    1, 3, 2,
+
+    2, 3, 1,
+    1, 0, 2,
+
+    2, 1, 0,
+    1, 2, 3,
+];
+
 //This is for a cube
 #[rustfmt::skip]
-const CUBE_INDICES: [u32; 36] = [
+pub const CUBE_INDICES: [u32; 36] = [
     0, 1, 2,
     3, 2, 1,
 
@@ -41,9 +71,12 @@ const CUBE_INDICES: [u32; 36] = [
     5, 6, 7,
 ];
 
+//quad texture coordinates
+pub const QUAD_INDICES: [u32; 6] = [0, 1, 2, 3, 2, 1];
+
 //2D quad vertex data
 #[rustfmt::skip]
-const QUAD_2D: [f32; 8] = [
+pub const QUAD_2D: [f32; 8] = [
     1.0, 1.0,
     1.0, -1.0,
     -1.0, -1.0,
@@ -51,7 +84,7 @@ const QUAD_2D: [f32; 8] = [
 ];
 
 #[rustfmt::skip]
-const QUAD_2D_INDICES: [u32; 6] = [
+pub const QUAD_2D_INDICES: [u32; 6] = [
     0, 1, 2,
     3, 0, 2,
 ];
@@ -125,7 +158,7 @@ pub fn gen_cube_vao() -> Vao {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, cube_vao.buffers[1]);
         gl::BufferData(
             gl::ELEMENT_ARRAY_BUFFER,
-            (CUBE_INDICES.len() * size_of::<f32>()) as isize,
+            (CUBE_INDICES.len() * size_of::<u32>()) as isize,
             &CUBE_INDICES[0] as *const u32 as *const c_void,
             gl::STATIC_DRAW,
         );
@@ -167,7 +200,7 @@ pub fn gen_quad2d_vao() -> Vao {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, quad_vao.buffers[1]);
         gl::BufferData(
             gl::ELEMENT_ARRAY_BUFFER,
-            (QUAD_2D_INDICES.len() * size_of::<f32>()) as isize,
+            (QUAD_2D_INDICES.len() * size_of::<u32>()) as isize,
             &QUAD_2D_INDICES[0] as *const u32 as *const c_void,
             gl::STATIC_DRAW,
         );

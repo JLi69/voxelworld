@@ -8,11 +8,13 @@ pub fn get_plant_positions(chunkx: i32, chunkz: i32, world_seed: u32) -> Vec<(i3
     let seed = ((zu32 as u64) << 32) | (xu32 as u64);
     let mut plant_generator = fastrand::Rng::with_seed(seed);
     let mut rng = fastrand::Rng::with_seed(seed + ((world_seed as u64) << 32));
-    let count = plant_generator.i32(0..80);
+    let count = plant_generator.i32(0..20);
     let mut positions = vec![];
     for _ in 0..count {
-        let plantx = (plant_generator.i32(0..32) + rng.i32(0..32)) % 32;
-        let plantz = (plant_generator.i32(0..32) + rng.i32(0..32)) % 32;
+        let plantx =
+            (plant_generator.i32(0..CHUNK_SIZE_I32) + rng.i32(0..CHUNK_SIZE_I32)) % CHUNK_SIZE_I32;
+        let plantz =
+            (plant_generator.i32(0..CHUNK_SIZE_I32) + rng.i32(0..CHUNK_SIZE_I32)) % CHUNK_SIZE_I32;
         let x = plantx + chunkx * CHUNK_SIZE_I32;
         let z = plantz + chunkz * CHUNK_SIZE_I32;
         positions.push((x, z));

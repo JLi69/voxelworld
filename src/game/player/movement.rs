@@ -7,6 +7,10 @@ const SPRINT_AMT: f32 = 1.33;
 const CROUCH_AMT: f32 = 0.33;
 
 impl Player {
+    pub fn is_crouching(&self) -> bool {
+        self.crouching
+    }
+
     //Jump up in the y direction
     pub fn jump(&mut self, jump_key: KeyState) {
         if self.falling || self.jump_cooldown > 0.0 || self.velocity_y != 0.0 {
@@ -21,7 +25,7 @@ impl Player {
 
     //Swim up in the y direction
     pub fn swim(&mut self, swim_key: KeyState, world: &World) {
-        let swimming = self.is_intersecting(world, 12) || self.is_intersecting(world, 13);
+        let swimming = self.is_swimming(world, 12, 1.0) || self.is_swimming(world, 13, 1.0);
         if (!self.can_move_in_x(world) || !self.can_move_in_z(world))
             && swimming
             && swim_key == KeyState::Held
@@ -31,7 +35,7 @@ impl Player {
             return;
         }
 
-        if !self.top_intersecting(world, 12, 0.9) && !self.top_intersecting(world, 13, 0.9) {
+        if !self.is_swimming(world, 12, 0.9) && !self.is_swimming(world, 13, 0.9) {
             return;
         }
 

@@ -12,13 +12,18 @@ use self::{
     ore::{generate_magma_blocks, generate_ore},
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
 };
-use std::collections::HashMap;
+use crossbeam::{queue::ArrayQueue, thread};
+use std::collections::{HashMap, HashSet};
 
 use super::{
-    gen_more::{find_in_range, get_chunks_to_generate, update_chunk_vao_table},
+    gen_more::{find_in_range, get_chunks_to_generate},
     World, WorldGenerator,
 };
-use crate::voxel::{Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE};
+use crate::voxel::{
+    region::{chunkpos_to_regionpos, Region},
+    world::gen_more::update_chunk_tables,
+    Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE,
+};
 use crate::{gfx::ChunkTables, voxel::CHUNK_SIZE_I32};
 use cgmath::Vector3;
 use gen_trees::generate_trees;
@@ -177,7 +182,7 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     let posy = chunkpos.y * CHUNK_SIZE_I32;
     let posz = chunkpos.z * CHUNK_SIZE_I32;
 
-    if chunkpos.y < -2 || chunkpos.y > 2 {
+    if chunkpos.y < -4 || chunkpos.y > 4 {
         return;
     }
 
@@ -191,12 +196,12 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
             let height = gen_info.heights[index];
+            let h = (height + 1).max(SEA_LEVEL + 1);
 
-            if height < posy {
+            if h < posy {
                 continue;
             }
 
-            let h = (height + 1).max(SEA_LEVEL + 1);
             for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
                 let indestructible = (y == BOTTOM_OF_WORLD)
                     || (y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2)
@@ -209,7 +214,9 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
 
                 if y > BOTTOM_OF_WORLD && y <= LAVA_LEVEL {
                     chunk.set_block(x, y, z, Block::new_fluid(13));
-                } else if y <= SEA_LEVEL && y > height {
+                }
+
+                if y <= SEA_LEVEL && y > height {
                     chunk.set_block(x, y, z, Block::new_fluid(12));
                 }
 
@@ -314,64 +321,109 @@ impl World {
         //Delete old chunks
         self.delete_out_of_range(&out_of_range);
 
-        //Generate height map
-        let mut gen_info_table = GenInfoTable::new();
-
-        //Generate new chunks
-        for (chunkx, chunky, chunkz) in &to_generate {
-            let pos = (*chunkx, *chunky, *chunkz);
-            self.updating.insert(pos);
-            if self.chunk_cache.contains_key(&pos) {
-                let new_chunk = self.chunk_cache.get(&pos);
-                if let Some(new_chunk) = new_chunk {
-                    self.chunks.insert(pos, new_chunk.clone());
-                    self.chunk_cache.remove(&pos);
-                }
-                continue;
-            } else if let Some(chunk) = Chunk::load_chunk(&self.path, *chunkx, *chunky, *chunkz) {
-                self.chunks.insert(pos, chunk);
-                continue;
-            }
-
-            gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
-            gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
-            gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
-            gen_info_table.add_sugarcane(*chunkx, *chunkz);
-            let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
-            //Should always evaluate to true
-            if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
-                gen_chunk(&mut new_chunk, gen_info, &self.world_generator);
-            }
-            self.chunks.insert(pos, new_chunk);
-        }
-
         //Set the center position
         self.centerx = x;
         self.centery = y;
         self.centerz = z;
 
-        update_chunk_vao_table(
-            &mut chunktables.chunk_vaos,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &to_generate,
+        //Load chunks from cache
+        let start = std::time::Instant::now();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if let Some(new_chunk) = self.chunk_cache.get(&pos) {
+                self.chunks.insert(pos, new_chunk.clone());
+                self.chunk_cache.remove(&pos);
+            }
+        }
+        eprintln!(
+            "Took {} ms to load chunks from cache",
+            start.elapsed().as_millis()
         );
 
-        update_chunk_vao_table(
-            &mut chunktables.lava_vaos,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &to_generate,
+        //Load regions from file system
+        let start = std::time::Instant::now();
+        let mut regions_loaded = 0;
+        let mut loaded = HashSet::new();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let (rx, ry, rz) = chunkpos_to_regionpos(*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
+                continue;
+            }
+
+            if loaded.contains(&(rx, ry, rz)) {
+                continue;
+            }
+            loaded.insert((rx, ry, rz));
+
+            if let Some(region) = Region::load_region(&self.path, rx, ry, rz) {
+                regions_loaded += 1;
+                self.add_region(region);
+            }
+        }
+        eprintln!(
+            "Took {} ms to load {regions_loaded} regions from filesystem",
+            start.elapsed().as_millis()
         );
 
-        update_chunk_vao_table(
-            &mut chunktables.water_vaos,
+        //Generate new chunks
+        let mut gen_info_table = GenInfoTable::new();
+        let start = std::time::Instant::now();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&pos) {
+                continue;
+            }
+            if *chunky < -4 || *chunky > 4 {
+                continue;
+            }
+            gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_sugarcane(*chunkx, *chunkz);
+        }
+        eprintln!(
+            "Took {} ms to generate chunk info",
+            start.elapsed().as_millis()
+        );
+
+        let start = std::time::Instant::now();
+        let generated = ArrayQueue::new(to_generate.len());
+        let mut generated_count = 0;
+        thread::scope(|s| {
+            for (chunkx, chunky, chunkz) in &to_generate {
+                if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
+                    continue;
+                }
+
+                generated_count += 1;
+
+                s.spawn(|_| {
+                    let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
+                    //Should always evaluate to true
+                    if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
+                        gen_chunk(&mut new_chunk, gen_info, &self.world_generator);
+                    }
+                    //This should never fail
+                    generated
+                        .push(new_chunk)
+                        .expect("Error: Failed to push onto ArrayQueue");
+                });
+            }
+        })
+        .expect("Failed to generate new chunks!");
+
+        for chunk in generated {
+            let chunkpos = chunk.get_chunk_pos();
+            let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
+            self.chunks.insert(pos, chunk);
+        }
+        eprintln!(
+            "Took {} ms to generate {generated_count} new chunks",
+            start.elapsed().as_millis()
+        );
+
+        update_chunk_tables(
+            chunktables,
             self.centerx,
             self.centery,
             self.centerz,

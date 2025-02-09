@@ -9,4 +9,5 @@ out vec2 tc;
 void main() {
 	gl_Position = screen * transform * pos;
 	tc = pos.xy * 0.5 + vec2(0.5, 0.5);
+	tc.y = 1.0 - tc.y;
 }

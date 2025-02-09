@@ -1,3 +1,6 @@
+pub mod rand_block_update;
+mod simulations;
+
 use super::World;
 use crate::{
     gfx::ChunkTables,
@@ -6,12 +9,39 @@ use crate::{
         EMPTY_BLOCK,
     },
 };
+pub use simulations::run_test_simulations;
 use std::collections::{HashMap, HashSet};
 
-const BLOCK_UPDATE_INTERVAL: f32 = 0.2;
+pub const BLOCK_UPDATE_INTERVAL: f32 = 0.2;
 const ADJ: [(i32, i32, i32); 4] = [(1, 0, 0), (0, 0, 1), (-1, 0, 0), (0, 0, -1)];
 
 type UpdateList = HashMap<(i32, i32, i32), Block>;
+
+pub fn get_chunktable_updates(x: i32, y: i32, z: i32, update_mesh: &mut HashSet<(i32, i32, i32)>) {
+    let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+    let ix = wrap_coord(x);
+    let iy = wrap_coord(y);
+    let iz = wrap_coord(z);
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            for dz in -1..=1 {
+                if (dx == -1 && ix != 0) || (dx == 1 && ix != CHUNK_SIZE_I32 - 1) {
+                    continue;
+                }
+
+                if (dy == -1 && iy != 0) || (dy == 1 && iy != CHUNK_SIZE_I32 - 1) {
+                    continue;
+                }
+
+                if (dz == -1 && iz != 0) || (dz == 1 && iz != CHUNK_SIZE_I32 - 1) {
+                    continue;
+                }
+
+                update_mesh.insert((chunkx + dx, chunky + dy, chunkz + dz));
+            }
+        }
+    }
+}
 
 fn add_water_tile(x: i32, y: i32, z: i32, level: u8, id: u8, to_update: &mut UpdateList) {
     let mut water = Block::new_fluid(id);
@@ -197,6 +227,17 @@ fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
             add_water_tile(px, py, pz, block.geometry, block.id, to_update);
         }
     } else if !update_list.is_empty() {
+        let mut updated = false;
+        for ((x, y, z), block) in update_list {
+            if world.get_block(x, y, z) != block {
+                updated = true;
+            }
+        }
+
+        if !updated {
+            return;
+        }
+
         let mut block2 = world.get_block(x, y, z);
         block2.geometry |= 1 << 7;
         to_update.insert((x, y, z), block2);
@@ -220,9 +261,45 @@ fn update_plant(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut U
     }
 }
 
+//Connect fences
+fn update_fence(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+    let mut block = world.get_block(x, y, z);
+
+    let geometry = block.geometry;
+    block.geometry = 0;
+    ADJ.iter()
+        .map(|(dx, dy, dz)| (x + dx, y + dy, z + dz))
+        .map(|(x, y, z)| world.get_block(x, y, z))
+        .enumerate()
+        .for_each(|(i, b)| {
+            if b.id == EMPTY_BLOCK {
+                return;
+            }
+            if b.shape() != 0 {
+                return;
+            }
+            if b.transparent() && b.id != block.id && b.id != 78 {
+                return;
+            }
+            block.geometry |= 1 << i;
+        });
+
+    if block.geometry == geometry {
+        return;
+    }
+
+    to_update.insert((x, y, z), block);
+}
+
 impl World {
     //Returns true if at least one block updated, otherwise false
     fn update_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32, to_update: &mut UpdateList) {
+        if let Some(chunk) = self.chunks.get(&(chunkx, chunky, chunkz)) {
+            if chunk.is_empty() {
+                return;
+            }
+        }
+
         let startx = chunkx * CHUNK_SIZE_I32;
         let starty = chunky * CHUNK_SIZE_I32;
         let startz = chunkz * CHUNK_SIZE_I32;
@@ -231,6 +308,9 @@ impl World {
             for y in starty..(starty + CHUNK_SIZE_I32) {
                 for z in startz..(startz + CHUNK_SIZE_I32) {
                     let block = self.get_block(x, y, z);
+                    if block.shape() != 0 {
+                        continue;
+                    }
                     match block.id {
                         //Water
                         12 => update_water(self, x, y, z, to_update),
@@ -238,8 +318,12 @@ impl World {
                         13 => update_lava(self, x, y, z, to_update),
                         //Farmland
                         43 | 45 => update_farmland(self, x, y, z, to_update),
-                        //Plants
-                        47..=56 | 69 => update_plant(self, x, y, z, block.id, to_update),
+                        //Plants, torches, ladders
+                        47..=56 | 69 | 71..=75 | 77 => {
+                            update_plant(self, x, y, z, block.id, to_update)
+                        }
+                        //Fence
+                        76 => update_fence(self, x, y, z, to_update),
                         _ => {}
                     }
                 }
@@ -284,29 +368,7 @@ impl World {
                 continue;
             }
 
-            let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
-            let ix = wrap_coord(x);
-            let iy = wrap_coord(y);
-            let iz = wrap_coord(z);
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    for dz in -1..=1 {
-                        if (dx == -1 && ix != 0) || (dx == 1 && ix != CHUNK_SIZE_I32 - 1) {
-                            continue;
-                        }
-
-                        if (dy == -1 && iy != 0) || (dy == 1 && iy != CHUNK_SIZE_I32 - 1) {
-                            continue;
-                        }
-
-                        if (dz == -1 && iz != 0) || (dz == 1 && iz != CHUNK_SIZE_I32 - 1) {
-                            continue;
-                        }
-
-                        update_mesh.insert((chunkx + dx, chunky + dy, chunkz + dz));
-                    }
-                }
-            }
+            get_chunktable_updates(x, y, z, &mut update_mesh);
             self.set_block(x, y, z, block);
         }
 
@@ -319,6 +381,24 @@ impl World {
     pub fn update_all_chunks(&mut self) {
         for chunkpos in self.chunks.keys() {
             self.updating.insert(*chunkpos);
+            self.in_update_range.insert(*chunkpos);
         }
+    }
+
+    //Determine which chunks are in update range
+    pub fn update_sim_range(&mut self, chunk_sim_dist: i32) {
+        let mut update_range = HashSet::new();
+        for x in (self.centerx - chunk_sim_dist)..=(self.centerx + chunk_sim_dist) {
+            for y in (self.centery - chunk_sim_dist)..=(self.centery + chunk_sim_dist) {
+                for z in (self.centerz - chunk_sim_dist)..=(self.centerz + chunk_sim_dist) {
+                    update_range.insert((x, y, z));
+                    if !self.in_update_range.contains(&(x, y, z)) {
+                        self.updating.insert((x, y, z));
+                        continue;
+                    }
+                }
+            }
+        }
+        self.in_update_range = update_range;
     }
 }

@@ -9,7 +9,12 @@ pub enum Item {
 fn item_to_string(item: Item) -> String {
     match item {
         Item::BlockItem(block, amt) => {
-            "block,".to_string() + &block.id.to_string() + "," + &amt.to_string()
+            "block,".to_string()
+                + &block.id.to_string()
+                + ","
+                + &block.geometry.to_string()
+                + ","
+                + &amt.to_string()
         }
         Item::EmptyItem => "empty".to_string(),
     }
@@ -19,15 +24,18 @@ fn item_to_string(item: Item) -> String {
 fn string_to_item(s: &str) -> Item {
     let tokens: Vec<String> = s.split(",").map(|s| s.to_string()).collect();
 
-    if tokens.len() == 3 && tokens[0] == "block" {
+    if tokens.len() == 4 && tokens[0] == "block" {
         let id = tokens[1].parse::<u8>().unwrap_or(0);
-        let amt = tokens[2].parse::<u8>().unwrap_or(0);
+        let geometry = tokens[2].parse::<u8>().unwrap_or(0);
+        let amt = tokens[3].parse::<u8>().unwrap_or(0);
 
         if amt == 0 || id == 0 {
             return Item::EmptyItem;
         }
 
-        Item::BlockItem(Block::new_id(id), amt)
+        let mut block = Block::new_id(id);
+        block.geometry = geometry;
+        Item::BlockItem(block, amt)
     } else {
         Item::EmptyItem
     }

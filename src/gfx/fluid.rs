@@ -78,7 +78,7 @@ pub fn generate_fluid_vertex_data(
     adj_chunks: [Option<&Chunk>; 6],
     world: &World,
     voxel_id: u8,
-) -> ChunkData {
+) -> (ChunkData, i32) {
     let mut chunk_vert_data = vec![];
 
     for x in 0..CHUNK_SIZE_I32 {
@@ -104,11 +104,12 @@ pub fn generate_fluid_vertex_data(
         chunks[i as usize] = world.get_chunk(x + pos.x, y + pos.y, z + pos.z);
     }
 
+    const VALS_PER_VERT: usize = 5;
     //Generate heights
     const SZ: usize = CHUNK_SIZE + 1;
     let mut heights = [0u8; SZ * SZ * SZ];
-    for i in 0..(chunk_vert_data.len() / 5) {
-        let index = i * 5;
+    for i in 0..(chunk_vert_data.len() / VALS_PER_VERT) {
+        let index = i * VALS_PER_VERT;
         let data = chunk_vert_data[index + 4];
         if (data & (7 << 2)) != 0 {
             let x = chunk_vert_data[index] as i32 + pos.x * CHUNK_SIZE_I32;
@@ -129,5 +130,5 @@ pub fn generate_fluid_vertex_data(
         }
     }
 
-    chunk_vert_data
+    (chunk_vert_data, VALS_PER_VERT as i32)
 }

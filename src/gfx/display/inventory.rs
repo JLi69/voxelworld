@@ -22,6 +22,10 @@ pub fn get_block_item_transform(size: f32, position: Vector3<f32>, block: Block)
     }
     transform = Matrix4::from_scale(size) * transform;
     transform = Matrix4::from_translation(position) * transform;
+    //If it's a slab that is vertical, attempt to center it
+    if block.shape() == 1 && block.orientation() % 3 != 0 {
+        transform = Matrix4::from_translation(Vector3::new(4.0, -4.0, 0.0)) * transform;
+    }
     transform
 }
 
@@ -39,7 +43,12 @@ pub fn display_block_item(chunk: &mut Chunk, block: Block) {
         add_block_vertices_transparent(chunk, adj_chunks, (1, 1, 1), &mut vert_data);
         add_block_vertices_fluid(chunk, adj_chunks, (1, 1, 1), &mut vert_data);
     }
-    let vao = ChunkVao::generate_new(&vert_data);
+
+    if vert_data.is_empty() {
+        return;
+    }
+
+    let vao = ChunkVao::generate_new(&vert_data, 5);
     vao.draw();
     vao.delete();
 }
@@ -83,12 +92,16 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
+        gl::Enable(gl::DEPTH_TEST);
     }
 
     gamestate.textures.bind("blocks");
     gamestate.shaders.use_program("orthographic");
     let orthographic_shader = gamestate.shaders.get("orthographic");
-    orthographic_shader.uniform_matrix4f("screen", &screen_mat);
+    let half_w = w as f32 / 2.0;
+    let half_h = h as f32 / 2.0;
+    let orthographic = cgmath::ortho(-half_w, half_w, -half_h, half_h, 0.01, 100.0);
+    orthographic_shader.uniform_matrix4f("screen", &orthographic);
     orthographic_shader.uniform_vec3f("offset", -1.5, -1.5, -1.5);
     let mut chunk = Chunk::new(0, 0, 0);
     for (i, item) in gamestate.player.hotbar.items.iter().enumerate() {
@@ -112,9 +125,5 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
             }
             Item::EmptyItem => {}
         }
-    }
-
-    unsafe {
-        gl::Enable(gl::DEPTH_TEST);
     }
 }

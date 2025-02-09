@@ -1,9 +1,9 @@
+use super::inventory::Item;
 use super::{Game, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
 use crate::voxel::{destroy_block, place_block};
-use glfw::{CursorMode, Key};
-use glfw::{MouseButtonLeft, MouseButtonRight};
+use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
 
@@ -20,14 +20,51 @@ const HOTBAR_KEYS: [Key; 9] = [
 ];
 
 impl Game {
-    //Update player and camera
-    pub fn update_player(&mut self, dt: f32, cursormode: CursorMode) {
-        if cursormode == CursorMode::Disabled {
-            let (dmousex, dmousey) = self.get_mouse_diff();
-            //Rotate camera
-            self.cam.rotate(dmousex, dmousey, 0.06);
+    fn rotate_item(&mut self) {
+        //Rotate the block in the player's hand
+        if self.get_key_state(Key::R) == KeyState::JustPressed {
+            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() {
+                match b.shape() {
+                    1 => {
+                        let mut rotated_block = b;
+                        if rotated_block.orientation() == 0 {
+                            rotated_block.set_orientation(2);
+                        } else if rotated_block.orientation() != 0 {
+                            rotated_block.set_orientation(0);
+                        }
+                        let new_item = Item::BlockItem(rotated_block, amt);
+                        self.player.hotbar.set_selected(new_item);
+                    }
+                    2..=4 => {
+                        let mut stair_block = b;
+                        let shape = b.shape();
+                        if shape == 4 {
+                            stair_block.set_shape(2);
+                            stair_block.set_orientation(2);
+                        } else if shape == 3 {
+                            stair_block.set_shape(4);
+                            stair_block.set_orientation(4);
+                        } else if shape == 2 {
+                            stair_block.set_shape(3);
+                            stair_block.set_orientation(4);
+                        }
+                        let new_item = Item::BlockItem(stair_block, amt);
+                        self.player.hotbar.set_selected(new_item);
+                    }
+                    _ => {}
+                }
+            }
         }
+    }
 
+    pub fn rotate_player(&mut self, sensitivity: f32) {
+        let (dmousex, dmousey) = self.get_mouse_diff();
+        //Rotate camera
+        self.cam.rotate(dmousex, dmousey, sensitivity);
+    }
+
+    //Update player and camera
+    pub fn update_player(&mut self, dt: f32) {
         //Set rotation of player
         self.player.rotation = self.cam.yaw;
         //Update player
@@ -50,15 +87,25 @@ impl Game {
         let d = self.get_key_state(Key::D);
         self.player.strafe(a, d);
         self.player.move_forward(w, s);
+        //Jump or climb
         let space = self.get_key_state(Key::Space);
-        //Jump
-        self.player.jump(space);
+        if !self.player.climbing(&self.world) {
+            self.player.jump(space);
+        } else {
+            self.player.climb(space, lctrl, &self.world)
+        }
         //Swim
         self.player.swim(space, &self.world);
         //Select items from the hotbar
         for (i, key) in HOTBAR_KEYS.iter().enumerate() {
             let keystate = self.get_key_state(*key);
             self.player.select_hotbar_item(keystate, i);
+        }
+        //Rotate current item in the hotbar (if it is rotatable
+        self.rotate_item();
+        //Drop item
+        if self.get_key_state(Key::Q) == KeyState::JustPressed {
+            self.player.hotbar.set_selected(Item::EmptyItem);
         }
     }
 
@@ -82,10 +129,10 @@ impl Game {
             self.destroy_cooldown = 0.0;
         }
 
-        let suffocating = self.player.suffocating(&self.world);
+        let stuck = self.player.get_head_stuck_block(&self.world);
         if self.get_mouse_state(MouseButtonLeft).is_held()
             && self.destroy_cooldown <= 0.0
-            && !suffocating
+            && stuck.is_none()
         {
             let destroyed = destroy_block(pos, dir, &mut self.world);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
@@ -97,7 +144,7 @@ impl Game {
         } else if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
             //If the player is trapped in a block, then they can only break
             //the block that is currently trapping them
-            let destroyed = destroy_block_suffocating(pos, &mut self.world);
+            let destroyed = destroy_block_suffocating(stuck, &mut self.world);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
@@ -113,7 +160,7 @@ impl Game {
 
         if self.get_mouse_state(MouseButtonRight).is_held()
             && self.build_cooldown <= 0.0
-            && !suffocating
+            && stuck.is_none()
         {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             gfx::update_chunk_vaos(chunktables, placed, &self.world);
@@ -163,6 +210,14 @@ impl Game {
     pub fn toggle_hud(&mut self) {
         if self.get_key_state(Key::F1) == KeyState::JustPressed {
             self.display_hud = !self.display_hud;
+        }
+    }
+
+    //Toggle backface
+    //For debug purposes
+    pub fn toggle_backface(&mut self) {
+        if self.get_key_state(Key::F12) == KeyState::JustPressed {
+            self.invert_backface_culling = !self.invert_backface_culling;
         }
     }
 

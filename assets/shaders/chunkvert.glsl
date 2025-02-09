@@ -13,9 +13,12 @@ flat out uint blockid;
 flat out uint faceid;
 
 void main() {
-	float x = float(vertdata.x);
-	float y = float(vertdata.y);
-	float z = float(vertdata.z);
+	float geox = float((vertdata.x & 0x40u) >> 6) * 0.5;
+	float geoy = float((vertdata.y & 0x40u) >> 6) * 0.5;
+	float geoz = float((vertdata.z & 0x40u) >> 6) * 0.5;
+	float x = float(vertdata.x & 0x3Fu) + geox;
+	float y = float(vertdata.y & 0x3Fu) + geoy;
+	float z = float(vertdata.z & 0x3Fu) + geoz;	
 	uint id = vertdata.w;
 
 	vec4 pos = vec4(x, y, z, 1.0) + vec4(chunkpos.xyz, 0.0);

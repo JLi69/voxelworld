@@ -2,19 +2,26 @@ mod fluid;
 mod furnace;
 mod grass;
 mod log;
+mod nonvoxel;
 mod plant;
+mod skipface;
+mod slab;
+mod stairgeometry;
 mod transparent;
 
 use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
-use crate::voxel::{out_of_bounds, wrap_coord, Chunk, EMPTY_BLOCK};
+use crate::voxel::{out_of_bounds, rotate_orientation, wrap_coord, Block, Chunk, EMPTY_BLOCK};
 pub use fluid::add_fluid_vertices;
 pub use furnace::add_block_vertices_furnace_rotated;
 pub use grass::add_block_vertices_grass;
 pub use log::add_block_vertices_log;
+pub use nonvoxel::add_nonvoxel_vertices;
 pub use plant::add_block_vertices_plant;
+use skipface::skip_face;
+use stairgeometry::add_stair_geometry;
 pub use transparent::add_block_vertices_trans;
 
 #[derive(Copy, Clone)]
@@ -32,6 +39,51 @@ impl FaceInfo {
     }
 }
 
+fn apply_geometry(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
+    match block.shape() {
+        1 => {
+            slab::apply_slab_geometry(vert_data, xyz, block.orientation());
+        }
+        2..=4 => {
+            if block.reflection() == 0 {
+                slab::apply_slab_geometry(vert_data, xyz, 0);
+            } else {
+                slab::apply_slab_geometry(vert_data, xyz, 3);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn get_adj_block(
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    xyz: Int3,
+    offset: Int3,
+) -> Option<Block> {
+    let (x, y, z) = xyz;
+    let (offx, offy, offz) = offset;
+
+    if let Some(adj_chunk) = adj_chunk {
+        let adj_x = wrap_coord(x + offx) as usize;
+        let adj_y = wrap_coord(y + offy) as usize;
+        let adj_z = wrap_coord(z + offz) as usize;
+        if out_of_bounds(x, y, z, offx, offy, offz) {
+            return Some(adj_chunk.get_block_relative(adj_x, adj_y, adj_z));
+        }
+    }
+
+    if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
+        return None;
+    }
+
+    let adj_x = (x + offx) as usize;
+    let adj_y = (y + offy) as usize;
+    let adj_z = (z + offz) as usize;
+    let adj_block = chunk.get_block_relative(adj_x, adj_y, adj_z);
+    Some(adj_block)
+}
+
 fn add_face(
     chunk: &Chunk,
     adj_chunk: Option<&Chunk>,
@@ -42,32 +94,17 @@ fn add_face(
     face_info: FaceInfo,
 ) {
     let (x, y, z) = xyz;
-    let (offx, offy, offz) = offset;
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
-    let adj_x = wrap_coord(x + offx) as usize;
-    let adj_y = wrap_coord(y + offy) as usize;
-    let adj_z = wrap_coord(z + offz) as usize;
-    if let Some(adj_chunk) = adj_chunk {
-        if out_of_bounds(x, y, z, offx, offy, offz)
-            && adj_chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK
-            && !adj_chunk
-                .get_block_relative(adj_x, adj_y, adj_z)
-                .transparent()
-        {
+    let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    add_stair_geometry(
+        vert_data, block, adj_block, xyz, offset, face, face_info, skip_face,
+    );
+    if let Some(adj_block) = adj_block {
+        if skip_face(block, adj_block, offset) {
             return;
         }
-    }
-
-    if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
-        return;
-    }
-
-    let adj_x = (x + offx) as usize;
-    let adj_y = (y + offy) as usize;
-    let adj_z = (z + offz) as usize;
-    if chunk.get_block_relative(adj_x, adj_y, adj_z).id != EMPTY_BLOCK
-        && !chunk.get_block_relative(adj_x, adj_y, adj_z).transparent()
-    {
+    } else {
         return;
     }
 
@@ -81,6 +118,8 @@ fn add_face(
         vert_data.push(face_info.block_texture_id);
         vert_data.push(face_info.face_id);
     }
+
+    apply_geometry(block, xyz, vert_data);
 }
 
 //Default function for adding block vertices, all faces have the same texture
@@ -91,16 +130,14 @@ pub fn add_block_vertices_default(
     vert_data: &mut ChunkData,
 ) {
     let (x, y, z) = xyz;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
-    if blockid == EMPTY_BLOCK {
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
+    if block.id == EMPTY_BLOCK {
         return;
     }
 
-    let facex = FaceInfo::new(blockid, 0);
-    let facey = FaceInfo::new(blockid, 1);
-    let facez = FaceInfo::new(blockid, 2);
+    let facex = FaceInfo::new(block.id, 0);
+    let facey = FaceInfo::new(block.id, 1);
+    let facez = FaceInfo::new(block.id, 2);
 
     #[rustfmt::skip]
     add_face(chunk, adj_chunks[0], xyz, (0, 1, 0), vert_data, &TOP_FACE, facey);

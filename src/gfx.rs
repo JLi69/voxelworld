@@ -5,6 +5,7 @@ mod face_data;
 pub mod fluid;
 pub mod frustum;
 pub mod models;
+pub mod nonvoxel;
 
 use crate::game::{Camera, Game};
 use buildchunk::{generate_chunk_vertex_data, ChunkData};

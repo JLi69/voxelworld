@@ -1,8 +1,9 @@
+use super::coordinates::f32coord_to_int;
 use super::is_valid::get_check_valid_fn;
 use super::{Axis, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::inventory::Item;
-use crate::game::physics::Hitbox;
+use crate::game::physics::{composite_to_hitbox, ray_intersects_box, CompositeHitbox, Hitbox};
 use crate::game::player::Player;
 use cgmath::{InnerSpace, Vector3};
 
@@ -35,6 +36,37 @@ pub fn get_raycast_voxel(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis) 
     }
 }
 
+fn ray_intersects_block(
+    pos: Vector3<f32>,
+    dir: Vector3<f32>,
+    x: i32,
+    y: i32,
+    z: i32,
+    world: &World,
+) -> bool {
+    let block = world.get_block(x, y, z);
+    let hit = match Hitbox::from_block_data(x, y, z, block) {
+        CompositeHitbox::Single(_) => {
+            let bbox = Hitbox::from_block_bbox(x, y, z, block);
+            ray_intersects_box(pos, dir, &bbox)
+        }
+        CompositeHitbox::Double(b1, b2) => {
+            ray_intersects_box(pos, dir, &b1) || ray_intersects_box(pos, dir, &b2)
+        }
+        CompositeHitbox::Triple(b1, b2, b3) => {
+            ray_intersects_box(pos, dir, &b1)
+                || ray_intersects_box(pos, dir, &b2)
+                || ray_intersects_box(pos, dir, &b3)
+        }
+    };
+
+    if !hit {
+        return false;
+    }
+
+    !(block.id == EMPTY_BLOCK || block.is_fluid())
+}
+
 //Scan to see if we hit a voxel in the x direction
 fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Vector3<f32> {
     if dir.x == 0.0 {
@@ -55,8 +87,7 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = convert_coord_to_voxel(current_pos.x, dir.x);
     let mut y = current_pos.y.floor() as i32;
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range
-        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
     {
         current_pos += diff;
         x = convert_coord_to_voxel(current_pos.x, dir.x);
@@ -87,8 +118,7 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = convert_coord_to_voxel(current_pos.y, dir.y);
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range
-        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -119,8 +149,7 @@ fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = current_pos.y.floor() as i32;
     let mut z = convert_coord_to_voxel(current_pos.z, dir.z);
-    while (current_pos - pos).magnitude() < range
-        && (world.get_block(x, y, z).id == EMPTY_BLOCK || world.get_block(x, y, z).is_fluid())
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -157,6 +186,16 @@ pub fn raycast(
     }
 }
 
+pub fn get_selected(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32, i32, i32) {
+    let (posx, posy, posz) = f32coord_to_int(pos.x, pos.y, pos.z);
+    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
+    if ray_intersects_block(pos, dir, posx, posy, posz, world) {
+        (posx, posy, posz)
+    } else {
+        get_raycast_voxel(x, y, z, dir, axis)
+    }
+}
+
 //Returns the (x, y, z) coordinate of the block destroyed as an option
 //Returns none if no block destroyed
 pub fn destroy_block(
@@ -164,8 +203,7 @@ pub fn destroy_block(
     dir: Vector3<f32>,
     world: &mut World,
 ) -> Option<(i32, i32, i32)> {
-    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
-    let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
+    let (ix, iy, iz) = get_selected(pos, dir, world);
     let block = world.get_block(ix, iy, iz);
     if block.id == INDESTRUCTIBLE {
         return None;
@@ -176,6 +214,20 @@ pub fn destroy_block(
         return None;
     }
 
+    match block.id {
+        //Door
+        79 => {
+            if world.get_block(ix, iy + 1, iz).id == 81 {
+                world.set_block(ix, iy + 1, iz, Block::new_id(0));
+            }
+        }
+        81 => {
+            if world.get_block(ix, iy - 1, iz).id == 79 {
+                world.set_block(ix, iy - 1, iz, Block::new_id(0));
+            }
+        }
+        _ => {}
+    }
     world.set_block(ix, iy, iz, Block::new_id(0));
     if block.id != EMPTY_BLOCK {
         return Some((ix, iy, iz));
@@ -186,22 +238,39 @@ pub fn destroy_block(
 
 //If the player is suffocating (their head is trapped in a block)
 //then they can only destroy the block that they are trapped in
-pub fn destroy_block_suffocating(pos: Vector3<f32>, world: &mut World) -> Option<(i32, i32, i32)> {
-    let (x, y, z) = (pos.x.floor(), pos.y.floor(), pos.z.floor());
-    let (ix, iy, iz) = (x as i32, y as i32, z as i32);
-    let block = world.get_block(ix, iy, iz);
-    if block.id == INDESTRUCTIBLE {
-        return None;
-    }
+pub fn destroy_block_suffocating(
+    stuck: Option<(i32, i32, i32)>,
+    world: &mut World,
+) -> Option<(i32, i32, i32)> {
+    if let Some((ix, iy, iz)) = stuck {
+        let block = world.get_block(ix, iy, iz);
+        if block.id == INDESTRUCTIBLE {
+            return None;
+        }
 
-    //You cannot destroy fluids
-    if block.is_fluid() {
-        return None;
-    }
+        //You cannot destroy fluids
+        if block.is_fluid() {
+            return None;
+        }
 
-    world.set_block(ix, iy, iz, Block::new_id(0));
-    if block.id != EMPTY_BLOCK {
-        return Some((ix, iy, iz));
+        match block.id {
+            //Door
+            79 => {
+                if world.get_block(ix, iy + 1, iz).id == 81 {
+                    world.set_block(ix, iy + 1, iz, Block::new_id(0));
+                }
+            }
+            81 => {
+                if world.get_block(ix, iy - 1, iz).id == 79 {
+                    world.set_block(ix, iy - 1, iz, Block::new_id(0));
+                }
+            }
+            _ => {}
+        }
+        world.set_block(ix, iy, iz, Block::new_id(0));
+        if block.id != EMPTY_BLOCK {
+            return Some((ix, iy, iz));
+        }
     }
 
     None
@@ -209,6 +278,10 @@ pub fn destroy_block_suffocating(pos: Vector3<f32>, world: &mut World) -> Option
 
 fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
     if !block.can_rotate() {
+        return;
+    }
+
+    if block.shape() != 0 {
         return;
     }
 
@@ -236,6 +309,163 @@ fn set_block_rotation(dir: Vector3<f32>, block: &mut Block) {
     }
 }
 
+//.fract() returns negative fractional parts for negative numbers, this
+//function will always return a positive number
+fn fraction(x: f32) -> f32 {
+    if x < 0.0 {
+        x.fract() + 1.0
+    } else {
+        x.fract()
+    }
+}
+
+fn set_slab_orientation(x: f32, y: f32, z: f32, dir: Vector3<f32>, axis: Axis, block: &mut Block) {
+    if block.shape() != 1 {
+        return;
+    }
+
+    //Horizontal slabs
+    if block.orientation() == 0 {
+        if fraction(y) < 0.5 {
+            block.set_orientation(0);
+        } else {
+            block.set_orientation(3);
+        }
+
+        if dir.y > 0.0 && (y.abs().fract() < 0.01 || y.abs().fract() > 0.99) {
+            block.set_orientation(3);
+        } else if dir.y < 0.0 && (y.abs().fract() < 0.01 || y.abs().fract() > 0.99) {
+            block.set_orientation(0);
+        }
+    } else {
+        //Vertical slabs
+        match axis {
+            Axis::X => {
+                if dir.x <= 0.0 {
+                    block.set_orientation(1);
+                } else if dir.x > 0.0 {
+                    block.set_orientation(4);
+                }
+            }
+            Axis::Y => {
+                let orientation = if (fraction(1.0 - x) > fraction(z)
+                    && fraction(1.0 - x) > fraction(1.0 - z))
+                    || (fraction(x) > fraction(z) && fraction(x) > fraction(1.0 - z))
+                {
+                    if fraction(x) < 0.5 {
+                        1
+                    } else {
+                        4
+                    }
+                } else if fraction(z) < 0.5 {
+                    2
+                } else {
+                    5
+                };
+                block.set_orientation(orientation);
+            }
+            Axis::Z => {
+                if dir.z <= 0.0 {
+                    block.set_orientation(2);
+                } else if dir.z > 0.0 {
+                    block.set_orientation(5);
+                }
+            }
+        }
+    }
+}
+
+fn set_stair_rotation(dir: Vector3<f32>, block: &mut Block) {
+    if !matches!(block.shape(), 2..=4) {
+        return;
+    }
+
+    if dir.z.abs() >= dir.x.abs() {
+        //Set orientation of the block
+        if dir.z.signum() as i32 == -1 {
+            block.set_orientation(2);
+        } else if dir.z.signum() as i32 == 1 {
+            block.set_orientation(5);
+        }
+    } else if dir.x.abs() > dir.z.abs() {
+        //Set orientation of the block
+        if dir.x.signum() as i32 == -1 {
+            block.set_orientation(1);
+        } else if dir.x.signum() as i32 == 1 {
+            block.set_orientation(4);
+        }
+    }
+
+    //Reflect stairs
+    if dir.y > 0.0 {
+        block.set_reflection(1);
+    }
+}
+
+fn set_torch_orientation(dir: Vector3<f32>, axis: Axis) -> u8 {
+    match axis {
+        Axis::X => {
+            if dir.x >= 0.0 {
+                4
+            } else {
+                1
+            }
+        }
+        Axis::Y => {
+            if dir.y >= 0.0 {
+                3
+            } else {
+                0
+            }
+        }
+        Axis::Z => {
+            if dir.z >= 0.0 {
+                5
+            } else {
+                2
+            }
+        }
+    }
+}
+
+fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
+    if !block.non_voxel_geometry() {
+        return;
+    }
+
+    let orientation = match block.id {
+        //Torches and ladder
+        71..=75 => set_torch_orientation(dir, axis),
+        _ => block.orientation(),
+    };
+    block.set_orientation(orientation);
+}
+
+fn place(
+    world: &mut World,
+    player: &Player,
+    ix: i32,
+    iy: i32,
+    iz: i32,
+    block: Block,
+) -> Option<(i32, i32, i32)> {
+    let prev_block = world.get_block(ix, iy, iz);
+    world.set_block(ix, iy, iz, block);
+    if let Some(check_valid) = get_check_valid_fn(block.id) {
+        if !check_valid(world, ix, iy, iz) {
+            world.set_block(ix, iy, iz, prev_block);
+            return None;
+        }
+    }
+    let composite_hitbox = Hitbox::from_block_data(ix, iy, iz, block);
+    let block_hitbox = composite_to_hitbox(composite_hitbox, &player.get_hitbox());
+    if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
+        world.set_block(ix, iy, iz, prev_block);
+        return None;
+    }
+    Some((ix, iy, iz))
+}
+
 //Returns the (x, y, z) coordinate of the block placed as an option
 //Returns none if no block is placed
 pub fn place_block(
@@ -245,6 +475,7 @@ pub fn place_block(
     player: &Player,
 ) -> Option<(i32, i32, i32)> {
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
+    //The id of the block we are placing another block on
     let blockid = {
         let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
         let block = world.get_block(ix, iy, iz);
@@ -254,7 +485,7 @@ pub fn place_block(
             block.id
         }
     };
-    let (mut ix, mut iy, mut iz) = get_raycast_voxel(x, y, z, dir, axis);
+    let (mut ix, mut iy, mut iz) = get_selected(pos, dir, world);
 
     let mut block;
     if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
@@ -262,39 +493,143 @@ pub fn place_block(
         if block.is_fluid() {
             block.geometry = 7;
         }
+
+        //To prevent leaf decay, we will set the orientation of leaves to be
+        //1 if they are a full block and are placed by the player
+        //This should not have any visual effect other than a way for the game
+        //to differentiate between naturally generated leaves and 'artificial'
+        //leaves. This is kind of a hack but I don't want to come up with
+        //a better solution.
+        if block.id == 7 && block.geometry == 0 {
+            block.set_orientation(1);
+        }
     } else {
-        return None;
+        block = Block::new();
     }
 
-    match axis {
-        Axis::X => ix -= dir.x.signum() as i32,
-        Axis::Y => iy -= dir.y.signum() as i32,
-        Axis::Z => iz -= dir.z.signum() as i32,
+    let raycast_block = world.get_block(ix, iy, iz);
+    //If the player can interact with the block or if the block is
+    //replacable (like tall grass) then don't attempt to shift the placed
+    //block back
+    if (!raycast_block.replaceable() || raycast_block.id == block.id)
+        && (!raycast_block.can_use() || player.is_crouching())
+    {
+        match axis {
+            Axis::X => ix -= dir.x.signum() as i32,
+            Axis::Y => iy -= dir.y.signum() as i32,
+            Axis::Z => iz -= dir.z.signum() as i32,
+        }
     }
 
     set_block_rotation(dir, &mut block);
+    set_slab_orientation(x, y, z, dir, axis, &mut block);
+    set_non_voxel_orientation(dir, axis, &mut block);
+    set_stair_rotation(dir, &mut block);
+
+    if block.orientation() % 3 == 0 && block.rotate_y_only() {
+        return None;
+    }
+
+    if raycast_block.can_use() && !player.is_crouching() {
+        block = match raycast_block.id {
+            //Open gates/door
+            78 | 79 | 81 => {
+                let mut b = raycast_block;
+                let is_open = b.reflection();
+                if is_open == 1 {
+                    b.set_reflection(0);
+                } else {
+                    b.set_reflection(1);
+                };
+                b
+            }
+            _ => block,
+        };
+
+        match block.id {
+            //Open door
+            79 => {
+                let prev_block = world.get_block(ix, iy, iz);
+                let ret = if place(world, player, ix, iy, iz, block).is_some() {
+                    let mut top = block;
+                    top.id = 81;
+                    place(world, player, ix, iy + 1, iz, top)
+                } else {
+                    None
+                };
+
+                if ret.is_none() {
+                    world.set_block(ix, iy, iz, prev_block);
+                }
+
+                return ret;
+            }
+            81 => {
+                let prev_block = world.get_block(ix, iy, iz);
+                let ret = if place(world, player, ix, iy, iz, block).is_some() {
+                    let mut bot = block;
+                    bot.id = 79;
+                    place(world, player, ix, iy - 1, iz, bot)
+                } else {
+                    None
+                };
+
+                if ret.is_none() {
+                    world.set_block(ix, iy, iz, prev_block);
+                }
+
+                return ret;
+            }
+            _ => return place(world, player, ix, iy, iz, block),
+        }
+    }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
-
     if replace.is_fluid() && block.fluid_destructibe() {
         return None;
     }
 
-    if (replace.id == EMPTY_BLOCK || replace.is_fluid()) && blockid != EMPTY_BLOCK {
-        if let Some(check_valid) = get_check_valid_fn(block.id) {
-            if !check_valid(world, ix, iy, iz) {
-                return None;
-            }
-        }
-        let prev_block = world.get_block(ix, iy, iz);
-        world.set_block(ix, iy, iz, block);
-        let block_hitbox = Hitbox::from_block(ix, iy, iz);
-        if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
-            world.set_block(ix, iy, iz, prev_block);
-            return None;
-        }
-        return Some((ix, iy, iz));
+    //Do not place a block if we are placing an empty block
+    if block.id == EMPTY_BLOCK {
+        return None;
     }
 
-    None
+    //Do not place a block if the block we are replacing is not empty, nor a fluid,
+    //nor replaceable (like tall grass)
+    if replace.id != EMPTY_BLOCK && !replace.is_fluid() && !replace.replaceable() {
+        return None;
+    }
+
+    //Do not place a block if we are not placing against a block
+    if blockid == EMPTY_BLOCK {
+        return None;
+    }
+
+    if block.id == 79 {
+        //Place door
+        let prev_block = world.get_block(ix, iy, iz);
+        let ret = if place(world, player, ix, iy, iz, block).is_some() {
+            let mut top = block;
+            top.id = 81;
+            let top_replace = world.get_block(ix, iy + 1, iz);
+            if top_replace.id != EMPTY_BLOCK
+                && !top_replace.is_fluid()
+                && !top_replace.replaceable()
+            {
+                None
+            } else {
+                place(world, player, ix, iy + 1, iz, top)
+            }
+        } else {
+            None
+        };
+
+        if ret.is_none() {
+            world.set_block(ix, iy, iz, prev_block);
+        }
+
+        ret
+    } else {
+        place(world, player, ix, iy, iz, block)
+    }
 }

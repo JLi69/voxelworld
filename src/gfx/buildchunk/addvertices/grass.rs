@@ -13,17 +13,22 @@ pub fn add_block_vertices_grass(
     vert_data: &mut ChunkData,
     top: u8,
     bot: u8,
+    side_half: u8,
 ) {
     let (x, y, z) = xyz;
-    let blockid = chunk
-        .get_block_relative(x as usize, y as usize, z as usize)
-        .id;
-    if blockid == EMPTY_BLOCK {
+    let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
+    if block.id == EMPTY_BLOCK {
         return;
     }
 
-    let facex = FaceInfo::new(blockid, 0);
-    let facez = FaceInfo::new(blockid, 2);
+    let side = if block.shape() == 1 && block.orientation() % 3 == 0 {
+        side_half
+    } else {
+        block.id
+    };
+
+    let facex = FaceInfo::new(side, 0);
+    let facez = FaceInfo::new(side, 2);
     let topface = FaceInfo::new(top, 1);
     let botface = FaceInfo::new(bot, 1);
 

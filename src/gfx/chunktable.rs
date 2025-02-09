@@ -1,5 +1,6 @@
 use super::fluid::generate_fluid_vertex_data;
 use super::frustum::Frustum;
+use super::nonvoxel::generate_non_voxel_vertex_data;
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
 use crate::game::physics::Hitbox;
@@ -42,7 +43,7 @@ pub struct ChunkVao {
 }
 
 impl ChunkVao {
-    pub fn generate_new(chunkdata: &ChunkData) -> Self {
+    pub fn generate_new(chunkdata: &ChunkData, values_per_vert: i32) -> Self {
         let mut vao = Self {
             id: 0,
             buffers: [0; BUF_COUNT],
@@ -54,8 +55,8 @@ impl ChunkVao {
             gl::GenBuffers(BUF_COUNT as i32, &mut vao.buffers[0]);
         }
 
-        send_chunk_data_to_vao(&vao, chunkdata);
-        vao.vert_count = chunkdata.len() as i32 / 5;
+        send_chunk_data_to_vao(&vao, values_per_vert, chunkdata);
+        vao.vert_count = chunkdata.len() as i32 / values_per_vert;
 
         vao
     }
@@ -76,7 +77,9 @@ impl ChunkVao {
 }
 
 //Send chunk vertex data to a buffer and vao
-fn send_chunk_data_to_vao(chunkvao: &ChunkVao, chunkdata: &ChunkData) {
+fn send_chunk_data_to_vao(chunkvao: &ChunkVao, values_per_vert: i32, chunkdata: &ChunkData) {
+    assert!(values_per_vert > 4);
+
     if chunkdata.is_empty() {
         return;
     }
@@ -94,7 +97,7 @@ fn send_chunk_data_to_vao(chunkvao: &ChunkVao, chunkdata: &ChunkData) {
             0,
             4,
             gl::UNSIGNED_BYTE,
-            size_of::<u8>() as i32 * 5,
+            size_of::<u8>() as i32 * values_per_vert,
             std::ptr::null::<u8>() as *const c_void,
         );
         gl::EnableVertexAttribArray(0);
@@ -107,9 +110,9 @@ fn send_chunk_data_to_vao(chunkvao: &ChunkVao, chunkdata: &ChunkData) {
         );
         gl::VertexAttribIPointer(
             1,
-            1,
+            values_per_vert - 4,
             gl::UNSIGNED_BYTE,
-            size_of::<u8>() as i32 * 5,
+            size_of::<u8>() as i32 * values_per_vert,
             (size_of::<u8>() * 4) as *const c_void,
         );
         gl::EnableVertexAttribArray(1);
@@ -134,7 +137,7 @@ impl ChunkVaoTable {
         self.to_update.push_back((x, y, z));
     }
 
-    fn update_chunk(&mut self, world: &World, gen_verts: fn(&Chunk, &World) -> ChunkData) {
+    fn update_chunk(&mut self, world: &World, gen_verts: fn(&Chunk, &World) -> (ChunkData, i32)) {
         let top = self.to_update.pop_front();
         if let Some(pos) = top {
             if !world.chunks.contains_key(&pos) {
@@ -159,9 +162,9 @@ impl ChunkVaoTable {
 
                 if let Some(chunk) = world.get_chunk(x, y, z) {
                     let chunkpos = chunk.get_chunk_pos();
-                    let chunkdata = gen_verts(chunk, world);
-                    send_chunk_data_to_vao(&vao, &chunkdata);
-                    vao.vert_count = chunkdata.len() as i32 / 5;
+                    let (chunkdata, values_per_vert) = gen_verts(chunk, world);
+                    send_chunk_data_to_vao(&vao, values_per_vert, &chunkdata);
+                    vao.vert_count = chunkdata.len() as i32 / values_per_vert;
                     self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), vao);
                 }
             }
@@ -172,7 +175,7 @@ impl ChunkVaoTable {
         &mut self,
         world: &World,
         maxtime: f32,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
     ) {
         let start = std::time::Instant::now();
         let mut total_time = 0.0;
@@ -222,7 +225,7 @@ impl ChunkVaoTable {
     pub fn generate_chunk_vaos(
         &mut self,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
     ) {
         let mut vaos = vec![0; world.chunks.len()];
         let mut buffers = vec![0; world.chunks.len() * BUF_COUNT];
@@ -234,13 +237,13 @@ impl ChunkVaoTable {
 
         for (i, chunk) in world.chunks.values().enumerate() {
             let chunkpos = chunk.get_chunk_pos();
-            let chunkdata = gen_verts(chunk, world);
+            let (chunkdata, values_per_vert) = gen_verts(chunk, world);
             let chunkvao = ChunkVao {
                 id: vaos[i],
                 buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
-                vert_count: chunkdata.len() as i32 / 5,
+                vert_count: chunkdata.len() as i32 / values_per_vert,
             };
-            send_chunk_data_to_vao(&chunkvao, &chunkdata);
+            send_chunk_data_to_vao(&chunkvao, values_per_vert, &chunkdata);
             self.vaos
                 .insert((chunkpos.x, chunkpos.y, chunkpos.z), chunkvao);
         }
@@ -251,15 +254,15 @@ impl ChunkVaoTable {
         &mut self,
         chunk: Option<&Chunk>,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
     ) {
         if let Some(chunk) = chunk {
             let chunkpos = chunk.get_chunk_pos();
-            let chunkdata = gen_verts(chunk, world);
-            let chunk = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
-            if let Some(chunk) = chunk {
-                chunk.vert_count = chunkdata.len() as i32 / 5;
-                send_chunk_data_to_vao(chunk, &chunkdata);
+            let (chunkdata, values_per_vert) = gen_verts(chunk, world);
+            let chunkvao = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
+            if let Some(chunkvao) = chunkvao {
+                chunkvao.vert_count = chunkdata.len() as i32 / values_per_vert;
+                send_chunk_data_to_vao(chunkvao, values_per_vert, &chunkdata);
             }
         }
     }
@@ -271,7 +274,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let x = wrap_coord(x % CHUNK_SIZE_I32);
@@ -310,7 +313,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> ChunkData,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let chunk = world.get_chunk(chunkx, chunky, chunkz);
@@ -320,8 +323,73 @@ impl ChunkVaoTable {
         }
     }
 
+    //Ignores the corners
+    fn update_adjacent_fast(
+        &mut self,
+        x: i32,
+        y: i32,
+        z: i32,
+        world: &World,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+    ) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let x = wrap_coord(x % CHUNK_SIZE_I32);
+        let y = wrap_coord(y % CHUNK_SIZE_I32);
+        let z = wrap_coord(z % CHUNK_SIZE_I32);
+        for dx in -1i32..=1 {
+            for dy in -1i32..=1 {
+                for dz in -1i32..=1 {
+                    if dx.abs() == 1 && dy.abs() == 1 && dz.abs() == 1 {
+                        continue;
+                    }
+
+                    if dx == 0 && dy == 0 && dz == 0 {
+                        continue;
+                    }
+
+                    if (dx == -1 && x != 0) || (dx == 1 && x != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    if (dy == -1 && y != 0) || (dy == 1 && y != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    if (dz == -1 && z != 0) || (dz == 1 && z != CHUNK_SIZE_I32 - 1) {
+                        continue;
+                    }
+
+                    let chunk = world.get_chunk(chunkx + dx, chunky + dy, chunkz + dz);
+                    self.update_chunk_vao(chunk, world, gen_verts);
+                }
+            }
+        }
+    }
+
+    pub fn update_chunk_with_adj_fast(
+        &mut self,
+        x: i32,
+        y: i32,
+        z: i32,
+        world: &World,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+    ) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let chunk = world.get_chunk(chunkx, chunky, chunkz);
+        self.update_chunk_vao(chunk, world, gen_verts);
+        if chunk.is_some() {
+            self.update_adjacent_fast(x, y, z, world, gen_verts);
+        }
+    }
+
     //Displays all the chunk vaos
     pub fn display_chunks(&self, gamestate: &Game, shaderid: &str) -> u32 {
+        if gamestate.invert_backface_culling {
+            unsafe {
+                gl::CullFace(gl::FRONT);
+            }
+        }
+
         gamestate.textures.bind("blocks");
         //Calculate view frustum
         let view_frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
@@ -364,6 +432,12 @@ impl ChunkVaoTable {
             unsafe {
                 gl::BindVertexArray(vao.id);
                 gl::DrawArrays(gl::TRIANGLES, 0, vao.vert_count);
+            }
+        }
+
+        if gamestate.invert_backface_culling {
+            unsafe {
+                gl::CullFace(gl::BACK);
             }
         }
 
@@ -419,7 +493,7 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
     if let Some((x, y, z)) = pos {
         chunks
             .chunk_vaos
-            .update_chunk_with_adj(x, y, z, world, |chunk, world| {
+            .update_chunk_with_adj_fast(x, y, z, world, |chunk, world| {
                 generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
             });
         chunks
@@ -432,6 +506,11 @@ pub fn update_chunk_vaos(chunks: &mut ChunkTables, pos: Option<(i32, i32, i32)>,
             .update_chunk_with_adj(x, y, z, world, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
+        chunks
+            .non_voxel_vaos
+            .update_chunk_with_adj_fast(x, y, z, world, |chunk, _| {
+                generate_non_voxel_vertex_data(chunk)
+            });
     }
 }
 
@@ -439,6 +518,7 @@ pub struct ChunkTables {
     pub chunk_vaos: ChunkVaoTable,
     pub lava_vaos: ChunkVaoTable,
     pub water_vaos: ChunkVaoTable,
+    pub non_voxel_vaos: ChunkVaoTable,
 }
 
 impl ChunkTables {
@@ -447,21 +527,40 @@ impl ChunkTables {
             chunk_vaos: ChunkVaoTable::new(),
             lava_vaos: ChunkVaoTable::new(),
             water_vaos: ChunkVaoTable::new(),
+            non_voxel_vaos: ChunkVaoTable::new(),
         }
+    }
+
+    pub fn init_tables(&mut self, world: &World) {
+        self.chunk_vaos.generate_chunk_vaos(world, |chunk, world| {
+            generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
+        });
+        self.lava_vaos.generate_chunk_vaos(world, |chunk, world| {
+            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
+        });
+        self.water_vaos.generate_chunk_vaos(world, |chunk, world| {
+            generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
+        });
+        self.non_voxel_vaos
+            .generate_chunk_vaos(world, |chunk, _| generate_non_voxel_vertex_data(chunk));
     }
 
     pub fn update_tables(&mut self, gamestate: &Game) {
         self.chunk_vaos
-            .update_chunks(&gamestate.world, 0.005, |chunk, world| {
+            .update_chunks(&gamestate.world, 0.0004, |chunk, world| {
                 generate_chunk_vertex_data(chunk, world.get_adjacent(chunk))
             });
         self.lava_vaos
-            .update_chunks(&gamestate.world, 0.003, |chunk, world| {
+            .update_chunks(&gamestate.world, 0.0001, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 13)
             });
         self.water_vaos
-            .update_chunks(&gamestate.world, 0.003, |chunk, world| {
+            .update_chunks(&gamestate.world, 0.0001, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
+            });
+        self.non_voxel_vaos
+            .update_chunks(&gamestate.world, 0.0001, |chunk, _| {
+                generate_non_voxel_vertex_data(chunk)
             });
     }
 
@@ -478,11 +577,16 @@ impl ChunkTables {
             .update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, world| {
                 generate_fluid_vertex_data(chunk, world.get_adjacent(chunk), world, 12)
             });
+        self.non_voxel_vaos
+            .update_chunk_vao(world.get_chunk(x, y, z), world, |chunk, _| {
+                generate_non_voxel_vertex_data(chunk)
+            });
     }
 
     pub fn clear(&mut self) {
         self.chunk_vaos.clear();
         self.lava_vaos.clear();
         self.water_vaos.clear();
+        self.non_voxel_vaos.clear();
     }
 }

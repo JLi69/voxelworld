@@ -9,10 +9,6 @@ use chunk::Chunk;
 const HAND_ANIMATION_MAX_ROTATION: f32 = 90.0;
 
 pub fn display_hand_item(gamestate: &Game) {
-    unsafe {
-        gl::Disable(gl::DEPTH_TEST);
-    }
-
     let hand_animation = gamestate.get_hand_animation();
     let item_rotation_x = if hand_animation < 0.5 {
         Deg(hand_animation * 2.0 * -HAND_ANIMATION_MAX_ROTATION)
@@ -44,9 +40,5 @@ pub fn display_hand_item(gamestate: &Game) {
             display_block_item(&mut chunk, block);
         }
         Item::EmptyItem => {}
-    }
-
-    unsafe {
-        gl::Enable(gl::DEPTH_TEST);
     }
 }
