@@ -131,15 +131,9 @@ impl Block {
 
     //Returns if the voxel has no hitbox
     pub fn no_hitbox(&self) -> bool {
-        match self.id {
-            //Gate
-            78 => {
-                //Open means no hitbox
-                if self.reflection() == 1 {
-                    return true;
-                }
-            }
-            _ => {}
+        //Open gate
+        if self.id == 78 && self.reflection() == 1 {
+            return true;
         }
         get_flag(self.id) & NO_HITBOX != 0
     }

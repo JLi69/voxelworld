@@ -445,8 +445,11 @@ pub fn place_block(
     }
 
     let raycast_block = world.get_block(ix, iy, iz);
-    if !(raycast_block.replaceable() && raycast_block.id != block.id)
-        && !(raycast_block.can_use() && !player.is_crouching())
+    //If the player can interact with the block or if the block is
+    //replacable (like tall grass) then don't attempt to shift the placed
+    //block back
+    if (!raycast_block.replaceable() || raycast_block.id == block.id)
+        && (!raycast_block.can_use() || player.is_crouching())
     {
         match axis {
             Axis::X => ix -= dir.x.signum() as i32,
