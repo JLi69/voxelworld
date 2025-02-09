@@ -403,6 +403,31 @@ fn set_non_voxel_orientation(dir: Vector3<f32>, axis: Axis, block: &mut Block) {
     block.set_orientation(orientation);
 }
 
+fn place(
+    world: &mut World,
+    player: &Player,
+    ix: i32, 
+    iy: i32,
+    iz: i32,
+    block: Block
+) -> Option<(i32, i32, i32)> {
+    let prev_block = world.get_block(ix, iy, iz);
+    world.set_block(ix, iy, iz, block);
+    if let Some(check_valid) = get_check_valid_fn(block.id) {
+        if !check_valid(world, ix, iy, iz) {
+            world.set_block(ix, iy, iz, prev_block);
+            return None;
+        }
+    }
+    let composite_hitbox = Hitbox::from_block_data(ix, iy, iz, block);
+    let block_hitbox = composite_to_hitbox(composite_hitbox, &player.get_hitbox());
+    if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
+        world.set_block(ix, iy, iz, prev_block);
+        return None;
+    }
+    Some((ix, iy, iz))
+}
+
 //Returns the (x, y, z) coordinate of the block placed as an option
 //Returns none if no block is placed
 pub fn place_block(
@@ -441,7 +466,7 @@ pub fn place_block(
             block.set_orientation(1);
         }
     } else {
-        return None;
+        block = Block::new();
     }
 
     let raycast_block = world.get_block(ix, iy, iz);
@@ -483,21 +508,7 @@ pub fn place_block(
             _ => block,
         };
 
-        let prev_block = world.get_block(ix, iy, iz);
-        world.set_block(ix, iy, iz, block);
-        if let Some(check_valid) = get_check_valid_fn(block.id) {
-            if !check_valid(world, ix, iy, iz) {
-                world.set_block(ix, iy, iz, prev_block);
-                return None;
-            }
-        }
-        let composite_hitbox = Hitbox::from_block_data(ix, iy, iz, block);
-        let block_hitbox = composite_to_hitbox(composite_hitbox, &player.get_hitbox());
-        if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
-            world.set_block(ix, iy, iz, prev_block);
-            return None;
-        }
-        return Some((ix, iy, iz));
+        return place(world, player, ix, iy, iz, block);
     }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced
@@ -505,25 +516,21 @@ pub fn place_block(
         return None;
     }
 
-    if (replace.id == EMPTY_BLOCK || replace.is_fluid() || replace.replaceable())
-        && blockid != EMPTY_BLOCK
-    {
-        let prev_block = world.get_block(ix, iy, iz);
-        world.set_block(ix, iy, iz, block);
-        if let Some(check_valid) = get_check_valid_fn(block.id) {
-            if !check_valid(world, ix, iy, iz) {
-                world.set_block(ix, iy, iz, prev_block);
-                return None;
-            }
-        }
-        let composite_hitbox = Hitbox::from_block_data(ix, iy, iz, block);
-        let block_hitbox = composite_to_hitbox(composite_hitbox, &player.get_hitbox());
-        if player.get_hitbox().intersects(&block_hitbox) && !block.no_hitbox() {
-            world.set_block(ix, iy, iz, prev_block);
-            return None;
-        }
-        return Some((ix, iy, iz));
+    //Do not place a block if we are placing an empty block
+    if block.id == EMPTY_BLOCK {
+        return None;
     }
 
-    None
+    //Do not place a block if the block we are replacing is not empty, nor a fluid,
+    //nor replaceable (like tall grass)
+    if replace.id != EMPTY_BLOCK && !replace.is_fluid() && !replace.replaceable() {
+        return None;
+    }
+
+    //Do not place a block if we are not placing against a block
+    if blockid == EMPTY_BLOCK {
+        return None;
+    }
+
+    place(world, player, ix, iy, iz, block)
 }
