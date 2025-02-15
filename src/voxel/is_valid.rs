@@ -53,6 +53,12 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
         71..=75 => Some(check_torch_valid),
         //Door
         79 => Some(check_door_valid),
+        //Cactus
+        88 => Some(|world, x, y, z| {
+            let shape = world.get_block(x, y, z).shape();
+            //Only apply to full blocks
+            check_below_valid(world, x, y, z, &[11, 88]) || shape != 0
+        }),
         _ => None,
     }
 }

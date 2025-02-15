@@ -110,6 +110,8 @@ pub fn init_voxel_flags() {
         //Door
         set_door_flags(79);
         set_door_flags(81);
+        //Hay bale
+        VOXEL_FLAGS[82] |= CAN_ROTATE_FLAG;
     }
 }
 

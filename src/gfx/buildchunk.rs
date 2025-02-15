@@ -57,6 +57,18 @@ pub fn add_block_vertices(
             //Dry Farmland
             add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 46, 45, 45);
         }
+        82 => {
+            //Hay bale
+            add_block_vertices_log(chunk, adj_chunks, xyz, vert_data, 83, 84);
+        }
+        87 => {
+            //Snow "grass" block
+            add_block_vertices_grass(chunk, adj_chunks, xyz, vert_data, 86, 4, 251);
+        }
+        88 => {
+            //Cactus
+            add_block_vertices_log(chunk, adj_chunks, xyz, vert_data, 89, 88);
+        }
         _ => {
             //Everything else
             add_block_vertices_default(chunk, adj_chunks, xyz, vert_data);
