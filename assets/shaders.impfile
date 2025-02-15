@@ -37,3 +37,8 @@
 	"vert" = "assets/shaders/nonvoxelvert.glsl";
 	"frag" = "assets/shaders/nonvoxelfrag.glsl";
 }
+
+"clouds" {
+	"vert" = "assets/shaders/quad3d.glsl";
+	"frag" = "assets/shaders/cloudfrag.glsl";
+}

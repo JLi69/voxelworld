@@ -40,6 +40,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     let mut fps_timer = 0.0;
     let mut save_timer = 0.0;
     let mut time_passed = 0.0;
+    let mut cloud_time = fastrand::f32() * 2048.0;
     let mut frames = 0;
     let mut chunks_drawn = 0;
     let mut quit = false;
@@ -78,6 +79,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         chunktables
             .non_voxel_vaos
             .display_chunks(gamestate, "nonvoxel");
+        gfx::display::display_clouds(gamestate, cloud_time);
 
         unsafe {
             gl::PolygonOffset(-1.0, -1.0);
@@ -166,6 +168,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         }
 
         if !gamestate.paused {
+            cloud_time += dt;
             time_passed += dt;
         }
 

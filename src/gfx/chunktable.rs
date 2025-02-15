@@ -13,24 +13,24 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 
 //Set fog color
-fn set_fog(gamestate: &Game, chunkshader: &ShaderProgram) {
+pub fn set_fog(gamestate: &Game, shader: &ShaderProgram) {
     if gamestate.player.head_intersection(&gamestate.world, 12) {
         //Water
-        chunkshader.uniform_float("fogdist", -CHUNK_SIZE_F32 / 3.0);
-        chunkshader.uniform_float("fogstrength", 1.0 / CHUNK_SIZE_F32);
-        chunkshader.uniform_vec4f("fogcolor", 0.16, 0.41, 0.51, 1.0);
+        shader.uniform_float("fogdist", -CHUNK_SIZE_F32 / 3.0);
+        shader.uniform_float("fogstrength", 1.0 / CHUNK_SIZE_F32);
+        shader.uniform_vec4f("fogcolor", 0.16, 0.41, 0.51, 1.0);
     } else if gamestate.player.head_intersection(&gamestate.world, 13) {
         //Lava
-        chunkshader.uniform_float("fogdist", -1.8 / 8.0);
-        chunkshader.uniform_float("fogstrength", 1.0 / 1.8);
-        chunkshader.uniform_vec4f("fogcolor", 1.0, 0.3, 0.0, 1.0);
+        shader.uniform_float("fogdist", -1.8 / 8.0);
+        shader.uniform_float("fogstrength", 1.0 / 1.8);
+        shader.uniform_vec4f("fogcolor", 1.0, 0.3, 0.0, 1.0);
     } else {
         //Normal
         let range = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32;
         let dist = range * 0.7;
-        chunkshader.uniform_float("fogdist", dist);
-        chunkshader.uniform_float("fogstrength", 1.0 / (range * 0.2));
-        chunkshader.uniform_vec4f("fogcolor", 0.4, 0.8, 1.0, 1.0);
+        shader.uniform_float("fogdist", dist);
+        shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
+        shader.uniform_vec4f("fogcolor", 0.4, 0.8, 1.0, 1.0);
     }
 }
 

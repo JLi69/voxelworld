@@ -29,3 +29,7 @@
 "stair_icon" {
 	"path" = "assets/textures/stair_icon.png";
 }
+
+"clouds" {
+	"path" = "assets/textures/clouds.png";
+}

@@ -2,14 +2,15 @@ pub mod block_menu;
 mod hand;
 mod inventory;
 
+use super::chunktable::set_fog;
 use super::ChunkTables;
 use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
 use crate::game::physics::Hitbox;
-use crate::voxel;
+use crate::voxel::{self, CHUNK_SIZE_F32};
 use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
-use cgmath::{Matrix4, SquareMatrix};
+use cgmath::{Matrix4, SquareMatrix, Vector3};
 pub use hand::display_hand_item;
 pub use inventory::display_hotbar;
 
@@ -145,6 +146,43 @@ pub fn display_suffocation_screen(gamestate: &Game, w: i32, h: i32) {
 
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::CULL_FACE);
+    }
+}
+
+pub fn display_clouds(gamestate: &Game, time_passed: f32) {
+    unsafe {
+        gl::Disable(gl::CULL_FACE);
+    }
+
+    gamestate.textures.bind("clouds");
+    gamestate.shaders.use_program("clouds");
+    let cloud_shader = gamestate.shaders.get("clouds");
+    let quad = gamestate.models.bind("quad2d");
+
+    let persp = gamestate.persp;
+    cloud_shader.uniform_matrix4f("persp", &persp);
+    let view = gamestate.cam.get_view();
+    cloud_shader.uniform_matrix4f("view", &view);
+    let mut transform = Matrix4::identity();
+    let sz = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32 * 16.0;
+    transform = Matrix4::from_nonuniform_scale(sz, 0.0, sz) * transform;
+    let camx = gamestate.cam.position.x;
+    let camz = gamestate.cam.position.z;
+    let height = 160.0 + gamestate.cam.position.y;
+    transform = Matrix4::from_translation(Vector3::new(camx, height, camz)) * transform;
+    cloud_shader.uniform_matrix4f("transform", &transform);
+    cloud_shader.uniform_vec3f(
+        "campos",
+        gamestate.cam.position.x,
+        gamestate.cam.position.y,
+        gamestate.cam.position.z,
+    );
+    cloud_shader.uniform_float("total_time", time_passed);
+    set_fog(gamestate, &cloud_shader);
+    draw_elements(quad);
+
+    unsafe {
         gl::Enable(gl::CULL_FACE);
     }
 }
