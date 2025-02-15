@@ -112,6 +112,8 @@ pub fn init_voxel_flags() {
         set_door_flags(81);
         //Hay bale
         VOXEL_FLAGS[82] |= CAN_ROTATE_FLAG;
+        //Dead bush
+        set_plant_flags(90);
     }
 }
 

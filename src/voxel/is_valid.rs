@@ -59,6 +59,8 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
             //Only apply to full blocks
             check_below_valid(world, x, y, z, &[11, 88]) || shape != 0
         }),
+        //Dead bush
+        90 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17])),
         _ => None,
     }
 }
