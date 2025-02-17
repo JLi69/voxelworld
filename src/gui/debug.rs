@@ -31,6 +31,9 @@ fn debug_info(
     let paused = format!("paused = {}", gamestate.is_paused());
     let fps_text = format!("{fps} FPS");
     let chunk_updates = format!("chunk updates: {}", gamestate.world.get_chunk_updates());
+    let seed_text = format!("seed: {}", gamestate.world.get_seed());
+    let days_passed = format!("days passed: {}", gamestate.world.days_passed);
+    let time_text = format!("current time: {:.2}", gamestate.world.time);
 
     egui::TopBottomPanel::top("debug")
         .frame(transparent_frame())
@@ -43,6 +46,9 @@ fn debug_info(
             ui.heading(debug_text(&paused));
             ui.heading(debug_text(&chunk_updates));
             ui.heading(debug_text(&fps_text));
+            ui.heading(debug_text(&seed_text));
+            ui.heading(debug_text(&days_passed));
+            ui.heading(debug_text(&time_text));
         });
 }
 

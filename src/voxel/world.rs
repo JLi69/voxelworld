@@ -15,6 +15,9 @@ use std::collections::{HashMap, HashSet};
 
 pub const OCTAVES: usize = 5;
 pub const PERSISTENCE: f64 = 0.47;
+const DEFAULT_TIME: f32 = 0.04;
+const MINUTES_PER_DAY: f32 = 20.0;
+const DAY_NIGHT_SPEED: f32 = 1.0 / (MINUTES_PER_DAY * 60.0);
 
 //Struct that contains information for generating the world
 struct WorldGenerator {
@@ -71,6 +74,9 @@ pub struct World {
     updating: HashSet<(i32, i32, i32)>,
     in_update_range: HashSet<(i32, i32, i32)>,
     ticks: u64,
+    //Day/night cycle
+    pub time: f32, //A number between 0.0 and 1.0
+    pub days_passed: u64,
     //Chunks that experienced block update and need to be saved
     to_save: HashSet<(i32, i32, i32)>,
     //Chunks that are to be removed from cache and need to be saved
@@ -96,6 +102,8 @@ impl World {
             updating: HashSet::new(),
             in_update_range: HashSet::new(),
             ticks: 0,
+            time: DEFAULT_TIME,
+            days_passed: 0,
             to_save: HashSet::new(),
             removed_from_cache: vec![],
         }
@@ -129,6 +137,8 @@ impl World {
             updating: HashSet::new(),
             in_update_range: HashSet::new(),
             ticks: 0,
+            time: DEFAULT_TIME,
+            days_passed: 0,
             to_save: HashSet::new(),
             removed_from_cache: vec![],
         }
@@ -310,5 +320,14 @@ impl World {
     //Returns how many chunks are updating
     pub fn get_chunk_updates(&self) -> usize {
         self.updating.len()
+    }
+
+    //Updates day night cycle
+    pub fn update_daynight(&mut self, dt: f32) {
+        self.time += dt * DAY_NIGHT_SPEED;
+        if self.time > 1.0 {
+            self.time = 0.0;
+            self.days_passed += 1;
+        }
     }
 }

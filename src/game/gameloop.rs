@@ -79,6 +79,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         chunktables
             .non_voxel_vaos
             .display_chunks(gamestate, "nonvoxel");
+        gfx::display::display_sky(gamestate);
         gfx::display::display_clouds(gamestate, cloud_time);
 
         unsafe {

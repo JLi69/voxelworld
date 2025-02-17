@@ -38,6 +38,8 @@ impl World {
         entry.add_integer("centery", self.centery as i64);
         entry.add_integer("centerz", self.centerz as i64);
         entry.add_integer("seed", self.world_seed as i64);
+        entry.add_integer("days_passed", self.days_passed as i64);
+        entry.add_float("time", self.time);
         entry.add_string("gen_type", &gen_type_to_string(self.gen_type));
 
         let world_save_path = self.path.clone() + "world.impfile";
@@ -144,6 +146,14 @@ impl World {
             updating: HashSet::new(),
             in_update_range: HashSet::new(),
             ticks: 0,
+            time: world_metadata_entries[0]
+                .get_var("time")
+                .parse::<f32>()
+                .unwrap_or(0.0),
+            days_passed: world_metadata_entries[0]
+                .get_var("days_passed")
+                .parse::<u64>()
+                .unwrap_or(0),
             to_save: HashSet::new(),
             removed_from_cache: vec![],
         }

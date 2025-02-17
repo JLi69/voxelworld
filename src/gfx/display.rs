@@ -4,13 +4,14 @@ mod inventory;
 
 use super::chunktable::set_fog;
 use super::ChunkTables;
+use crate::assets::shader::ShaderProgram;
 use crate::assets::Texture;
 use crate::game::assets::models::draw_elements;
 use crate::game::physics::Hitbox;
 use crate::voxel::{self, CHUNK_SIZE_F32};
 use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
-use cgmath::{Matrix4, SquareMatrix, Vector3};
+use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 pub use hand::display_hand_item;
 pub use inventory::display_hotbar;
 
@@ -179,8 +180,167 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
         gamestate.cam.position.z,
     );
     cloud_shader.uniform_float("total_time", time_passed);
-    set_fog(gamestate, &cloud_shader);
+    set_fog(gamestate, &cloud_shader, get_skycolor(gamestate.world.time));
     draw_elements(quad);
+
+    unsafe {
+        gl::Enable(gl::CULL_FACE);
+    }
+}
+
+//Assumes 0.0 < t < 1.0
+fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    a * (1.0 - t) + b * t
+}
+
+fn lerp_col(a: (f32, f32, f32), b: (f32, f32, f32), t: f32) -> (f32, f32, f32) {
+    let (ar, ag, ab) = a;
+    let (br, bg, bb) = b;
+    (lerp(ar, br, t), lerp(ag, bg, t), lerp(ab, bb, t))
+}
+
+const WHITE: (f32, f32, f32) = (1.0, 1.0, 1.0);
+const DAY: (f32, f32, f32) = (0.4, 0.8, 1.0);
+const NIGHT: (f32, f32, f32) = (0.1, 0.1, 0.1);
+const ORANGE: (f32, f32, f32) = (1.0, 0.25, 0.0);
+const YELLOW: (f32, f32, f32) = (1.0, 0.8, 0.0);
+const TRANSITION_TIME: f32 = 0.04;
+
+//Returns rgb
+pub fn get_skycolor(t: f32) -> (f32, f32, f32) {
+    if t < TRANSITION_TIME {
+        lerp_col(NIGHT, DAY, (t + TRANSITION_TIME) / (2.0 * TRANSITION_TIME))
+    } else if t > 1.0 - TRANSITION_TIME {
+        lerp_col(
+            NIGHT,
+            DAY,
+            (t - 1.0 + TRANSITION_TIME) / (2.0 * TRANSITION_TIME),
+        )
+    } else if (t - 0.5).abs() < TRANSITION_TIME {
+        lerp_col(
+            DAY,
+            NIGHT,
+            (t - (0.5 - TRANSITION_TIME)) / (2.0 * TRANSITION_TIME),
+        )
+    } else if t > 0.5 {
+        //Night
+        NIGHT
+    } else {
+        //Day
+        DAY
+    }
+}
+
+fn get_bot_skycolor(t: f32) -> (f32, f32, f32) {
+    if t < TRANSITION_TIME {
+        lerp_col(ORANGE, DAY, t / TRANSITION_TIME)
+    } else if t > 1.0 - TRANSITION_TIME {
+        lerp_col(NIGHT, ORANGE, (t - 1.0 + TRANSITION_TIME) / TRANSITION_TIME)
+    } else if t < 0.5 && t > 0.5 - TRANSITION_TIME {
+        lerp_col(DAY, ORANGE, (t - 0.5 + TRANSITION_TIME) / TRANSITION_TIME)
+    } else if t > 0.5 && t < 0.5 + TRANSITION_TIME {
+        lerp_col(ORANGE, NIGHT, (t - 0.5) / TRANSITION_TIME)
+    } else if t > 0.5 && t < 1.0 {
+        NIGHT
+    } else {
+        DAY
+    }
+}
+
+fn set_sky_color(shader: &ShaderProgram, t: f32) {
+    let (topr, topg, topb) = get_skycolor(t);
+    shader.uniform_vec3f("topcolor", topr, topg, topb);
+    let (botr, botg, botb) = get_bot_skycolor(t);
+    shader.uniform_vec3f("botcolor", botr, botg, botb);
+}
+
+fn get_sun_color(t: f32) -> (f32, f32, f32) {
+    if t < TRANSITION_TIME {
+        lerp_col(
+            YELLOW,
+            WHITE,
+            (t + TRANSITION_TIME) / (TRANSITION_TIME * 2.0),
+        )
+    } else if t > 1.0 - TRANSITION_TIME {
+        lerp_col(
+            YELLOW,
+            WHITE,
+            (t - 1.0 + TRANSITION_TIME) / (TRANSITION_TIME * 2.0),
+        )
+    } else if t > 0.5 - TRANSITION_TIME && t < 0.5 + TRANSITION_TIME {
+        lerp_col(
+            WHITE,
+            YELLOW,
+            (t - 0.5 + TRANSITION_TIME) / (TRANSITION_TIME * 2.0),
+        )
+    } else if t > TRANSITION_TIME && t < 0.5 - TRANSITION_TIME {
+        WHITE
+    } else {
+        YELLOW
+    }
+}
+
+pub fn display_sky(gamestate: &Game) {
+    unsafe {
+        gl::Disable(gl::CULL_FACE);
+    }
+
+    let persp = gamestate.persp;
+    let view = gamestate.cam.get_view_no_translate();
+
+    //Display skybox
+    let cube = gamestate.models.bind("cube");
+    gamestate.shaders.use_program("skybox");
+    let skybox_shader = gamestate.shaders.get("skybox");
+    skybox_shader.uniform_matrix4f("persp", &persp);
+    skybox_shader.uniform_matrix4f("view", &view);
+    skybox_shader.uniform_matrix4f("transform", &Matrix4::identity());
+    set_sky_color(&skybox_shader, gamestate.world.time);
+    draw_elements(cube);
+
+    let quad = gamestate.models.bind("quad2d");
+    gamestate.shaders.use_program("skyobject");
+    let shader = gamestate.shaders.get("skyobject");
+    shader.uniform_matrix4f("persp", &persp);
+    shader.uniform_matrix4f("view", &view);
+    shader.uniform_float("alpha", 1.0);
+
+    let rotation = -gamestate.world.time * 360.0;
+
+    //Draw the sun
+    shader.uniform_vec2f("tcScale", 1.0, 1.0);
+    shader.uniform_vec2f("tcOffset", 0.0, 0.0);
+    gamestate.textures.bind("sun");
+    let mut transform = Matrix4::identity();
+    transform = Matrix4::from_scale(8.0) * transform;
+    transform = Matrix4::from_angle_z(Deg(90.0)) * transform;
+    transform = Matrix4::from_translation(Vector3::new(-160.0, 0.0, 0.0)) * transform;
+    transform = Matrix4::from_angle_z(Deg(rotation)) * transform;
+    shader.uniform_matrix4f("transform", &transform);
+    let (sunr, sung, sunb) = get_sun_color(gamestate.world.time);
+    shader.uniform_vec4f("tint", sunr, sung, sunb, 1.0);
+    draw_elements(quad.clone());
+
+    //Draw the moon
+    //Calculate the phase of the moon
+    let phase = if gamestate.world.time > 0.25 {
+        //This is to prevent the player from seeing the moon suddenly change
+        //phases at the end of the day when the moon is still visible
+        ((gamestate.world.days_passed + 8) % 16) / 2
+    } else {
+        ((gamestate.world.days_passed + 8 - 1) % 16) / 2
+    };
+    shader.uniform_vec2f("tcScale", 1.0 / 8.0, 1.0);
+    shader.uniform_vec2f("tcOffset", 1.0 / 8.0 * phase as f32, 0.0);
+    shader.uniform_vec4f("tint", 1.0, 1.0, 1.0, 1.0);
+    gamestate.textures.bind("moon");
+    let mut transform = Matrix4::identity();
+    transform = Matrix4::from_scale(8.0) * transform;
+    transform = Matrix4::from_angle_z(Deg(90.0)) * transform;
+    transform = Matrix4::from_translation(Vector3::new(160.0, 0.0, 0.0)) * transform;
+    transform = Matrix4::from_angle_z(Deg(rotation)) * transform;
+    shader.uniform_matrix4f("transform", &transform);
+    draw_elements(quad.clone());
 
     unsafe {
         gl::Enable(gl::CULL_FACE);

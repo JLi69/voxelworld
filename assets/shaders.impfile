@@ -39,6 +39,16 @@
 }
 
 "clouds" {
-	"vert" = "assets/shaders/quad3d.glsl";
+	"vert" = "assets/shaders/skyquad.glsl";
 	"frag" = "assets/shaders/cloudfrag.glsl";
+}
+
+"skyobject" {
+	"vert" = "assets/shaders/skyquad.glsl";
+	"frag" = "assets/shaders/skyfrag.glsl";
+}
+
+"skybox" {
+	"vert" = "assets/shaders/skyboxvert.glsl";
+	"frag" = "assets/shaders/skyboxfrag.glsl";
 }

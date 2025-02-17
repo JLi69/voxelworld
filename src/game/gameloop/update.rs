@@ -42,6 +42,8 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     gamestate.world.update_sim_range(3);
     gamestate.world.update_blocks(dt, chunktables, 3);
     gamestate.world.rand_block_update(dt, Some(chunktables), 3);
+    //Update day night cycle
+    gamestate.world.update_daynight(dt);
 
     //Generate new chunks
     gamestate.world.clean_cache();

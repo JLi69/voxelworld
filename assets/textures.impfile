@@ -33,3 +33,15 @@
 "clouds" {
 	"path" = "assets/textures/clouds.png";
 }
+
+"sun" {
+	"path" = "assets/textures/sun.png";
+}
+
+"moon" {
+	"path" = "assets/textures/moon.png";
+}
+
+"star" {
+	"path" = "assets/textures/star.png";
+}

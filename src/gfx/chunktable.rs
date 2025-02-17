@@ -1,3 +1,4 @@
+use super::display::get_skycolor;
 use super::fluid::generate_fluid_vertex_data;
 use super::frustum::Frustum;
 use super::nonvoxel::generate_non_voxel_vertex_data;
@@ -13,7 +14,7 @@ use std::mem::size_of;
 use std::os::raw::c_void;
 
 //Set fog color
-pub fn set_fog(gamestate: &Game, shader: &ShaderProgram) {
+pub fn set_fog(gamestate: &Game, shader: &ShaderProgram, skycolor: (f32, f32, f32)) {
     if gamestate.player.head_intersection(&gamestate.world, 12) {
         //Water
         shader.uniform_float("fogdist", -CHUNK_SIZE_F32 / 3.0);
@@ -25,12 +26,13 @@ pub fn set_fog(gamestate: &Game, shader: &ShaderProgram) {
         shader.uniform_float("fogstrength", 1.0 / 1.8);
         shader.uniform_vec4f("fogcolor", 1.0, 0.3, 0.0, 1.0);
     } else {
+        let (sr, sg, sb) = skycolor;
         //Normal
         let range = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32;
         let dist = range * 0.7;
         shader.uniform_float("fogdist", dist);
         shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
-        shader.uniform_vec4f("fogcolor", 0.4, 0.8, 1.0, 1.0);
+        shader.uniform_vec4f("fogcolor", sr, sg, sb, 1.0);
     }
 }
 
@@ -406,7 +408,7 @@ impl ChunkVaoTable {
         );
 
         //Set fog color
-        set_fog(gamestate, &chunkshader);
+        set_fog(gamestate, &chunkshader, get_skycolor(gamestate.world.time));
 
         let mut drawn_count = 0;
         for ((chunkx, chunky, chunkz), vao) in &self.vaos {

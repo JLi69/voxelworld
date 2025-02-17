@@ -44,6 +44,13 @@ impl Camera {
             * Matrix4::from_translation(-self.position)
     }
 
+    //Returns the view matrix but without the translation,
+    //this is used for objects that are meant to be displayed as infinitely
+    //far away, such as the sun or moon
+    pub fn get_view_no_translate(&self) -> Matrix4<f32> {
+        Matrix4::from_angle_x(Deg(self.pitch)) * Matrix4::from_angle_y(Deg(self.yaw))
+    }
+
     //Forward vector for camera
     pub fn forward(&self) -> Vector3<f32> {
         let dir = Matrix4::from_angle_y(Deg(-self.yaw))
