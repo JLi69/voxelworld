@@ -42,3 +42,10 @@ pub fn draw_elements(vao: Option<Vao>) {
         vao.draw_elements();
     }
 }
+
+//Draws instanced elements for an optional vao, will do nothing if vao is None
+pub fn draw_elements_instanced(vao: Option<Vao>, count: i32) {
+    if let Some(vao) = vao {
+        vao.draw_elements_instanced(count);
+    }
+}

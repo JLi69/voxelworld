@@ -6,7 +6,7 @@ use super::chunktable::set_fog;
 use super::ChunkTables;
 use crate::assets::shader::ShaderProgram;
 use crate::assets::Texture;
-use crate::game::assets::models::draw_elements;
+use crate::game::assets::models::{draw_elements, draw_elements_instanced};
 use crate::game::physics::Hitbox;
 use crate::voxel::{self, CHUNK_SIZE_F32};
 use crate::{game::Game, EMPTY_BLOCK};
@@ -190,6 +190,7 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
 
 //Assumes 0.0 < t < 1.0
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    let t = t.clamp(0.0, 1.0);
     a * (1.0 - t) + b * t
 }
 
@@ -280,6 +281,18 @@ fn get_sun_color(t: f32) -> (f32, f32, f32) {
     }
 }
 
+fn get_star_alpha(t: f32) -> f32 {
+    if t > 1.0 - TRANSITION_TIME {
+        lerp(1.0, 0.0, (t - 1.0 + TRANSITION_TIME) / TRANSITION_TIME)
+    } else if t > 0.5 && t < 0.5 + TRANSITION_TIME {
+        lerp(0.0, 1.0, (t - 0.5) / TRANSITION_TIME)
+    } else if t >= 0.0 && t <= 0.5 {
+        0.0
+    } else {
+        1.0
+    }
+}
+
 pub fn display_sky(gamestate: &Game) {
     unsafe {
         gl::Disable(gl::CULL_FACE);
@@ -298,14 +311,32 @@ pub fn display_sky(gamestate: &Game) {
     set_sky_color(&skybox_shader, gamestate.world.time);
     draw_elements(cube);
 
+    let rotation = -gamestate.world.time * 360.0;
     let quad = gamestate.models.bind("quad2d");
+
+    //Draw stars
+    gamestate.shaders.use_program("stars");
+    let star_shader = gamestate.shaders.get("stars");
+    star_shader.uniform_matrix4f("persp", &persp);
+    star_shader.uniform_matrix4f("view", &view);
+    star_shader.uniform_float("alpha", get_star_alpha(gamestate.world.time));
+    star_shader.uniform_vec2f("tcScale", 1.0, 1.0);
+    star_shader.uniform_vec2f("tcOffset", 0.0, 0.0);
+    gamestate.textures.bind("star");
+    let mut transform = Matrix4::identity();
+    transform = Matrix4::from_angle_z(Deg(90.0)) * transform;
+    transform = Matrix4::from_angle_x(Deg(45.0)) * transform;
+    transform = Matrix4::from_translation(Vector3::new(-320.0, 0.0, 0.0)) * transform;
+    star_shader.uniform_float("rotation", rotation);
+    star_shader.uniform_matrix4f("transform", &transform);
+    star_shader.uniform_vec4f("tint", 1.0, 1.0, 1.0, 1.0);
+    draw_elements_instanced(quad.clone(), 800);
+
     gamestate.shaders.use_program("skyobject");
     let shader = gamestate.shaders.get("skyobject");
     shader.uniform_matrix4f("persp", &persp);
     shader.uniform_matrix4f("view", &view);
     shader.uniform_float("alpha", 1.0);
-
-    let rotation = -gamestate.world.time * 360.0;
 
     //Draw the sun
     shader.uniform_vec2f("tcScale", 1.0, 1.0);

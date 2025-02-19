@@ -48,6 +48,11 @@
 	"frag" = "assets/shaders/skyfrag.glsl";
 }
 
+"stars" {
+	"vert" = "assets/shaders/starvert.glsl";
+	"frag" = "assets/shaders/skyfrag.glsl";
+}
+
 "skybox" {
 	"vert" = "assets/shaders/skyboxvert.glsl";
 	"frag" = "assets/shaders/skyboxfrag.glsl";

@@ -124,6 +124,19 @@ impl Vao {
             );
         }
     }
+
+    //Draw the instanced vao with triangles as the primitive
+    pub fn draw_elements_instanced(&self, count: i32) {
+        unsafe {
+            gl::DrawElementsInstanced(
+                gl::TRIANGLES,
+                self.vert_count,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+                count,
+            );
+        }
+    }
 }
 
 //Create a cube
