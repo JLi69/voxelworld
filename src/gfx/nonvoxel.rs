@@ -7,7 +7,7 @@ pub fn generate_non_voxel_vertex_data(chunk: &Chunk) -> (ChunkData, i32) {
     let mut vert_data = vec![];
 
     if chunk.is_empty() {
-        return (vert_data, 7);
+        return (vert_data, 8);
     }
 
     let mut cache = HashMap::new();
@@ -20,5 +20,5 @@ pub fn generate_non_voxel_vertex_data(chunk: &Chunk) -> (ChunkData, i32) {
         }
     }
 
-    (vert_data, 7)
+    (vert_data, 8)
 }

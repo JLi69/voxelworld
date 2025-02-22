@@ -13,6 +13,7 @@ use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
+use crate::voxel::light::Light;
 use crate::voxel::{out_of_bounds, rotate_orientation, wrap_coord, Block, Chunk, EMPTY_BLOCK};
 pub use fluid::add_fluid_vertices;
 pub use furnace::add_block_vertices_furnace_rotated;
@@ -84,6 +85,35 @@ fn get_adj_block(
     Some(adj_block)
 }
 
+fn get_adj_light(
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    xyz: Int3,
+    offset: Int3,
+) -> Option<Light> {
+    let (x, y, z) = xyz;
+    let (offx, offy, offz) = offset;
+
+    if let Some(adj_chunk) = adj_chunk {
+        let adj_x = wrap_coord(x + offx) as usize;
+        let adj_y = wrap_coord(y + offy) as usize;
+        let adj_z = wrap_coord(z + offz) as usize;
+        if out_of_bounds(x, y, z, offx, offy, offz) {
+            return Some(adj_chunk.get_light_relative(adj_x, adj_y, adj_z));
+        }
+    }
+
+    if adj_chunk.is_none() && out_of_bounds(x, y, z, offx, offy, offz) {
+        return None;
+    }
+
+    let adj_x = (x + offx) as usize;
+    let adj_y = (y + offy) as usize;
+    let adj_z = (z + offz) as usize;
+    let adj_light = chunk.get_light_relative(adj_x, adj_y, adj_z);
+    Some(adj_light)
+}
+
 fn add_face(
     chunk: &Chunk,
     adj_chunk: Option<&Chunk>,
@@ -96,9 +126,10 @@ fn add_face(
     let (x, y, z) = xyz;
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
+    let adj_light = get_adj_light(chunk, adj_chunk, xyz, offset).unwrap_or(Light::black());
     let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
     add_stair_geometry(
-        vert_data, block, adj_block, xyz, offset, face, face_info, skip_face,
+        vert_data, block, adj_block, adj_light, xyz, offset, face, face_info, skip_face,
     );
     if let Some(adj_block) = adj_block {
         if skip_face(block, adj_block, offset) {
@@ -117,6 +148,8 @@ fn add_face(
         vert_data.push(z);
         vert_data.push(face_info.block_texture_id);
         vert_data.push(face_info.face_id);
+        vert_data.push(((adj_light.r() as u8) << 4) | (adj_light.skylight() as u8));
+        vert_data.push(((adj_light.b() as u8) << 4) | (adj_light.g() as u8));
     }
 
     apply_geometry(block, xyz, vert_data);

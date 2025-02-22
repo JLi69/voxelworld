@@ -1,5 +1,5 @@
 use super::Chunk;
-use crate::voxel::{Block, CHUNK_SIZE};
+use crate::voxel::{light::Light, Block, CHUNK_SIZE};
 
 impl Chunk {
     pub fn from_rle(x: i32, y: i32, z: i32, blocks: &[(u16, Block)]) -> Self {
@@ -19,6 +19,7 @@ impl Chunk {
 
         Self {
             blocks: chunk_blocks,
+            light: vec![Light::black(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE],
             ix: x,
             iy: y,
             iz: z,

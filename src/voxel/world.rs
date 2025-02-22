@@ -2,9 +2,11 @@ pub mod block_update;
 mod default_world;
 mod flat_world;
 mod gen_more;
+mod light;
 mod save;
 
 use super::{
+    light::{Light, LU},
     region::{chunkpos_to_regionpos, get_region_chunks, get_region_chunks_remove, Region},
     world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32,
 };
@@ -204,6 +206,27 @@ impl World {
             return chunk.get_block(x, y, z);
         }
         Block::new()
+    }
+
+    //Returns the light value for a position
+    //Returns black if the position is out of range in the world
+    pub fn get_light(&self, x: i32, y: i32, z: i32) -> Light {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let chunk = self.get_chunk(chunkx, chunky, chunkz);
+        if let Some(chunk) = chunk {
+            return chunk.get_light(x, y, z);
+        }
+        Light::black()
+    }
+
+    //Updates light at a position
+    //Does nothing if the position is out of range for the world
+    pub fn update_light(&mut self, x: i32, y: i32, z: i32, update: LU) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let chunk = self.get_mut_chunk(chunkx, chunky, chunkz);
+        if let Some(chunk) = chunk {
+            return chunk.update_light(x, y, z, update);
+        }
     }
 
     fn get_max_cache_sz(&self) -> usize {

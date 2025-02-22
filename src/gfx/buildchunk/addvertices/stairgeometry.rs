@@ -1,5 +1,5 @@
 use super::{rotate_orientation, slab, Block, ChunkData, Face, FaceInfo, Int3};
-use crate::voxel::orientation_to_normal;
+use crate::voxel::{light::Light, orientation_to_normal};
 use cgmath::Vector3;
 
 #[allow(clippy::too_many_arguments)]
@@ -7,6 +7,7 @@ fn add_stair_geometry_normal(
     vert_data: &mut ChunkData,
     block: Block,
     adj_block: Option<Block>,
+    adj_light: Light,
     xyz: Int3,
     offset: Int3,
     face: &Face,
@@ -33,6 +34,8 @@ fn add_stair_geometry_normal(
         vert_data.push(z);
         vert_data.push(face_info.block_texture_id);
         vert_data.push(face_info.face_id);
+        vert_data.push(((adj_light.r() as u8) << 4) | (adj_light.skylight() as u8));
+        vert_data.push(((adj_light.b() as u8) << 4) | (adj_light.g() as u8));
     }
     if block.reflection() == 0 {
         slab::apply_slab_geometry(vert_data, xyz, 3);
@@ -47,6 +50,7 @@ fn add_stair_geometry_corner(
     vert_data: &mut ChunkData,
     block: Block,
     adj_block: Option<Block>,
+    adj_light: Light,
     xyz: Int3,
     offset: Int3,
     face: &Face,
@@ -82,6 +86,8 @@ fn add_stair_geometry_corner(
         vert_data.push(z);
         vert_data.push(face_info.block_texture_id);
         vert_data.push(face_info.face_id);
+        vert_data.push(((adj_light.r() as u8) << 4) | (adj_light.skylight() as u8));
+        vert_data.push(((adj_light.b() as u8) << 4) | (adj_light.g() as u8));
     }
     if block.reflection() == 0 {
         slab::apply_slab_geometry(vert_data, xyz, 3);
@@ -97,6 +103,7 @@ pub fn add_stair_geometry(
     vert_data: &mut ChunkData,
     block: Block,
     adj_block: Option<Block>,
+    adj_light: Light,
     xyz: Int3,
     offset: Int3,
     face: &Face,
@@ -108,6 +115,7 @@ pub fn add_stair_geometry(
             vert_data,
             block,
             adj_block,
+            adj_light,
             xyz,
             offset,
             face,
@@ -118,6 +126,7 @@ pub fn add_stair_geometry(
             vert_data,
             block,
             adj_block,
+            adj_light,
             xyz,
             offset,
             face,
@@ -129,6 +138,7 @@ pub fn add_stair_geometry(
                 vert_data,
                 block,
                 adj_block,
+                adj_light,
                 xyz,
                 offset,
                 face,
@@ -141,6 +151,7 @@ pub fn add_stair_geometry(
                 vert_data,
                 rotated,
                 adj_block,
+                adj_light,
                 xyz,
                 offset,
                 face,

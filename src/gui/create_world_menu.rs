@@ -53,6 +53,7 @@ fn create_new_world(menu_state: &mut CreateWorldMenuState, gamestate: &mut Game)
         fastrand::u32(..)
     };
     gamestate.generate_world(seed, 7, menu_state.gen_type);
+    gamestate.world.init_block_light();
 }
 
 //Display the create world gui

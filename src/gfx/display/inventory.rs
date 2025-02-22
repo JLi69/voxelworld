@@ -48,7 +48,7 @@ pub fn display_block_item(chunk: &mut Chunk, block: Block) {
         return;
     }
 
-    let vao = ChunkVao::generate_new(&vert_data, 5);
+    let vao = ChunkVao::generate_new(&vert_data, 7);
     vao.draw();
     vao.delete();
 }

@@ -104,7 +104,7 @@ pub fn generate_fluid_vertex_data(
         chunks[i as usize] = world.get_chunk(x + pos.x, y + pos.y, z + pos.z);
     }
 
-    const VALS_PER_VERT: usize = 5;
+    const VALS_PER_VERT: usize = 7;
     //Generate heights
     const SZ: usize = CHUNK_SIZE + 1;
     let mut heights = [0u8; SZ * SZ * SZ];

@@ -3,6 +3,7 @@ pub mod chunk;
 pub mod coordinates;
 pub mod flags;
 pub mod is_valid;
+pub mod light;
 pub mod region;
 pub mod world;
 
@@ -12,6 +13,7 @@ use self::flags::{
     get_flag, CAN_ROTATE_FLAG, CAN_USE, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE,
     NON_VOXEL, NO_HITBOX, REPLACEABLE, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
+use self::light::LightSrc;
 use cgmath::Vector3;
 pub use chunk::Chunk;
 pub use world::World;
@@ -171,6 +173,24 @@ impl Block {
     //Returns if the voxel can be used (right clicked on)
     pub fn can_use(&self) -> bool {
         get_flag(self.id) & CAN_USE != 0
+    }
+
+    //Returns Some(light_level) if the block emits light
+    //Returns None otherwise
+    pub fn light_src(&self) -> Option<LightSrc> {
+        match self.id {
+            //Lava
+            13 => Some(LightSrc::new(15, 8, 2)),
+            //Normal Torch
+            71 => Some(LightSrc::new(15, 15, 15)),
+            //Red torch
+            72 => Some(LightSrc::new(15, 0, 0)),
+            //Green torch
+            73 => Some(LightSrc::new(0, 15, 0)),
+            //Blue torch
+            74 => Some(LightSrc::new(0, 3, 15)),
+            _ => None,
+        }
     }
 }
 

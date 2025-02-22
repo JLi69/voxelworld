@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::gfx::buildchunk::{ChunkData, Int3};
 use crate::gfx::models::{CUBE, CUBE_INDICES, CUBE_TEX_INDICES, QUAD_INDICES, TEX_COORDS};
+use crate::voxel::light::Light;
 use crate::voxel::{Block, Chunk};
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Vector4};
 
@@ -32,7 +33,14 @@ fn tc_to_u8(tc: f32) -> (u8, u8) {
     }
 }
 
-fn add_mesh_to_chunk(xyz: Int3, id: u8, vertices: &[Vert], tc: &[Tc], vert_data: &mut ChunkData) {
+fn add_mesh_to_chunk(
+    xyz: Int3,
+    id: u8,
+    vertices: &[Vert],
+    tc: &[Tc],
+    vert_data: &mut ChunkData,
+    light: Light,
+) {
     let (x, y, z) = xyz;
     for (i, v) in vertices.iter().enumerate() {
         let vx = v.x + x as f32;
@@ -69,9 +77,12 @@ fn add_mesh_to_chunk(xyz: Int3, id: u8, vertices: &[Vert], tc: &[Tc], vert_data:
         vert_data.push(verty | (fy1 << 6));
         vert_data.push(vertz | (fz1 << 6));
         vert_data.push(id);
-        vert_data.push(0xff); //Meaningless data
+        //Sky light and red channel
+        vert_data.push(((light.r() as u8) << 4) | (light.skylight() as u8));
         vert_data.push(fraction | (tcx1 << 6) | (tcy1 << 7));
         vert_data.push((tcy2 << 4) | tcx2);
+        //Green and blue channel
+        vert_data.push(((light.b() as u8) << 4) | (light.g() as u8));
     }
 }
 
@@ -514,9 +525,10 @@ pub fn add_nonvoxel_vertices(
         _ => block.id,
     };
 
+    let light = chunk.get_light_relative(x as usize, y as usize, z as usize);
     let key = (block.id, block.geometry);
     if let Some((vert, tc)) = cached_meshes.get(&key) {
-        add_mesh_to_chunk(xyz, id, vert, tc, vert_data);
+        add_mesh_to_chunk(xyz, id, vert, tc, vert_data, light);
     }
 
     let (vert, tc) = match block.id {
@@ -536,6 +548,6 @@ pub fn add_nonvoxel_vertices(
         _ => (vec![], vec![]),
     };
 
-    add_mesh_to_chunk(xyz, id, &vert, &tc, vert_data);
+    add_mesh_to_chunk(xyz, id, &vert, &tc, vert_data, light);
     cached_meshes.insert(key, (vert, tc));
 }

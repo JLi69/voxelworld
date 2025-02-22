@@ -162,5 +162,5 @@ pub fn generate_chunk_vertex_data(
         }
     }
 
-    (chunk_vert_data, 5)
+    (chunk_vert_data, 7)
 }

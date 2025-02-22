@@ -47,6 +47,7 @@ fn add_face_fluid(
         return;
     }
 
+    let light = chunk.get_light_relative(x as usize, y as usize, z as usize);
     for i in 0..6 {
         let x = face[i * 3] + x as u8;
         let y = face[i * 3 + 1] + y as u8;
@@ -60,6 +61,8 @@ fn add_face_fluid(
             data |= 7 << 2;
         }
         vert_data.push(data);
+        vert_data.push(((light.r() as u8) << 4) | (light.skylight() as u8));
+        vert_data.push(((light.b() as u8) << 4) | (light.g() as u8));
     }
 }
 

@@ -38,5 +38,6 @@ impl Game {
         self.player.hotbar = load_inventory(&inventory_path);
         self.world = World::load_world_metadata(world_path);
         self.world.load_chunks();
+        self.world.init_block_light();
     }
 }

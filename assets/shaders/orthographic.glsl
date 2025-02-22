@@ -1,7 +1,7 @@
 #version 330 core
 
 layout(location = 0) in uvec4 vertdata;
-layout(location = 1) in uint data;
+layout(location = 1) in uvec3 data;
 
 uniform mat4 screen;
 uniform mat4 transform;
@@ -11,6 +11,7 @@ out vec3 fragpos;
 out vec3 chunkfragpos;
 flat out uint blockid;
 flat out uint faceid;
+out vec3 tint;
 
 void main() {
 	float geox = float((vertdata.x & 0x40u) >> 6) * 0.5;
@@ -29,5 +30,6 @@ void main() {
 	screenPos.z -= offset.z;
 	gl_Position = screenPos;
 	blockid = id;
-	faceid = data & 3u;
+	faceid = data.x & 3u;
+	tint = vec3(1.0);
 }

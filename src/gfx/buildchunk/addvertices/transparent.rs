@@ -1,8 +1,9 @@
-use super::{add_stair_geometry, get_adj_block};
+use super::{add_stair_geometry, get_adj_block, get_adj_light};
 use super::{apply_geometry, skipface::skip_face_trans, ChunkData, FaceInfo, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
 };
+use crate::voxel::light::Light;
 use crate::voxel::{Chunk, EMPTY_BLOCK};
 
 fn add_face_transparent(
@@ -18,10 +19,12 @@ fn add_face_transparent(
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
 
     let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    let adj_light = get_adj_light(chunk, adj_chunk, xyz, offset).unwrap_or(Light::black());
     add_stair_geometry(
         vert_data,
         block,
         adj_block,
+        adj_light,
         xyz,
         offset,
         face,
@@ -45,6 +48,8 @@ fn add_face_transparent(
         vert_data.push(z);
         vert_data.push(face_info.block_texture_id);
         vert_data.push(face_info.face_id);
+        vert_data.push(((adj_light.r() as u8) << 4) | (adj_light.skylight() as u8));
+        vert_data.push(((adj_light.b() as u8) << 4) | (adj_light.g() as u8));
     }
 
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);

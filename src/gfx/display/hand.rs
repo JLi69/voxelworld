@@ -1,7 +1,7 @@
 use super::inventory::display_block_item;
 use crate::{
     game::{inventory::Item, Game},
-    voxel::chunk,
+    voxel::{chunk, coordinates::f32coord_to_int, light::LU},
 };
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 use chunk::Chunk;
@@ -18,6 +18,18 @@ pub fn display_hand_item(gamestate: &Game) {
     let rotation_animation = Matrix4::<f32>::from_angle_x(item_rotation_x);
 
     let held_item = gamestate.player.hotbar.get_selected();
+    let (playerx, playery, playerz) = f32coord_to_int(
+        gamestate.player.position.x,
+        gamestate.player.position.y,
+        gamestate.player.position.z,
+    );
+    let light = gamestate.world.get_light(playerx, playery, playerz);
+    let lu = LU::new(
+        Some(light.sky()),
+        Some(light.r()),
+        Some(light.g()),
+        Some(light.b()),
+    );
     match held_item {
         Item::BlockItem(block, _) => {
             gamestate.shaders.use_program("chunk");
@@ -37,6 +49,14 @@ pub fn display_hand_item(gamestate: &Game) {
             chunk_shader.uniform_vec3f("chunkpos", -1.5, -1.5, -1.5);
             chunk_shader.uniform_vec3f("campos", 0.0, 0.0, 0.0);
             let mut chunk = Chunk::new(0, 0, 0);
+            //Fill in the light for the chunk
+            for x in 0..=2 {
+                for y in 0..=2 {
+                    for z in 0..=2 {
+                        chunk.update_light(x, y, z, lu);
+                    }
+                }
+            }
             display_block_item(&mut chunk, block);
         }
         Item::EmptyItem => {}

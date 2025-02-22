@@ -5,6 +5,7 @@ in vec3 fragpos;
 in vec3 chunkfragpos;
 flat in uint blockid;
 flat in uint faceid;
+in vec3 tint;
 
 uniform sampler2D tex;
 
@@ -32,7 +33,8 @@ vec2 transformTc(vec2 tc) {
 
 void main() {
 	vec2 tc = transformTc(texturecoords[faceid]);
-	color = texture(tex, tc);
+	color = texture(tex, tc);	
+	color *= vec4(tint, 1.0);
 	float alpha = color.a;
 	color *= shading[faceid];
 	float mixamt = min(max(length(fragpos - campos) - fogdist, 0.0) * fogstrength, 1.0);
