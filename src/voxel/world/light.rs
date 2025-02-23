@@ -3,7 +3,7 @@ use crate::voxel::{
     light::{Light, LightSrc, LU},
     Block, EMPTY_BLOCK,
 };
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 const ADJ: [(i32, i32, i32); 6] = [
     (-1, 0, 0),
@@ -20,17 +20,34 @@ pub fn light_can_pass(block: Block) -> bool {
     block.transparent() || block.id == EMPTY_BLOCK || block.shape() != 0
 }
 
+fn check_visited(visited: &HashMap<(i32, i32, i32), u16>, xyz: (i32, i32, i32), val: u16) -> bool {
+    if let Some(v) = visited.get(&xyz) {
+        if *v >= val {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn add_visited(visited: &mut HashMap<(i32, i32, i32), u16>, xyz: (i32, i32, i32), val: u16) {
+    if check_visited(visited, xyz, val) {
+        return;
+    }
+    visited.insert(xyz, val);
+}
+
 fn propagate_channel(
     queue: &mut VecDeque<Propagation>,
     world: &mut World,
     channel: fn(Light) -> u16,
     update: fn(u16) -> LU,
 ) {
-    let mut visited = HashSet::<(i32, i32, i32, u16)>::new();
+    let mut visited = HashMap::<(i32, i32, i32), u16>::new();
     while !queue.is_empty() {
         let top = queue.pop_front();
         if let Some((x, y, z, val)) = top {
-            if visited.contains(&(x, y, z, val)) {
+            if check_visited(&visited, (x, y, z), val) {
                 continue;
             }
             let light = world.get_light(x, y, z);
@@ -38,7 +55,7 @@ fn propagate_channel(
                 continue;
             }
             let lu = update(val);
-            visited.insert((x, y, z, val));
+            add_visited(&mut visited, (x, y, z), val);
             world.update_light(x, y, z, lu);
 
             if val <= 1 {
@@ -46,17 +63,13 @@ fn propagate_channel(
             }
 
             for (dx, dy, dz) in ADJ {
-                if visited.contains(&(x + dx, y + dy, z + dz, val - 1)) {
+                let adj = (x + dx, y + dy, z + dz);
+                if check_visited(&visited, adj, val - 1) {
                     continue;
                 }
                 let block = world.get_block(x + dx, y + dy, z + dz);
                 if !light_can_pass(block) {
-                    visited.insert((x, y, z, val));
-                    continue;
-                }
-                let adj_light = world.get_light(x + dx, y + dy, z + dz);
-                if channel(adj_light) >= val - 1 {
-                    visited.insert((x + dx, y + dy, z + dz, val - 1));
+                    add_visited(&mut visited, adj, 15);
                     continue;
                 }
                 queue.push_back((x + dx, y + dy, z + dz, val - 1));
