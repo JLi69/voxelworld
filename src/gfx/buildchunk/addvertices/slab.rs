@@ -33,7 +33,7 @@ fn half_positions(chunkdata: &mut ChunkData, pos: Int3, offset: i32, index: usiz
 
         let light_idx = (face_count - 1) * 6 * 7 + 7 * i + 5;
         chunkdata[light_idx] = ((light.r() as u8) << 4) | (light.skylight() as u8);
-        chunkdata[light_idx] = ((light.b() as u8) << 4) | (light.g() as u8);
+        chunkdata[light_idx + 1] = ((light.b() as u8) << 4) | (light.g() as u8);
     }
 }
 
