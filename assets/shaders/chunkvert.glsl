@@ -13,7 +13,7 @@ flat out uint blockid;
 flat out uint faceid;
 out vec3 tint;
 
-const float MIN_LIGHT = 0.15;
+const float MIN_LIGHT = 0.05;
 
 void main() {
 	float geox = float((vertdata.x & 0x40u) >> 6) * 0.5;

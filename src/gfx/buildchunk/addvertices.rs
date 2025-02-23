@@ -9,6 +9,8 @@ mod slab;
 mod stairgeometry;
 mod transparent;
 
+use self::stairgeometry::StairInfo;
+
 use super::{ChunkData, Int3};
 use crate::gfx::face_data::{
     Face, BACK_FACE, BOTTOM_FACE, FRONT_FACE, LEFT_FACE, RIGHT_FACE, TOP_FACE,
@@ -40,16 +42,16 @@ impl FaceInfo {
     }
 }
 
-fn apply_geometry(block: Block, xyz: Int3, vert_data: &mut ChunkData) {
+fn apply_geometry(block: Block, xyz: Int3, vert_data: &mut ChunkData, light: Light) {
     match block.shape() {
         1 => {
-            slab::apply_slab_geometry(vert_data, xyz, block.orientation());
+            slab::apply_slab_geometry(vert_data, xyz, block.orientation(), light);
         }
         2..=4 => {
             if block.reflection() == 0 {
-                slab::apply_slab_geometry(vert_data, xyz, 0);
+                slab::apply_slab_geometry(vert_data, xyz, 0, light);
             } else {
-                slab::apply_slab_geometry(vert_data, xyz, 3);
+                slab::apply_slab_geometry(vert_data, xyz, 3, light);
             }
         }
         _ => {}
@@ -128,8 +130,10 @@ fn add_face(
 
     let adj_light = get_adj_light(chunk, adj_chunk, xyz, offset).unwrap_or(Light::black());
     let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
+    let light = chunk.get_light_relative(x as usize, y as usize, z as usize);
+    let stairinfo = StairInfo::new(block, adj_block, adj_light, light);
     add_stair_geometry(
-        vert_data, block, adj_block, adj_light, xyz, offset, face, face_info, skip_face,
+        vert_data, stairinfo, xyz, offset, face, face_info, skip_face,
     );
     if let Some(adj_block) = adj_block {
         if skip_face(block, adj_block, offset) {
@@ -152,7 +156,7 @@ fn add_face(
         vert_data.push(((adj_light.b() as u8) << 4) | (adj_light.g() as u8));
     }
 
-    apply_geometry(block, xyz, vert_data);
+    apply_geometry(block, xyz, vert_data, light);
 }
 
 //Default function for adding block vertices, all faces have the same texture

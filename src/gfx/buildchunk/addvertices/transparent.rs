@@ -1,3 +1,4 @@
+use super::stairgeometry::StairInfo;
 use super::{add_stair_geometry, get_adj_block, get_adj_light};
 use super::{apply_geometry, skipface::skip_face_trans, ChunkData, FaceInfo, Int3};
 use crate::gfx::face_data::{
@@ -20,11 +21,11 @@ fn add_face_transparent(
 
     let adj_block = get_adj_block(chunk, adj_chunk, xyz, offset);
     let adj_light = get_adj_light(chunk, adj_chunk, xyz, offset).unwrap_or(Light::black());
+    let light = chunk.get_light_relative(x as usize, y as usize, z as usize);
+    let stairinfo = StairInfo::new(block, adj_block, adj_light, light);
     add_stair_geometry(
         vert_data,
-        block,
-        adj_block,
-        adj_light,
+        stairinfo,
         xyz,
         offset,
         face,
@@ -53,7 +54,7 @@ fn add_face_transparent(
     }
 
     let block = chunk.get_block_relative(x as usize, y as usize, z as usize);
-    apply_geometry(block, xyz, vert_data);
+    apply_geometry(block, xyz, vert_data, light);
 }
 
 pub fn add_block_vertices_trans(

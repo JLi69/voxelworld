@@ -12,7 +12,7 @@ out vec3 fragpos;
 out vec3 tint;
 
 const float TEX_FRAC = 1.0 / 16.0;
-const float MIN_LIGHT = 0.15;
+const float MIN_LIGHT = 0.05;
 
 vec2 transformTc(vec2 tc, uint blockid) {
 	float x = float(int(blockid) % 16) * TEX_FRAC;

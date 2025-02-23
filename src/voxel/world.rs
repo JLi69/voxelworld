@@ -225,7 +225,7 @@ impl World {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let chunk = self.get_mut_chunk(chunkx, chunky, chunkz);
         if let Some(chunk) = chunk {
-            return chunk.update_light(x, y, z, update);
+            chunk.update_light(x, y, z, update);
         }
     }
 

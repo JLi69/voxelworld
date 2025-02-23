@@ -180,7 +180,7 @@ impl Block {
     pub fn light_src(&self) -> Option<LightSrc> {
         match self.id {
             //Lava
-            13 => Some(LightSrc::new(15, 8, 2)),
+            13 => Some(LightSrc::new(15, 8, 0)),
             //Normal Torch
             71 => Some(LightSrc::new(15, 15, 15)),
             //Red torch

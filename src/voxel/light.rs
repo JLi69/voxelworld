@@ -46,10 +46,6 @@ impl LightUpdate {
             b: bupdate,
         }
     }
-
-    pub fn from_src(src: LightSrc) -> Self {
-        Self::new(None, Some(src.r), Some(src.g), Some(src.b))
-    }
 }
 
 macro_rules! get_channel {
