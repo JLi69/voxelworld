@@ -286,7 +286,7 @@ fn get_star_alpha(t: f32) -> f32 {
         lerp(1.0, 0.0, (t - 1.0 + TRANSITION_TIME) / TRANSITION_TIME)
     } else if t > 0.5 && t < 0.5 + TRANSITION_TIME {
         lerp(0.0, 1.0, (t - 0.5) / TRANSITION_TIME)
-    } else if t >= 0.0 && t <= 0.5 {
+    } else if (0.0..=0.5).contains(&t) {
         0.0
     } else {
         1.0
