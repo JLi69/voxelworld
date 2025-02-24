@@ -113,6 +113,8 @@ impl World {
             self.chunks.insert(pos, new_chunk);
         }
 
+        self.init_light_new_chunks(&to_generate);
+
         update_chunk_tables(
             chunktables,
             self.centerx,

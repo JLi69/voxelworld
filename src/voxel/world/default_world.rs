@@ -422,6 +422,8 @@ impl World {
             start.elapsed().as_millis()
         );
 
+        self.init_light_new_chunks(&to_generate);
+
         update_chunk_tables(
             chunktables,
             self.centerx,

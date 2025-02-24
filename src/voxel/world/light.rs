@@ -57,10 +57,9 @@ fn propagate_channel(
             if channel(light) >= val {
                 continue;
             }
-            let lu = update(val);
             add_visited(&mut visited, (x, y, z), val);
             get_chunktable_updates(x, y, z, &mut updated);
-            world.update_light(x, y, z, lu);
+            world.update_light(x, y, z, update(val));
 
             if val <= 1 {
                 continue;
@@ -73,7 +72,7 @@ fn propagate_channel(
                 }
                 let block = world.get_block(x + dx, y + dy, z + dz);
                 if !light_can_pass(block) {
-                    add_visited(&mut visited, adj, 15);
+                    add_visited(&mut visited, adj, 0xff);
                     continue;
                 }
                 queue.push_back((x + dx, y + dy, z + dz, val - 1));
@@ -273,5 +272,33 @@ impl World {
         } else {
             ChunkList::new()
         }
+    }
+
+    //Takes in a list of newly loaded chunks and generates the light for those chunks
+    pub fn init_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) {
+        let start = std::time::Instant::now();
+
+        //Generate new light
+        let mut srcs = vec![];
+        let mut chunks_with_neighbors = HashSet::new();
+        for (x, y, z) in chunks {
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    for dz in -1..=1 {
+                        chunks_with_neighbors.insert((x + dx, y + dy, z + dz));
+                    }
+                }
+            } 
+        }
+        for (x, y, z) in chunks_with_neighbors {
+            if let Some(chunk) = self.chunks.get_mut(&(x, y, z)) {
+                chunk.clear_light();
+                chunk.get_light_srcs(&mut srcs);
+            }
+        }
+        propagate(self, &srcs);
+
+        let time = start.elapsed().as_millis();
+        eprintln!("Took {time} ms to init light in new chunks");
     }
 }
