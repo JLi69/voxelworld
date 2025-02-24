@@ -135,7 +135,11 @@ impl Game {
             && stuck.is_none()
         {
             let destroyed = destroy_block(pos, dir, &mut self.world);
+            let update_mesh = self.world.update_single_block_light(destroyed);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
             } else {
@@ -145,7 +149,11 @@ impl Game {
             //If the player is trapped in a block, then they can only break
             //the block that is currently trapping them
             let destroyed = destroy_block_suffocating(stuck, &mut self.world);
+            let update_mesh = self.world.update_single_block_light(destroyed);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
             } else {
@@ -163,7 +171,11 @@ impl Game {
             && stuck.is_none()
         {
             let placed = place_block(pos, dir, &mut self.world, &self.player);
+            let update_mesh = self.world.update_single_block_light(placed);
             gfx::update_chunk_vaos(chunktables, placed, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
             if placed.is_some() {
                 self.hand_animation = 0.1;
                 self.build_cooldown = BUILD_COOLDOWN;

@@ -356,6 +356,7 @@ impl World {
 
         self.updating.clear();
 
+        let mut light_updates = vec![];
         for ((x, y, z), block) in to_update {
             if self.get_block(x, y, z) == block {
                 continue;
@@ -370,7 +371,10 @@ impl World {
 
             get_chunktable_updates(x, y, z, &mut update_mesh);
             self.set_block(x, y, z, block);
+            light_updates.push((x, y, z));
         }
+
+        update_mesh.extend(self.update_block_light(&light_updates));
 
         for (x, y, z) in update_mesh {
             chunktables.update_table(self, x, y, z);

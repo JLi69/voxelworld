@@ -312,14 +312,18 @@ impl World {
         }
 
         let mut update_mesh = HashSet::<(i32, i32, i32)>::new();
+        let mut light_updates = vec![];
         for ((x, y, z), block) in to_update {
             if self.get_block(x, y, z) == block {
                 continue;
             }
 
             self.set_block(x, y, z, block);
+            light_updates.push((x, y, z));
             get_chunktable_updates(x, y, z, &mut update_mesh);
         }
+
+        update_mesh.extend(self.update_block_light(&light_updates));
 
         if let Some(chunktables) = chunktables {
             for (x, y, z) in update_mesh {
