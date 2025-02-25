@@ -245,6 +245,87 @@ fn validate_light(world: &World, chunks: &HashSet<(i32, i32, i32)>) {
     }
 }
 
+fn propagate_channel_fast(
+    queue: &mut VecDeque<Propagation>,
+    world: &mut World,
+    channel: fn(Light) -> u16,
+    update: fn(u16) -> LU,
+) {
+    let mut visited = HashMap::<(i32, i32, i32), u16>::new();
+    while !queue.is_empty() {
+        let top = queue.pop_front();
+        if let Some((x, y, z, val)) = top {
+            if check_visited(&visited, (x, y, z), val) {
+                continue;
+            }
+            let light = world.get_light(x, y, z);
+            if channel(light) >= val {
+                continue;
+            }
+            add_visited(&mut visited, (x, y, z), val);
+            world.update_light(x, y, z, update(val));
+
+            if val <= 1 {
+                continue;
+            }
+
+            for (dx, dy, dz) in ADJ {
+                if world.out_of_bounds(x + dx, y + dy, z + dz) {
+                    continue;
+                }
+                let adj = (x + dx, y + dy, z + dz);
+                if check_visited(&visited, adj, val - 1) {
+                    continue;
+                }
+                let block = world.get_block(x + dx, y + dy, z + dz);
+                if !light_can_pass(block) {
+                    add_visited(&mut visited, adj, 0xff);
+                    continue;
+                }
+                queue.push_back((x + dx, y + dy, z + dz, val - 1));
+            }
+        }
+    }
+}
+
+//Propagate a light source
+//This function is different from `propagate` in that it does not return
+//a list of chunks that have been updated and thus should require less memory
+//allocations and therefore be slightly faster
+pub fn propagate_fast(world: &mut World, srcs: &[((i32, i32, i32), LightSrc)]) {
+    let mut queue = VecDeque::new();
+    //Propagate red
+    for ((x, y, z), src) in srcs {
+        queue.push_back((*x, *y, *z, src.r));
+    }
+    propagate_channel_fast(
+        &mut queue,
+        world,
+        |light| light.r(),
+        |v| LU::new(None, Some(v), None, None),
+    );
+    //Propagate green
+    for ((x, y, z), src) in srcs {
+        queue.push_back((*x, *y, *z, src.g));
+    }
+    propagate_channel_fast(
+        &mut queue,
+        world,
+        |light| light.g(),
+        |v| LU::new(None, None, Some(v), None),
+    );
+    //Propagate blue
+    for ((x, y, z), src) in srcs {
+        queue.push_back((*x, *y, *z, src.b));
+    }
+    propagate_channel_fast(
+        &mut queue,
+        world,
+        |light| light.b(),
+        |v| LU::new(None, None, None, Some(v)),
+    );
+}
+
 impl World {
     //Called when the world is first loaded
     pub fn init_block_light(&mut self) {
@@ -254,7 +335,7 @@ impl World {
         for chunk in self.chunks.values() {
             chunk.get_light_srcs(&mut srcs);
         }
-        propagate(self, &srcs);
+        propagate_fast(self, &srcs);
 
         let time = start.elapsed().as_millis();
         eprintln!("Took {time} ms to init light");
@@ -334,7 +415,7 @@ impl World {
                 chunk.get_light_srcs(&mut srcs);
             }
         }
-        propagate(self, &srcs);
+        propagate_fast(self, &srcs);
 
         for (pos, light) in prev_light { 
             if let Some(chunk) = self.chunks.get_mut(&pos) {
@@ -349,7 +430,7 @@ impl World {
                 chunk.get_light_srcs(&mut srcs);
             }
         }
-        propagate(self, &srcs); 
+        propagate_fast(self, &srcs); 
 
         //Uncomment the following if you want to verify if the light generated is correct
         //(for debugging purposes)
