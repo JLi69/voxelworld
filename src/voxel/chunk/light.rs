@@ -22,7 +22,24 @@ impl Chunk {
 
     pub fn clear_light(&mut self) {
         for l in &mut self.light {
-            *l = Light::black();
+            l.clear();
+        }
+    }
+
+    pub fn light(&self) -> &Vec<Light> {
+        &self.light
+    }
+
+    pub fn apply_light_data(&mut self, light_data: &[Light]) {
+        if light_data.len() != self.light.len() {
+            return;
+        }
+
+        for (i, light) in light_data.iter().enumerate() {
+            let light2 = self.light[i];
+            self.light[i].set_red(light.r().max(light2.r()));
+            self.light[i].set_green(light.g().max(light2.g()));
+            self.light[i].set_blue(light.b().max(light2.b()));
         }
     }
 }

@@ -1,7 +1,7 @@
 use super::{World, block_update::get_chunktable_updates};
 use crate::voxel::{
     light::{Light, LightSrc, LU},
-    Block, EMPTY_BLOCK,
+    Block, EMPTY_BLOCK, CHUNK_SIZE_I32,
 };
 use std::collections::{HashMap, VecDeque, HashSet};
 
@@ -66,6 +66,9 @@ fn propagate_channel(
             }
 
             for (dx, dy, dz) in ADJ {
+                if world.out_of_bounds(x + dx, y + dy, z + dz) {
+                    continue;
+                }
                 let adj = (x + dx, y + dy, z + dz);
                 if check_visited(&visited, adj, val - 1) {
                     continue;
@@ -119,7 +122,7 @@ pub fn propagate(world: &mut World, srcs: &[((i32, i32, i32), LightSrc)]) -> Chu
     updated
 }
 
-fn attenuate(channel: u16) -> u16 {
+pub fn attenuate(channel: u16) -> u16 {
     if channel == 0 {
         0
     } else {
@@ -127,7 +130,7 @@ fn attenuate(channel: u16) -> u16 {
     }
 }
 
-pub fn get_new_light(world: &World, x: i32, y: i32, z: i32, block: Block) -> Light {
+pub fn calculate_light(world: &World, x: i32, y: i32, z: i32, block: Block) -> Light {
     if light_can_pass(block) {
         let mut light = Light::black();
         for (dx, dy, dz) in ADJ {
@@ -160,7 +163,7 @@ fn propagate_channel_updates(
         if let Some((x, y, z)) = top {
             let light = world.get_light(x, y, z);
             let block = world.get_block(x, y, z);
-            let val = channel(get_new_light(world, x, y, z, block));
+            let val = channel(calculate_light(world, x, y, z, block));
             if channel(light) == val {
                 continue;
             }
@@ -220,6 +223,28 @@ pub fn propagate_updates(world: &mut World, blocks: &[(i32, i32, i32)]) -> Chunk
     updated
 }
 
+//Used to test if the light in a set of chunks is of the correct value
+//The assertion will fail if we do not get what we expect and crash the program
+#[allow(dead_code)]
+fn validate_light(world: &World, chunks: &HashSet<(i32, i32, i32)>) {
+    for (x, y, z) in chunks {
+        if !world.chunks.contains_key(&(*x, *y, *z)) {
+            continue;
+        }
+
+        for ix in (x * CHUNK_SIZE_I32)..((x + 1) * CHUNK_SIZE_I32) {
+            for iy in (y * CHUNK_SIZE_I32)..((y + 1) * CHUNK_SIZE_I32) {
+                for iz in (z * CHUNK_SIZE_I32)..((z + 1) * CHUNK_SIZE_I32) {
+                    let b = world.get_block(ix, iy, iz);
+                    let expected = calculate_light(world, ix, iy, iz, b);
+                    let light = world.get_light(ix, iy, iz);
+                    assert_eq!(expected.get_rgb::<u16>(), light.get_rgb())
+                }
+            }
+        }
+    }
+}
+
 impl World {
     //Called when the world is first loaded
     pub fn init_block_light(&mut self) {
@@ -276,29 +301,64 @@ impl World {
 
     //Takes in a list of newly loaded chunks and generates the light for those chunks
     pub fn init_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) {
-        let start = std::time::Instant::now();
+        let start = std::time::Instant::now(); 
 
-        //Generate new light
+        for (x, y, z) in chunks {
+            if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
+                chunk.clear_light();
+            }
+        }
+
         let mut srcs = vec![];
-        let mut chunks_with_neighbors = HashSet::new();
+        //Get neighbors
+        let mut neighbors = HashSet::new();
         for (x, y, z) in chunks {
             for dx in -1..=1 {
                 for dy in -1..=1 {
                     for dz in -1..=1 {
-                        chunks_with_neighbors.insert((x + dx, y + dy, z + dz));
+                        let pos = (x + dx, y + dy, z + dz);
+                        if chunks.contains(&pos) {
+                            continue;
+                        }
+                        neighbors.insert(pos);
                     }
                 }
-            } 
+            }
         }
-        for (x, y, z) in chunks_with_neighbors {
-            if let Some(chunk) = self.chunks.get_mut(&(x, y, z)) {
+
+        let mut prev_light = HashMap::<(i32, i32, i32), Vec<Light>>::new();
+        for pos in &neighbors {
+            if let Some(chunk) = self.chunks.get_mut(pos) {
+                prev_light.insert(*pos, chunk.light().clone());
                 chunk.clear_light();
                 chunk.get_light_srcs(&mut srcs);
             }
         }
         propagate(self, &srcs);
 
+        for (pos, light) in prev_light { 
+            if let Some(chunk) = self.chunks.get_mut(&pos) {
+                chunk.apply_light_data(&light);
+            }
+        }
+        
+        srcs.clear();
+        //Generate new light in chunks
+        for (x, y, z) in chunks {
+            if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
+                chunk.get_light_srcs(&mut srcs);
+            }
+        }
+        propagate(self, &srcs); 
+
+        //Uncomment the following if you want to verify if the light generated is correct
+        //(for debugging purposes)
+        //eprintln!("Validating new chunks");
+        //validate_light(self, chunks);
+        //eprintln!("Validating neighbors");
+        //validate_light(self, &neighbors);
+
         let time = start.elapsed().as_millis();
         eprintln!("Took {time} ms to init light in new chunks");
-    }
+    } 
 }

@@ -1,8 +1,8 @@
 pub mod block_update;
+pub mod light;
 mod default_world;
 mod flat_world;
 mod gen_more;
-mod light;
 mod save;
 
 use super::{
@@ -352,5 +352,12 @@ impl World {
             self.time = 0.0;
             self.days_passed += 1;
         }
+    }
+
+    //Returns true if the position is not located in any chunk in the world
+    //Returns false otherwise
+    pub fn out_of_bounds(&self, x: i32, y: i32, z: i32) -> bool {
+        let pos = world_to_chunk_position(x, y, z);
+        !self.chunks.contains_key(&pos)
     }
 }
