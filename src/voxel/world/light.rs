@@ -1,9 +1,9 @@
-use super::{World, block_update::get_chunktable_updates};
+use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
     light::{Light, LightSrc, LU},
-    Block, EMPTY_BLOCK, CHUNK_SIZE_I32,
+    Block, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
-use std::collections::{HashMap, VecDeque, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 const ADJ: [(i32, i32, i32); 6] = [
     (-1, 0, 0),
@@ -219,7 +219,7 @@ pub fn propagate_updates(world: &mut World, blocks: &[(i32, i32, i32)]) -> Chunk
         |light| light.b(),
         |v| LU::new(None, None, None, Some(v)),
     ));
-    
+
     updated
 }
 
@@ -344,29 +344,32 @@ impl World {
     //Updates block light upon a single block change
     //Returns a vector of chunks that need to be updated
     pub fn update_block_light(&mut self, positions: &[(i32, i32, i32)]) -> ChunkList {
-        let blocks: Vec<(i32, i32, i32, Block)> = positions.iter().map(|(x, y, z)| {
-            let b = self.get_block(*x, *y, *z);
-            (*x, *y, *z, b)
-        }).collect();
+        let blocks: Vec<(i32, i32, i32, Block)> = positions
+            .iter()
+            .map(|(x, y, z)| {
+                let b = self.get_block(*x, *y, *z);
+                (*x, *y, *z, b)
+            })
+            .collect();
 
         let mut updated = ChunkList::new();
         //Propagate light from any new light sources
-        let srcs: Vec<((i32, i32, i32), LightSrc)> = blocks.iter().map(|(x, y, z, b)| {
-            (*x, *y, *z, b.light_src())
-        }).filter(|(_, _, _, src)| {
-            src.is_some()
-        }).map(|(x, y, z, src)| {
-            ((x, y, z), src.unwrap_or(LightSrc::new(0, 0, 0)))
-        }).collect();
+        let srcs: Vec<((i32, i32, i32), LightSrc)> = blocks
+            .iter()
+            .map(|(x, y, z, b)| (*x, *y, *z, b.light_src()))
+            .filter(|(_, _, _, src)| src.is_some())
+            .map(|(x, y, z, src)| ((x, y, z), src.unwrap_or(LightSrc::new(0, 0, 0))))
+            .collect();
         updated.extend(propagate(self, &srcs));
 
         //Update block light for other updated blocks that are not light sources
-        let block_updates: Vec<(i32, i32, i32)> = blocks.iter()
+        let block_updates: Vec<(i32, i32, i32)> = blocks
+            .iter()
             .filter(|(_, _, _, b)| b.light_src().is_none())
             .map(|(x, y, z, _)| (*x, *y, *z))
             .collect();
         updated.extend(propagate_updates(self, &block_updates));
-    
+
         updated
     }
 
@@ -382,7 +385,7 @@ impl World {
 
     //Takes in a list of newly loaded chunks and generates the light for those chunks
     pub fn init_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) {
-        let start = std::time::Instant::now(); 
+        let start = std::time::Instant::now();
 
         for (x, y, z) in chunks {
             if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
@@ -417,12 +420,12 @@ impl World {
         }
         propagate_fast(self, &srcs);
 
-        for (pos, light) in prev_light { 
+        for (pos, light) in prev_light {
             if let Some(chunk) = self.chunks.get_mut(&pos) {
                 chunk.apply_light_data(&light);
             }
         }
-        
+
         srcs.clear();
         //Generate new light in chunks
         for (x, y, z) in chunks {
@@ -430,7 +433,7 @@ impl World {
                 chunk.get_light_srcs(&mut srcs);
             }
         }
-        propagate_fast(self, &srcs); 
+        propagate_fast(self, &srcs);
 
         //Uncomment the following if you want to verify if the light generated is correct
         //(for debugging purposes)
@@ -441,5 +444,5 @@ impl World {
 
         let time = start.elapsed().as_millis();
         eprintln!("Took {time} ms to init light in new chunks");
-    } 
+    }
 }

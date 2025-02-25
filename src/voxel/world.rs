@@ -1,8 +1,8 @@
 pub mod block_update;
-pub mod light;
 mod default_world;
 mod flat_world;
 mod gen_more;
+pub mod light;
 mod save;
 
 use super::{

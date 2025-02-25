@@ -1,5 +1,8 @@
 use super::Chunk;
-use crate::voxel::{light::{LightSrc, Light}, CHUNK_SIZE_I32};
+use crate::voxel::{
+    light::{Light, LightSrc},
+    CHUNK_SIZE_I32,
+};
 
 impl Chunk {
     //Returns a list of light sources and their positions
