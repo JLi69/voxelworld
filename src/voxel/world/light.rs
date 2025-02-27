@@ -1,7 +1,7 @@
 use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
     light::{Light, LightSrc, LU},
-    Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK, world_to_chunk_position,
+    Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -254,7 +254,7 @@ fn propagate_channel_fast(
     let mut visited = HashMap::<(i32, i32, i32), u16>::new();
     let mut updated = vec![];
     while !queue.is_empty() {
-        while let Some((x, y, z, val)) = queue.pop_front() { 
+        while let Some((x, y, z, val)) = queue.pop_front() {
             let light = world.get_light(x, y, z);
             if channel(light) >= val {
                 continue;
@@ -339,26 +339,29 @@ fn compare_light(light: Light, adj_light: Light) -> Light {
     res
 }
 
+fn contains_chunk(chunk: Option<&Chunk>, chunks: &HashSet<(i32, i32, i32)>) -> bool {
+    if let Some(chunk) = chunk {
+        let p = chunk.get_chunk_pos();
+        chunks.contains(&(p.x, p.y, p.z))
+    } else {
+        false
+    }
+}
+
 pub fn add_neighbor_src(
     pos: (i32, i32, i32),
     diff: (i32, i32, i32),
     chunk: &Chunk,
     adj_chunk: Option<&Chunk>,
     srcs: &mut HashMap<(i32, i32, i32), Light>,
-    chunks: &HashSet<(i32, i32, i32)>,
 ) {
     let (x, y, z) = pos;
     let (dx, dy, dz) = diff;
-   
-    //Ignore any of the new chunks that we are generating
-    if chunks.contains(&world_to_chunk_position(x + dx, y + dy, z + dz)) {
-        return;
-    }
-   
+
     //Ignore any block that is opaque
     if !light_can_pass(chunk.get_block(x, y, z)) {
         return;
-    } 
+    }
 
     //Get the current source in srcs
     let current_src = srcs.get(&(x, y, z)).copied().unwrap_or(Light::black());
@@ -381,11 +384,37 @@ pub fn add_neighbor_src(
     srcs.insert((x, y, z), light);
 }
 
+pub fn scan_neighbor<T>(
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    diff: (i32, i32, i32),
+    srcs: &mut HashMap<(i32, i32, i32), Light>,
+    chunks: &HashSet<(i32, i32, i32)>,
+    get_pos: T,
+) where
+    T: Fn(i32, i32) -> (i32, i32, i32),
+{
+    if adj_chunk.is_none() {
+        return;
+    }
+
+    if contains_chunk(adj_chunk, chunks) {
+        return;
+    }
+
+    for i in 0..CHUNK_SIZE_I32 {
+        for j in 0..CHUNK_SIZE_I32 {
+            let pos = get_pos(i, j);
+            add_neighbor_src(pos, diff, chunk, adj_chunk, srcs);
+        }
+    }
+}
+
 pub fn get_neighbor_srcs(
     chunk: &Chunk,
     adj_chunks: &[Option<&Chunk>; 6],
     srcs: &mut HashMap<(i32, i32, i32), Light>,
-    chunks: &HashSet<(i32, i32, i32)>
+    chunks: &HashSet<(i32, i32, i32)>,
 ) {
     let chunkpos = chunk.get_chunk_pos();
     let startx = chunkpos.x * CHUNK_SIZE_I32;
@@ -395,33 +424,25 @@ pub fn get_neighbor_srcs(
     let endy = starty + CHUNK_SIZE_I32 - 1;
     let endz = startz + CHUNK_SIZE_I32 - 1;
 
-    for i in 0..CHUNK_SIZE_I32 {
-        for j in 0..CHUNK_SIZE_I32 {
-            let pos = (startx + i, starty + j, startz);
-            let diff = (0, 0, -1);
-            add_neighbor_src(pos, diff, chunk, adj_chunks[4], srcs, chunks); 
-     
-            let pos = (startx + i, starty, startz + j);
-            let diff = (0, -1, 0);
-            add_neighbor_src(pos, diff, chunk, adj_chunks[1], srcs, chunks);
-           
-            let pos = (startx, starty + i, startz + j);
-            let diff = (-1, 0, 0);
-            add_neighbor_src(pos, diff, chunk, adj_chunks[2], srcs, chunks);
+    scan_neighbor(chunk, adj_chunks[4], (0, 0, -1), srcs, chunks, |i, j| {
+        (startx + i, starty + j, startz)
+    });
+    scan_neighbor(chunk, adj_chunks[1], (0, -1, 0), srcs, chunks, |i, j| {
+        (startx + i, starty, startz + j)
+    });
+    scan_neighbor(chunk, adj_chunks[2], (-1, 0, 0), srcs, chunks, |i, j| {
+        (startx, starty + i, startz + j)
+    });
 
-            let pos = (startx + i, starty + j, endz);
-            let diff = (0, 0, 1);
-            add_neighbor_src(pos, diff, chunk, adj_chunks[5], srcs, chunks);
-    
-            let pos = (startx + i, endy, startz + j);
-            let diff = (0, 1, 0);
-            add_neighbor_src(pos, diff, chunk, adj_chunks[0], srcs, chunks);
-            
-            let pos = (endx, starty + i, startz + j);
-            let diff = (1, 0, 0);
-            add_neighbor_src(pos, diff, chunk, adj_chunks[3], srcs, chunks);
-        }
-    }
+    scan_neighbor(chunk, adj_chunks[5], (0, 0, 1), srcs, chunks, |i, j| {
+        (startx + i, starty + j, endz)
+    });
+    scan_neighbor(chunk, adj_chunks[0], (0, 1, 0), srcs, chunks, |i, j| {
+        (startx + i, endy, startz + j)
+    });
+    scan_neighbor(chunk, adj_chunks[3], (1, 0, 0), srcs, chunks, |i, j| {
+        (endx, starty + i, startz + j)
+    });
 }
 
 impl World {
