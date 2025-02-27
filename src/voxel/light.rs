@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Light {
     //[4 bits sky][4 bits red][4 bits green][4 bits blue]
     light_data: u16,

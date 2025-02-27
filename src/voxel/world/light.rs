@@ -1,7 +1,7 @@
 use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
     light::{Light, LightSrc, LU},
-    Block, CHUNK_SIZE_I32, EMPTY_BLOCK,
+    Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK, world_to_chunk_position,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -252,23 +252,23 @@ fn propagate_channel_fast(
     update: fn(u16) -> LU,
 ) {
     let mut visited = HashMap::<(i32, i32, i32), u16>::new();
+    let mut updated = vec![];
     while !queue.is_empty() {
-        let top = queue.pop_front();
-        if let Some((x, y, z, val)) = top {
-            if check_visited(&visited, (x, y, z), val) {
-                continue;
-            }
+        while let Some((x, y, z, val)) = queue.pop_front() { 
             let light = world.get_light(x, y, z);
             if channel(light) >= val {
                 continue;
             }
-            add_visited(&mut visited, (x, y, z), val);
             world.update_light(x, y, z, update(val));
 
             if val <= 1 {
                 continue;
             }
 
+            updated.push((x, y, z, val));
+        }
+
+        for (x, y, z, val) in &updated {
             for (dx, dy, dz) in ADJ {
                 if world.out_of_bounds(x + dx, y + dy, z + dz) {
                     continue;
@@ -279,12 +279,17 @@ fn propagate_channel_fast(
                 }
                 let block = world.get_block(x + dx, y + dy, z + dz);
                 if !light_can_pass(block) {
-                    add_visited(&mut visited, adj, 0xff);
                     continue;
                 }
+                let light = world.get_light(x + dx, y + dy, z + dz);
+                if channel(light) >= val - 1 {
+                    continue;
+                }
+                add_visited(&mut visited, adj, val - 1);
                 queue.push_back((x + dx, y + dy, z + dz, val - 1));
             }
         }
+        updated.clear();
     }
 }
 
@@ -324,6 +329,99 @@ pub fn propagate_fast(world: &mut World, srcs: &[((i32, i32, i32), LightSrc)]) {
         |light| light.b(),
         |v| LU::new(None, None, None, Some(v)),
     );
+}
+
+fn compare_light(light: Light, adj_light: Light) -> Light {
+    let mut res = Light::black();
+    res.set_red(light.r().max(attenuate(adj_light.r())));
+    res.set_green(light.g().max(attenuate(adj_light.g())));
+    res.set_blue(light.b().max(attenuate(adj_light.b())));
+    res
+}
+
+pub fn add_neighbor_src(
+    pos: (i32, i32, i32),
+    diff: (i32, i32, i32),
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    srcs: &mut HashMap<(i32, i32, i32), Light>,
+    chunks: &HashSet<(i32, i32, i32)>,
+) {
+    let (x, y, z) = pos;
+    let (dx, dy, dz) = diff;
+   
+    //Ignore any of the new chunks that we are generating
+    if chunks.contains(&world_to_chunk_position(x + dx, y + dy, z + dz)) {
+        return;
+    }
+   
+    //Ignore any block that is opaque
+    if !light_can_pass(chunk.get_block(x, y, z)) {
+        return;
+    } 
+
+    //Get the current source in srcs
+    let current_src = srcs.get(&(x, y, z)).copied().unwrap_or(Light::black());
+    let adj_light = if let Some(adj_chunk) = adj_chunk {
+        adj_chunk.get_light(x + dx, y + dy, z + dz)
+    } else {
+        return;
+    };
+
+    let light = compare_light(current_src, adj_light);
+
+    let current_light = chunk.get_light(x, y, z);
+    if light.r() <= current_light.r()
+        && light.g() <= current_light.g()
+        && light.b() <= current_light.b()
+    {
+        return;
+    }
+
+    srcs.insert((x, y, z), light);
+}
+
+pub fn get_neighbor_srcs(
+    chunk: &Chunk,
+    adj_chunks: &[Option<&Chunk>; 6],
+    srcs: &mut HashMap<(i32, i32, i32), Light>,
+    chunks: &HashSet<(i32, i32, i32)>
+) {
+    let chunkpos = chunk.get_chunk_pos();
+    let startx = chunkpos.x * CHUNK_SIZE_I32;
+    let starty = chunkpos.y * CHUNK_SIZE_I32;
+    let startz = chunkpos.z * CHUNK_SIZE_I32;
+    let endx = startx + CHUNK_SIZE_I32 - 1;
+    let endy = starty + CHUNK_SIZE_I32 - 1;
+    let endz = startz + CHUNK_SIZE_I32 - 1;
+
+    for i in 0..CHUNK_SIZE_I32 {
+        for j in 0..CHUNK_SIZE_I32 {
+            let pos = (startx + i, starty + j, startz);
+            let diff = (0, 0, -1);
+            add_neighbor_src(pos, diff, chunk, adj_chunks[4], srcs, chunks); 
+     
+            let pos = (startx + i, starty, startz + j);
+            let diff = (0, -1, 0);
+            add_neighbor_src(pos, diff, chunk, adj_chunks[1], srcs, chunks);
+           
+            let pos = (startx, starty + i, startz + j);
+            let diff = (-1, 0, 0);
+            add_neighbor_src(pos, diff, chunk, adj_chunks[2], srcs, chunks);
+
+            let pos = (startx + i, starty + j, endz);
+            let diff = (0, 0, 1);
+            add_neighbor_src(pos, diff, chunk, adj_chunks[5], srcs, chunks);
+    
+            let pos = (startx + i, endy, startz + j);
+            let diff = (0, 1, 0);
+            add_neighbor_src(pos, diff, chunk, adj_chunks[0], srcs, chunks);
+            
+            let pos = (endx, starty + i, startz + j);
+            let diff = (1, 0, 0);
+            add_neighbor_src(pos, diff, chunk, adj_chunks[3], srcs, chunks);
+        }
+    }
 }
 
 impl World {
@@ -387,60 +485,34 @@ impl World {
     pub fn init_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) {
         let start = std::time::Instant::now();
 
-        for (x, y, z) in chunks {
-            if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
-                chunk.clear_light();
-            }
-        }
-
         let mut srcs = vec![];
-        //Get neighbors
-        let mut neighbors = HashSet::new();
-        for (x, y, z) in chunks {
-            for dx in -1..=1 {
-                for dy in -1..=1 {
-                    for dz in -1..=1 {
-                        let pos = (x + dx, y + dy, z + dz);
-                        if chunks.contains(&pos) {
-                            continue;
-                        }
-                        neighbors.insert(pos);
-                    }
-                }
-            }
-        }
-
-        let mut prev_light = HashMap::<(i32, i32, i32), Vec<Light>>::new();
-        for pos in &neighbors {
-            if let Some(chunk) = self.chunks.get_mut(pos) {
-                prev_light.insert(*pos, chunk.light().clone());
-                chunk.clear_light();
-                chunk.get_light_srcs(&mut srcs);
-            }
-        }
-        propagate_fast(self, &srcs);
-
-        for (pos, light) in prev_light {
-            if let Some(chunk) = self.chunks.get_mut(&pos) {
-                chunk.apply_light_data(&light);
-            }
-        }
-
-        srcs.clear();
         //Generate new light in chunks
         for (x, y, z) in chunks {
             if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
+                chunk.clear_light();
                 chunk.get_light_srcs(&mut srcs);
             }
         }
         propagate_fast(self, &srcs);
 
-        //Uncomment the following if you want to verify if the light generated is correct
+        let mut neighbor_srcs = HashMap::new();
+        for (x, y, z) in chunks {
+            if let Some(chunk) = self.chunks.get(&(*x, *y, *z)) {
+                get_neighbor_srcs(chunk, &self.get_adjacent(chunk), &mut neighbor_srcs, chunks);
+            }
+        }
+        let neighbor_srcs: Vec<((i32, i32, i32), LightSrc)> = neighbor_srcs
+            .iter()
+            .map(|((x, y, z), light)| {
+                ((*x, *y, *z), LightSrc::new(light.r(), light.g(), light.b()))
+            })
+            .collect();
+        propagate_fast(self, &neighbor_srcs);
+
         //(for debugging purposes)
+        //Uncomment the following if you want to verify if the light generated is correct
         //eprintln!("Validating new chunks");
         //validate_light(self, chunks);
-        //eprintln!("Validating neighbors");
-        //validate_light(self, &neighbors);
 
         let time = start.elapsed().as_millis();
         eprintln!("Took {time} ms to init light in new chunks");
