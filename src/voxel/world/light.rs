@@ -508,6 +508,7 @@ impl World {
 
         let mut srcs = vec![];
         //Generate new light in chunks
+        let mut initialized = HashSet::<(i32, i32, i32)>::new();
         for (x, y, z) in chunks {
             if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
                 //Clearing light likely is not necessary since we only need
@@ -529,6 +530,7 @@ impl World {
                 if chunk.light_initialized() {
                     continue;
                 }
+                initialized.insert((*x, *y, *z));
                 chunk.get_light_srcs(&mut srcs);
             }
         }
@@ -537,7 +539,7 @@ impl World {
         let mut neighbor_srcs = HashMap::new();
         for (x, y, z) in chunks {
             if let Some(chunk) = self.chunks.get(&(*x, *y, *z)) {
-                if chunk.light_initialized() {
+                if !initialized.contains(&(*x, *y, *z)) {
                     continue;
                 }
                 get_neighbor_srcs(chunk, &self.get_adjacent(chunk), &mut neighbor_srcs, chunks);
