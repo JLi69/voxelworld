@@ -510,7 +510,25 @@ impl World {
         //Generate new light in chunks
         for (x, y, z) in chunks {
             if let Some(chunk) = self.chunks.get_mut(&(*x, *y, *z)) {
-                chunk.clear_light();
+                //Clearing light likely is not necessary since we only need
+                //to initialize light when the chunk has been just loaded
+                //and any block updates to chunks neighboring it or in it
+                //will allow for lighting in that chunk to be updated,
+                //realistically blocks in the neighboring chunks can't be updated
+                //(and thus can not have light updates in a way that affects
+                //the chunk) due to the fact that if a neighboring chunk is
+                //bordering a chunk that needs to be loaded, then that chunk
+                //is likely too far away for block simulation/the player to
+                //place/break blocks in it. Therefore, it should be that in
+                //most cases any light updates that affect this chunk will happen
+                //when the chunk is loaded and we can have the program lazily
+                //assume that not much has changed and therefore we do not
+                //need to clear the chunk light.
+                //Hopefully this is correct in most scenarios.
+                //chunk.clear_light();
+                if chunk.light_initialized() {
+                    continue;
+                }
                 chunk.get_light_srcs(&mut srcs);
             }
         }
@@ -519,6 +537,9 @@ impl World {
         let mut neighbor_srcs = HashMap::new();
         for (x, y, z) in chunks {
             if let Some(chunk) = self.chunks.get(&(*x, *y, *z)) {
+                if chunk.light_initialized() {
+                    continue;
+                }
                 get_neighbor_srcs(chunk, &self.get_adjacent(chunk), &mut neighbor_srcs, chunks);
             }
         }

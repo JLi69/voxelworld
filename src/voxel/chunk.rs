@@ -41,7 +41,7 @@ impl Chunk {
     pub fn new(x: i32, y: i32, z: i32) -> Self {
         Self {
             blocks: vec![],
-            light: vec![Light::black(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE],
+            light: vec![],
             ix: x,
             iy: y,
             iz: z,
@@ -87,6 +87,10 @@ impl Chunk {
     }
 
     pub fn get_light_relative(&self, x: usize, y: usize, z: usize) -> Light {
+        if self.light.is_empty() {
+            return Light::black();
+        }
+
         //Out of bounds, return black
         if x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE {
             return Light::black();
@@ -99,6 +103,10 @@ impl Chunk {
     }
 
     pub fn update_light_relative(&mut self, x: usize, y: usize, z: usize, update: LU) {
+        if self.light.is_empty() {
+            self.light = vec![Light::black(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+        }
+
         //Out of bounds, return 0
         if x >= CHUNK_SIZE || y >= CHUNK_SIZE || z >= CHUNK_SIZE {
             return;

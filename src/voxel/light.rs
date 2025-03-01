@@ -150,10 +150,6 @@ impl Light {
             self.set_blue(b);
         }
     }
-
-    pub fn clear(&mut self) {
-        self.light_data = 0;
-    }
 }
 
 #[cfg(test)]

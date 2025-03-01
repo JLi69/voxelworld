@@ -46,12 +46,16 @@ pub fn display_selected_outline(gamestate: &Game) {
 
         unsafe {
             gl::Disable(gl::CULL_FACE);
+            gl::Enable(gl::POLYGON_OFFSET_FILL);
+            gl::PolygonOffset(-1.0, -1.0);
         }
 
         draw_elements(cube);
 
         unsafe {
             gl::Enable(gl::CULL_FACE);
+            gl::Disable(gl::POLYGON_OFFSET_FILL);
+            gl::PolygonOffset(0.0, 0.0);
         }
     }
 }

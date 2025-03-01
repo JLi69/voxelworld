@@ -20,9 +20,11 @@ impl Chunk {
         }
     }
 
-    pub fn clear_light(&mut self) {
-        for l in &mut self.light {
-            l.clear();
-        }
+    //Returns whether the light has been initialized
+    pub fn light_initialized(&self) -> bool {
+        //If the lighting in the chunk has not been initialized, then the light
+        //vector will be empty but once we start updating the light in the chunk
+        //then the vector will be allocated and thus be nonempty
+        !self.light.is_empty()
     }
 }
