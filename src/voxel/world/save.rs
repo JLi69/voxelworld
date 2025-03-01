@@ -123,7 +123,8 @@ impl World {
             range: world_metadata_entries[0]
                 .get_var("range")
                 .parse::<i32>()
-                .unwrap_or(3),
+                .unwrap_or(7)
+                .max(2),
             centerx: world_metadata_entries[0]
                 .get_var("centerx")
                 .parse::<i32>()

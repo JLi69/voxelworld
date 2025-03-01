@@ -39,9 +39,10 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     //Update hand animation
     gamestate.update_hand_animation(dt);
     //Update blocks
-    gamestate.world.update_sim_range(3);
-    gamestate.world.update_blocks(dt, chunktables, 3);
-    gamestate.world.rand_block_update(dt, Some(chunktables), 3);
+    let sim_range = (gamestate.world.get_range() / 2).min(7);
+    gamestate.world.update_sim_range(sim_range);
+    gamestate.world.update_blocks(dt, chunktables, sim_range);
+    gamestate.world.rand_block_update(dt, Some(chunktables), sim_range);
     //Update day night cycle
     gamestate.world.update_daynight(dt);
 
