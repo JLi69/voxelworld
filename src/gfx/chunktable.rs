@@ -5,6 +5,7 @@ use super::frustum::Frustum;
 use super::nonvoxel::generate_non_voxel_vertex_data;
 use super::{generate_chunk_vertex_data, ChunkData};
 use crate::assets::shader::ShaderProgram;
+use crate::game::inventory::Item;
 use crate::game::physics::Hitbox;
 use crate::game::Game;
 use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
@@ -34,6 +35,21 @@ pub fn set_fog(gamestate: &Game, shader: &ShaderProgram, skycolor: (f32, f32, f3
         shader.uniform_float("fogdist", dist);
         shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
         shader.uniform_vec4f("fogcolor", sr, sg, sb, 1.0);
+    }
+}
+
+//Set dynamic lighting based on what the player is holding
+pub fn set_dyn_light(gamestate: &Game, shader: &ShaderProgram) {
+    match gamestate.player.hotbar.get_selected() {
+        Item::BlockItem(b, _) => {
+            if let Some(src) = b.light_src() {
+                let (r, g, b) = src.rgb_f32();
+                shader.uniform_vec3f("lightcolor", r, g, b);
+            } else {
+                shader.uniform_vec3f("lightcolor", 0.0, 0.0, 0.0);
+            }
+        }
+        _ => {}
     }
 }
 
@@ -435,6 +451,8 @@ impl ChunkVaoTable {
 
         //Set fog color
         set_fog(gamestate, &chunkshader, get_skycolor(gamestate.world.time));
+        //Dynamic lighting
+        set_dyn_light(gamestate, &chunkshader);
 
         let mut drawn_count = 0;
         for ((chunkx, chunky, chunkz), vao) in &self.vaos {

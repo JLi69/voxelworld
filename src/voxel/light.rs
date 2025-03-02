@@ -28,6 +28,11 @@ impl LightSrc {
             b: bval,
         }
     }
+
+    //Returns the rgb values as f32 (between 0.0 -> 1.0)
+    pub fn rgb_f32(&self) -> (f32, f32, f32) {
+        (self.r as f32 / 15.0, self.g as f32 / 15.0, self.b as f32 / 15.0)
+    }
 }
 
 pub type LU = LightUpdate;
