@@ -1,5 +1,6 @@
 mod addvertices;
 
+use super::face_data::FACE_INDICES;
 use crate::voxel::{Chunk, CHUNK_SIZE_I32};
 pub use addvertices::add_block_vertices_flat;
 pub use addvertices::add_nonvoxel_vertices;
@@ -11,6 +12,7 @@ use addvertices::{
 pub type Int3 = (i32, i32, i32);
 
 pub type ChunkData = Vec<u8>;
+pub type Indices = Vec<u32>;
 
 pub fn add_block_vertices(
     chunk: &Chunk,
@@ -145,11 +147,11 @@ pub fn add_block_vertices_fluid(
 pub fn generate_chunk_vertex_data(
     chunk: &Chunk,
     adj_chunks: [Option<&Chunk>; 6],
-) -> (ChunkData, i32) {
+) -> (ChunkData, Indices, i32) {
     let mut chunk_vert_data = vec![];
 
     if chunk.is_empty() {
-        return (chunk_vert_data, 5);
+        return (chunk_vert_data, vec![], 7);
     }
 
     for x in 0..CHUNK_SIZE_I32 {
@@ -162,5 +164,17 @@ pub fn generate_chunk_vertex_data(
         }
     }
 
-    (chunk_vert_data, 7)
+    let face_count = chunk_vert_data.len() / (7 * 4);
+    (chunk_vert_data, get_indices(face_count), 7)
+}
+
+//Assumes square faces
+pub fn get_indices(face_count: usize) -> Indices {
+    let mut indices = Vec::with_capacity(face_count * 6);
+    for f in 0..face_count {
+        for index in &FACE_INDICES {
+            indices.push(f as u32 * 4 + index);
+        }
+    }
+    indices
 }

@@ -1,3 +1,4 @@
+use super::buildchunk::Indices;
 use super::display::get_skycolor;
 use super::fluid::generate_fluid_vertex_data;
 use super::frustum::Frustum;
@@ -36,7 +37,7 @@ pub fn set_fog(gamestate: &Game, shader: &ShaderProgram, skycolor: (f32, f32, f3
     }
 }
 
-const BUF_COUNT: usize = 2;
+const BUF_COUNT: usize = 3;
 
 pub struct ChunkVao {
     id: u32,
@@ -45,7 +46,7 @@ pub struct ChunkVao {
 }
 
 impl ChunkVao {
-    pub fn generate_new(chunkdata: &ChunkData, values_per_vert: i32) -> Self {
+    pub fn generate_new(chunkdata: &ChunkData, indices: &Indices, values_per_vert: i32) -> Self {
         let mut vao = Self {
             id: 0,
             buffers: [0; BUF_COUNT],
@@ -57,8 +58,8 @@ impl ChunkVao {
             gl::GenBuffers(BUF_COUNT as i32, &mut vao.buffers[0]);
         }
 
-        send_chunk_data_to_vao(&vao, values_per_vert, chunkdata);
-        vao.vert_count = chunkdata.len() as i32 / values_per_vert;
+        send_chunk_data_to_vao(&vao, indices, chunkdata, values_per_vert);
+        vao.vert_count = indices.len() as i32;
 
         vao
     }
@@ -66,7 +67,12 @@ impl ChunkVao {
     pub fn draw(&self) {
         unsafe {
             gl::BindVertexArray(self.id);
-            gl::DrawArrays(gl::TRIANGLES, 0, self.vert_count);
+            gl::DrawElements(
+                gl::TRIANGLES,
+                self.vert_count,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+            );
         }
     }
 
@@ -79,12 +85,17 @@ impl ChunkVao {
 }
 
 //Send chunk vertex data to a buffer and vao
-fn send_chunk_data_to_vao(chunkvao: &ChunkVao, values_per_vert: i32, chunkdata: &ChunkData) {
-    assert!(values_per_vert > 4);
-
-    if chunkdata.is_empty() {
+fn send_chunk_data_to_vao(
+    chunkvao: &ChunkVao,
+    indices: &Indices,
+    chunkdata: &ChunkData,
+    values_per_vert: i32,
+) {
+    if chunkdata.is_empty() || indices.is_empty() {
         return;
     }
+
+    assert!(values_per_vert > 4);
 
     unsafe {
         gl::BindVertexArray(chunkvao.id);
@@ -118,6 +129,13 @@ fn send_chunk_data_to_vao(chunkvao: &ChunkVao, values_per_vert: i32, chunkdata: 
             (size_of::<u8>() * 4) as *const c_void,
         );
         gl::EnableVertexAttribArray(1);
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, chunkvao.buffers[2]);
+        gl::BufferData(
+            gl::ELEMENT_ARRAY_BUFFER,
+            (indices.len() * size_of::<u32>()) as isize,
+            &indices[0] as *const u32 as *const c_void,
+            gl::STATIC_DRAW,
+        );
     }
 }
 
@@ -139,7 +157,11 @@ impl ChunkVaoTable {
         self.to_update.push_back((x, y, z));
     }
 
-    fn update_chunk(&mut self, world: &World, gen_verts: fn(&Chunk, &World) -> (ChunkData, i32)) {
+    fn update_chunk(
+        &mut self,
+        world: &World,
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
+    ) {
         let top = self.to_update.pop_front();
         if let Some(pos) = top {
             if !world.chunks.contains_key(&pos) {
@@ -164,9 +186,9 @@ impl ChunkVaoTable {
 
                 if let Some(chunk) = world.get_chunk(x, y, z) {
                     let chunkpos = chunk.get_chunk_pos();
-                    let (chunkdata, values_per_vert) = gen_verts(chunk, world);
-                    send_chunk_data_to_vao(&vao, values_per_vert, &chunkdata);
-                    vao.vert_count = chunkdata.len() as i32 / values_per_vert;
+                    let (chunkdata, indices, vals_per_vert) = gen_verts(chunk, world);
+                    send_chunk_data_to_vao(&vao, &indices, &chunkdata, vals_per_vert);
+                    vao.vert_count = indices.len() as i32;
                     self.vaos.insert((chunkpos.x, chunkpos.y, chunkpos.z), vao);
                 }
             }
@@ -177,7 +199,7 @@ impl ChunkVaoTable {
         &mut self,
         world: &World,
         maxtime: f32,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         let start = std::time::Instant::now();
         let mut total_time = 0.0;
@@ -227,7 +249,7 @@ impl ChunkVaoTable {
     pub fn generate_chunk_vaos(
         &mut self,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         let mut vaos = vec![0; world.chunks.len()];
         let mut buffers = vec![0; world.chunks.len() * BUF_COUNT];
@@ -239,13 +261,17 @@ impl ChunkVaoTable {
 
         for (i, chunk) in world.chunks.values().enumerate() {
             let chunkpos = chunk.get_chunk_pos();
-            let (chunkdata, values_per_vert) = gen_verts(chunk, world);
+            let (chunkdata, indices, vals_per_vert) = gen_verts(chunk, world);
             let chunkvao = ChunkVao {
                 id: vaos[i],
-                buffers: [buffers[i * BUF_COUNT], buffers[i * BUF_COUNT + 1]],
-                vert_count: chunkdata.len() as i32 / values_per_vert,
+                buffers: [
+                    buffers[i * BUF_COUNT],
+                    buffers[i * BUF_COUNT + 1],
+                    buffers[i * BUF_COUNT + 2],
+                ],
+                vert_count: indices.len() as i32,
             };
-            send_chunk_data_to_vao(&chunkvao, values_per_vert, &chunkdata);
+            send_chunk_data_to_vao(&chunkvao, &indices, &chunkdata, vals_per_vert);
             self.vaos
                 .insert((chunkpos.x, chunkpos.y, chunkpos.z), chunkvao);
         }
@@ -256,15 +282,15 @@ impl ChunkVaoTable {
         &mut self,
         chunk: Option<&Chunk>,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         if let Some(chunk) = chunk {
             let chunkpos = chunk.get_chunk_pos();
-            let (chunkdata, values_per_vert) = gen_verts(chunk, world);
+            let (chunkdata, indices, vals_per_vert) = gen_verts(chunk, world);
             let chunkvao = self.vaos.get_mut(&(chunkpos.x, chunkpos.y, chunkpos.z));
             if let Some(chunkvao) = chunkvao {
-                chunkvao.vert_count = chunkdata.len() as i32 / values_per_vert;
-                send_chunk_data_to_vao(chunkvao, values_per_vert, &chunkdata);
+                chunkvao.vert_count = indices.len() as i32;
+                send_chunk_data_to_vao(chunkvao, &indices, &chunkdata, vals_per_vert);
             }
         }
     }
@@ -276,7 +302,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let x = wrap_coord(x % CHUNK_SIZE_I32);
@@ -315,7 +341,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let chunk = world.get_chunk(chunkx, chunky, chunkz);
@@ -332,7 +358,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let x = wrap_coord(x % CHUNK_SIZE_I32);
@@ -374,7 +400,7 @@ impl ChunkVaoTable {
         y: i32,
         z: i32,
         world: &World,
-        gen_verts: fn(&Chunk, &World) -> (ChunkData, i32),
+        gen_verts: fn(&Chunk, &World) -> (ChunkData, Indices, i32),
     ) {
         let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
         let chunk = world.get_chunk(chunkx, chunky, chunkz);
@@ -433,7 +459,12 @@ impl ChunkVaoTable {
             chunkshader.uniform_vec3f("chunkpos", x, y, z);
             unsafe {
                 gl::BindVertexArray(vao.id);
-                gl::DrawArrays(gl::TRIANGLES, 0, vao.vert_count);
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    vao.vert_count,
+                    gl::UNSIGNED_INT,
+                    std::ptr::null(),
+                );
             }
         }
 

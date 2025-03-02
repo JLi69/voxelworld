@@ -14,7 +14,7 @@ fn add_face_plant(
 ) {
     let (x, y, z) = xyz;
 
-    for i in 0..6 {
+    for i in 0..4 {
         let x = face[i * 3] + x as u8;
         let y = face[i * 3 + 1] + y as u8;
         let z = face[i * 3 + 2] + z as u8;

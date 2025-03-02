@@ -1,6 +1,13 @@
-use super::{buildchunk::add_block_vertices_fluid, ChunkData};
-use crate::voxel::{
-    world_to_chunk_position, Block, Chunk, ChunkPos, World, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK,
+use super::{
+    buildchunk::{add_block_vertices_fluid, Indices},
+    ChunkData,
+};
+use crate::{
+    gfx::buildchunk::get_indices,
+    voxel::{
+        world_to_chunk_position, Block, Chunk, ChunkPos, World, CHUNK_SIZE, CHUNK_SIZE_I32,
+        EMPTY_BLOCK,
+    },
 };
 
 const OFFSETS: [(i32, i32, i32); 4] = [(0, -1, 0), (-1, -1, 0), (0, -1, -1), (-1, -1, -1)];
@@ -78,7 +85,7 @@ pub fn generate_fluid_vertex_data(
     adj_chunks: [Option<&Chunk>; 6],
     world: &World,
     voxel_id: u8,
-) -> (ChunkData, i32) {
+) -> (ChunkData, Indices, i32) {
     let mut chunk_vert_data = vec![];
 
     for x in 0..CHUNK_SIZE_I32 {
@@ -130,5 +137,6 @@ pub fn generate_fluid_vertex_data(
         }
     }
 
-    (chunk_vert_data, VALS_PER_VERT as i32)
+    let face_count = chunk_vert_data.len() / (VALS_PER_VERT * 4);
+    (chunk_vert_data, get_indices(face_count), 7)
 }

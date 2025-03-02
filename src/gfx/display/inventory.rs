@@ -3,7 +3,7 @@ use crate::{
     gfx::{
         buildchunk::{
             add_block_vertices, add_block_vertices_flat, add_block_vertices_fluid,
-            add_block_vertices_transparent,
+            add_block_vertices_transparent, get_indices,
         },
         chunktable::ChunkVao,
     },
@@ -48,7 +48,8 @@ pub fn display_block_item(chunk: &mut Chunk, block: Block) {
         return;
     }
 
-    let vao = ChunkVao::generate_new(&vert_data, 7);
+    let face_count = vert_data.len() / (7 * 4);
+    let vao = ChunkVao::generate_new(&vert_data, &get_indices(face_count), 7);
     vao.draw();
     vao.delete();
 }

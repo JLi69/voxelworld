@@ -42,7 +42,9 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     let sim_range = (gamestate.world.get_range() / 2).min(7);
     gamestate.world.update_sim_range(sim_range);
     gamestate.world.update_blocks(dt, chunktables, sim_range);
-    gamestate.world.rand_block_update(dt, Some(chunktables), sim_range);
+    gamestate
+        .world
+        .rand_block_update(dt, Some(chunktables), sim_range);
     //Update day night cycle
     gamestate.world.update_daynight(dt);
 

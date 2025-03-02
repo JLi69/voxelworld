@@ -17,9 +17,9 @@ pub fn decrease_by_half(x: u8) -> u8 {
 fn half_positions(chunkdata: &mut ChunkData, pos: Int3, offset: i32, index: usize, light: Light) {
     let (x, y, z) = pos;
     let pos = [x, y, z];
-    let face_count = chunkdata.len() / (6 * 7);
-    for i in 0..6 {
-        let current_idx = (face_count - 1) * 6 * 7 + 7 * i + index;
+    let face_count = chunkdata.len() / (4 * 7);
+    for i in 0..4 {
+        let current_idx = (face_count - 1) * 4 * 7 + 7 * i + index;
         let coord = chunkdata[current_idx];
         if coord as i32 - pos[index] != offset {
             continue;
@@ -31,7 +31,7 @@ fn half_positions(chunkdata: &mut ChunkData, pos: Int3, offset: i32, index: usiz
             chunkdata[current_idx] = decrease_by_half(chunkdata[current_idx]);
         }
 
-        let light_idx = (face_count - 1) * 6 * 7 + 7 * i + 5;
+        let light_idx = (face_count - 1) * 4 * 7 + 7 * i + 5;
         chunkdata[light_idx] = ((light.r() as u8) << 4) | (light.skylight() as u8);
         chunkdata[light_idx + 1] = ((light.b() as u8) << 4) | (light.g() as u8);
     }
