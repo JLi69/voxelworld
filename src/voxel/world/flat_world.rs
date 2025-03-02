@@ -125,4 +125,30 @@ impl World {
             &to_generate,
         );
     }
+
+    //Generates missing flat world chunks on load
+    pub fn gen_flat_on_load(&mut self) {
+        let mut to_generate = HashSet::new();
+        for y in (self.centery - self.range)..=(self.centery + self.range) {
+            for z in (self.centerz - self.range)..=(self.centerz + self.range) {
+                for x in (self.centerx - self.range)..=(self.centerx + self.range) {
+                    if self.chunks.contains_key(&(x, y, z)) {
+                        continue;
+                    }
+                    to_generate.insert((x, y, z));
+                }
+            }
+        }
+
+        //Generate new chunks
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&pos) {
+                continue;
+            }
+            let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
+            gen_flat_chunk(&mut new_chunk);
+            self.chunks.insert(pos, new_chunk);
+        }
+    }
 }

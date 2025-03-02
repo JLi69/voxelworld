@@ -207,5 +207,10 @@ impl World {
                 }
             }
         }
+
+        match self.gen_type {
+            WorldGenType::Flat => self.gen_flat_on_load(),
+            WorldGenType::DefaultGen => self.gen_default_on_load(),
+        }
     }
 }

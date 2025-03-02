@@ -434,4 +434,80 @@ impl World {
             &to_generate,
         );
     }
+
+    //Generates any missing default chunks on load
+    pub fn gen_default_on_load(&mut self) {
+        let mut to_generate = HashSet::new();
+        for y in (self.centery - self.range)..=(self.centery + self.range) {
+            for z in (self.centerz - self.range)..=(self.centerz + self.range) {
+                for x in (self.centerx - self.range)..=(self.centerx + self.range) {
+                    if self.chunks.contains_key(&(x, y, z)) {
+                        continue;
+                    }
+                    to_generate.insert((x, y, z));
+                }
+            }
+        }
+
+        if to_generate.is_empty() {
+            return;
+        }
+
+        //Generate new chunks
+        let mut gen_info_table = GenInfoTable::new();
+        let start = std::time::Instant::now();
+        for (chunkx, chunky, chunkz) in &to_generate {
+            let pos = (*chunkx, *chunky, *chunkz);
+            if self.chunks.contains_key(&pos) {
+                continue;
+            }
+            if *chunky < -4 || *chunky > 4 {
+                continue;
+            }
+            gen_info_table.add_heights(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_trees(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_plants(*chunkx, *chunkz, &self.world_generator);
+            gen_info_table.add_sugarcane(*chunkx, *chunkz);
+        }
+        eprintln!(
+            "Took {} ms to generate chunk info",
+            start.elapsed().as_millis()
+        ); 
+
+        let start = std::time::Instant::now();
+        let generated = ArrayQueue::new(to_generate.len());
+        let mut generated_count = 0;
+        thread::scope(|s| {
+            for (chunkx, chunky, chunkz) in &to_generate {
+                if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
+                    continue;
+                }
+
+                generated_count += 1;
+
+                s.spawn(|_| {
+                    let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
+                    //Should always evaluate to true
+                    if let Some(gen_info) = gen_info_table.get(*chunkx, *chunkz) {
+                        gen_chunk(&mut new_chunk, gen_info, &self.world_generator);
+                    }
+                    //This should never fail
+                    generated
+                        .push(new_chunk)
+                        .expect("Error: Failed to push onto ArrayQueue");
+                });
+            }
+        })
+        .expect("Failed to generate new chunks!");
+
+        for chunk in generated {
+            let chunkpos = chunk.get_chunk_pos();
+            let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
+            self.chunks.insert(pos, chunk);
+        }
+        eprintln!(
+            "Took {} ms to generate {generated_count} new chunks",
+            start.elapsed().as_millis()
+        );
+    }
 }
