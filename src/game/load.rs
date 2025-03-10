@@ -39,5 +39,6 @@ impl Game {
         self.world = World::load_world_metadata(world_path);
         self.world.load_chunks();
         self.world.init_block_light();
+        self.world.init_sky_light();
     }
 }

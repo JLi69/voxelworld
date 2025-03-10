@@ -1,7 +1,7 @@
 use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
-    light::{Light, LightSrc, LU},
-    Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK,
+    light::{Light, LightSrc, SkyLightMap, LU},
+    world_to_chunk_position, Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -13,6 +13,8 @@ const ADJ: [(i32, i32, i32); 6] = [
     (0, 0, -1),
     (0, 0, 1),
 ];
+
+const ADJ_2D: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
 
 type Propagation = (i32, i32, i32, u16);
 
@@ -147,6 +149,19 @@ pub fn calculate_light(world: &World, x: i32, y: i32, z: i32, block: Block) -> L
         light
     } else {
         Light::black()
+    }
+}
+
+pub fn calculate_sky_light(world: &World, x: i32, y: i32, z: i32, block: Block) -> u16 {
+    if light_can_pass(block) {
+        let mut light = world.get_light(x, y, z).skylight();
+        for (dx, dy, dz) in ADJ {
+            let adj_light = world.get_light(x + dx, y + dy, z + dz);
+            light = light.max(attenuate(adj_light.skylight()));
+        }
+        light
+    } else {
+        0
     }
 }
 
@@ -331,6 +346,19 @@ pub fn propagate_fast(world: &mut World, srcs: &[((i32, i32, i32), LightSrc)]) {
     );
 }
 
+pub fn propagate_sky_fast(world: &mut World, srcs: &[((i32, i32, i32), LightSrc)]) {
+    let mut queue = VecDeque::new();
+    for ((x, y, z), src) in srcs {
+        queue.push_back((*x, *y, *z, src.r));
+    }
+    propagate_channel_fast(
+        &mut queue,
+        world,
+        |light| light.skylight(),
+        |v| LU::new(Some(v), None, None, None),
+    );
+}
+
 fn compare_light(light: Light, adj_light: Light) -> Light {
     let mut res = Light::black();
     res.set_red(light.r().max(attenuate(adj_light.r())));
@@ -458,6 +486,67 @@ impl World {
 
         let time = start.elapsed().as_millis();
         eprintln!("Took {time} ms to init light");
+    }
+
+    pub fn get_skylightmap(&self, x: i32, z: i32) -> Option<i32> {
+        let (chunkx, _, chunkz) = world_to_chunk_position(x, 0, z);
+        if let Some(map) = self.skylightmap.get(&(chunkx, chunkz)) {
+            map.get(x, z)
+        } else {
+            None
+        }
+    }
+
+    //Called when the world is first loaded
+    pub fn init_sky_light(&mut self) {
+        let start = std::time::Instant::now();
+
+        for (x, _, z) in self.chunks.keys() {
+            if self.skylightmap.contains_key(&(*x, *z)) {
+                continue;
+            }
+            self.skylightmap.insert((*x, *z), SkyLightMap::new(*x, *z));
+        }
+
+        for ((x, _, z), chunk) in &self.chunks {
+            if let Some(map) = self.skylightmap.get_mut(&(*x, *z)) {
+                map.init_map_from_chunk(chunk);
+            }
+        }
+
+        for chunk in self.chunks.values_mut() {
+            let chunkpos = chunk.get_chunk_pos();
+            let x = chunkpos.x;
+            let z = chunkpos.z;
+            if let Some(map) = self.skylightmap.get(&(x, z)) {
+                chunk.init_sky_light(map);
+            }
+        }
+
+        //Find the lowest adjacent height, this will be used to 'cull' out
+        //columns in chunks that are too low down to be affected by sky light
+        let mut heights = HashMap::<(i32, i32), i32>::new();
+        for map in self.skylightmap.values() {
+            for x in (map.x * CHUNK_SIZE_I32)..((map.x + 1) * CHUNK_SIZE_I32) {
+                for z in (map.z * CHUNK_SIZE_I32)..((map.z + 1) * CHUNK_SIZE_I32) {
+                    let mut h = map.get(x, z).unwrap_or(i32::MAX);
+                    for (dx, dz) in ADJ_2D {
+                        let adj_h = self.get_skylightmap(x + dx, z + dz).unwrap_or(i32::MAX);
+                        h = h.min(adj_h);
+                    }
+                    heights.insert((x, z), h - 1);
+                }
+            }
+        }
+
+        let mut srcs = vec![];
+        for chunk in self.chunks.values() {
+            chunk.get_sky_light_srcs(self, &heights, &mut srcs);
+        }
+        propagate_sky_fast(self, &srcs);
+
+        let time = start.elapsed().as_millis();
+        eprintln!("Took {time} ms to init sky light");
     }
 
     //Updates block light upon a single block change

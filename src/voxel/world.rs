@@ -6,7 +6,7 @@ pub mod light;
 mod save;
 
 use super::{
-    light::{Light, LU},
+    light::{Light, SkyLightMap, LU},
     region::{chunkpos_to_regionpos, get_region_chunks, get_region_chunks_remove, Region},
     world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32,
 };
@@ -56,6 +56,8 @@ pub enum WorldGenType {
 pub struct World {
     //This only stores chunks that are near to the player
     pub chunks: HashMap<(i32, i32, i32), Chunk>,
+    //The y coordinate of the tallest block in a chunk
+    skylightmap: HashMap<(i32, i32), SkyLightMap>,
     //Maximum range for chunks that should be loaded
     range: i32,
     //Position of the center chunk
@@ -90,6 +92,7 @@ impl World {
     pub fn empty() -> Self {
         Self {
             chunks: HashMap::new(),
+            skylightmap: HashMap::new(),
             range: 0,
             centerx: 0,
             centery: 0,
@@ -125,6 +128,7 @@ impl World {
 
         Self {
             chunks: chunklist,
+            skylightmap: HashMap::new(),
             range: chunk_range,
             centerx: 0,
             centery: 0,

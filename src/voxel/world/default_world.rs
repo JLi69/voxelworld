@@ -472,7 +472,7 @@ impl World {
         eprintln!(
             "Took {} ms to generate chunk info",
             start.elapsed().as_millis()
-        ); 
+        );
 
         let start = std::time::Instant::now();
         let generated = ArrayQueue::new(to_generate.len());

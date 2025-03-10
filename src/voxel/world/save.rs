@@ -120,6 +120,7 @@ impl World {
 
         Self {
             chunks: HashMap::new(),
+            skylightmap: HashMap::new(),
             range: world_metadata_entries[0]
                 .get_var("range")
                 .parse::<i32>()

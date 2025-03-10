@@ -1,3 +1,5 @@
+use super::{Block, Chunk, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Light {
     //[4 bits sky][4 bits red][4 bits green][4 bits blue]
@@ -31,7 +33,11 @@ impl LightSrc {
 
     //Returns the rgb values as f32 (between 0.0 -> 1.0)
     pub fn rgb_f32(&self) -> (f32, f32, f32) {
-        (self.r as f32 / 15.0, self.g as f32 / 15.0, self.b as f32 / 15.0)
+        (
+            self.r as f32 / 15.0,
+            self.g as f32 / 15.0,
+            self.b as f32 / 15.0,
+        )
     }
 }
 
@@ -153,6 +159,127 @@ impl Light {
 
         if let Some(b) = light_update.b {
             self.set_blue(b);
+        }
+    }
+}
+
+//Contains the y coordinate of the tallest block in a 16 x 16 region
+//The value is set to None if no such block is found
+pub struct SkyLightMap {
+    //In chunk coordinates
+    pub x: i32,
+    pub z: i32,
+    heights: Vec<Option<i32>>,
+    count: usize,
+}
+
+//Returns whether sky light can pass through a block
+pub fn skylight_can_pass(block: Block) -> bool {
+    //If it is a fluid or is leaves, then it blocks sky light
+    if block.is_fluid() || block.id == 7 {
+        return false;
+    }
+
+    block.transparent() || block.shape() != 0 || block.id == EMPTY_BLOCK
+}
+
+impl SkyLightMap {
+    pub fn new(chunkx: i32, chunkz: i32) -> Self {
+        Self {
+            x: chunkx,
+            z: chunkz,
+            heights: vec![],
+            count: 0,
+        }
+    }
+
+    //x and z are in world coordinates
+    pub fn get(&self, x: i32, z: i32) -> Option<i32> {
+        if self.heights.is_empty() {
+            return None;
+        }
+
+        let ix = x - self.x * CHUNK_SIZE_I32;
+        let iz = z - self.z * CHUNK_SIZE_I32;
+        //Out of bounds
+        if ix < 0 || iz < 0 || ix >= CHUNK_SIZE_I32 || iz >= CHUNK_SIZE_I32 {
+            return None;
+        }
+        let index = (ix + iz * CHUNK_SIZE_I32) as usize;
+        self.heights[index]
+    }
+
+    //x and z are in world coordinates
+    pub fn set(&mut self, x: i32, z: i32, val: Option<i32>) {
+        let ix = x - self.x * CHUNK_SIZE_I32;
+        let iz = z - self.z * CHUNK_SIZE_I32;
+        //Out of bounds
+        if ix < 0 || iz < 0 || ix >= CHUNK_SIZE_I32 || iz >= CHUNK_SIZE_I32 {
+            return;
+        }
+
+        let current = self.get(x, z);
+        //If val is Some then increase the number of values in the map by 1
+        //otherwise decrease it by 1 if we are changing a value in the map
+        //from Some to None or None to Some
+        if val.is_some() && current.is_none() {
+            self.count += 1;
+        } else if val.is_none() && current.is_some() {
+            self.count -= 1;
+        }
+
+        //Allocate or deallocate memory
+        if self.count > 0 && self.heights.is_empty() {
+            self.heights = vec![None; CHUNK_SIZE * CHUNK_SIZE];
+        } else if self.count == 0 && !self.heights.is_empty() {
+            self.heights = vec![];
+        }
+
+        let index = (ix + iz * CHUNK_SIZE_I32) as usize;
+        self.heights[index] = val;
+    }
+
+    //set the values of the skylight map using a chunk
+    pub fn init_map_from_chunk(&mut self, chunk: &Chunk) {
+        let chunkpos = chunk.get_chunk_pos();
+
+        if chunkpos.x != self.x || chunkpos.z != self.z {
+            return;
+        }
+
+        if chunk.is_empty() {
+            return;
+        }
+
+        let chunkx = chunkpos.x * CHUNK_SIZE_I32;
+        let chunky = chunkpos.y * CHUNK_SIZE_I32;
+        let chunkz = chunkpos.z * CHUNK_SIZE_I32;
+        for x in chunkx..(chunkx + CHUNK_SIZE_I32) {
+            for z in chunkz..(chunkz + CHUNK_SIZE_I32) {
+                if let Some(height) = self.get(x, z) {
+                    if height >= chunky + CHUNK_SIZE_I32 {
+                        continue;
+                    }
+                }
+
+                for y in (chunky..(chunky + CHUNK_SIZE_I32)).rev() {
+                    let block = chunk.get_block(x, y, z);
+                    //If the block is transparent or the block is not a full block,
+                    //then ignore it
+                    //Otherwise, if it is a fluid or leaves, stop
+                    if skylight_can_pass(block) {
+                        continue;
+                    }
+
+                    if let Some(height) = self.get(x, z) {
+                        self.set(x, z, Some(height.max(y)));
+                    } else {
+                        self.set(x, z, Some(y));
+                    }
+
+                    break;
+                }
+            }
         }
     }
 }

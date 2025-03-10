@@ -54,6 +54,7 @@ fn create_new_world(menu_state: &mut CreateWorldMenuState, gamestate: &mut Game)
     };
     gamestate.generate_world(seed, 7, menu_state.gen_type);
     gamestate.world.init_block_light();
+    gamestate.world.init_sky_light();
 }
 
 //Display the create world gui
