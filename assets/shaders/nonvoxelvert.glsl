@@ -6,6 +6,7 @@ layout(location = 1) in uvec4 data;
 uniform mat4 persp;
 uniform mat4 view;
 uniform vec3 chunkpos;
+uniform float skybrightness;
 
 out vec2 texcoord;
 out vec3 fragpos;
@@ -53,6 +54,7 @@ void main() {
 	gl_Position = persp * view * pos;
 
 	float sky = float(data.x & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;
+	sky *= skybrightness;
 	float r = float((data.x >> 4) & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;
 	float g = float(data.w & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;
 	float b = float((data.w >> 4) & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;

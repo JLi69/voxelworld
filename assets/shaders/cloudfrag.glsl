@@ -6,6 +6,7 @@ uniform float fogstrength;
 uniform vec4 fogcolor;
 uniform sampler2D tex;
 uniform float total_time;
+uniform float skybrightness;
 
 out vec4 color;
 in vec3 fragpos;
@@ -17,7 +18,11 @@ void main() {
 	vec2 texsize = textureSize(tex, 0) * 2.0;
 	vec2 offset = total_time * vec2(0.0, scrollspeed);
 	vec2 tc = (fragpos.xz + offset) / (texsize.x * scale);
-	color = texture(tex, fract(tc / scale));	
+	color = texture(tex, fract(tc / scale));
+
+	float alpha = color.a;
+	color *= (skybrightness * 0.75 + 0.25);
+	color.a = alpha;
 
 	if(color.a < 0.5)
 		discard;

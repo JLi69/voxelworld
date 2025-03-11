@@ -76,6 +76,7 @@ macro_rules! set_channel {
     };
 }
 
+//Unused macro, for getting maximum of client and block light
 macro_rules! get_client {
     ($fn_name: ident, $channel:ident) => {
         pub fn $fn_name<T: From<u16> + Ord>(&self) -> T {
@@ -107,22 +108,11 @@ impl Light {
     set_channel!(set_blue, 0);
     set_channel!(set_green, 4);
     set_channel!(set_red, 8);
-    set_channel!(set_sky, 12);
-
-    //Returns the client values
-    //(returns the max of sky light value and the channel)
-    get_client!(client_blue, blue);
-    get_client!(client_green, green);
-    get_client!(client_red, red);
+    set_channel!(set_sky, 12); 
 
     //Returns the rgb values as a tuple (without the sky)
     pub fn get_rgb<T: From<u16>>(&self) -> (T, T, T) {
         (self.red(), self.green(), self.blue())
-    }
-
-    //Returns all the client values in a tuple (red, green, blue)
-    pub fn get_client<T: From<u16> + Ord>(&self) -> (T, T, T) {
-        (self.client_red(), self.client_green(), self.client_blue())
     }
 
     //rgb channels

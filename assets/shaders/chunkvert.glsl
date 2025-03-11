@@ -6,6 +6,7 @@ layout(location = 1) in uvec3 data;
 uniform mat4 persp;
 uniform mat4 view;
 uniform vec3 chunkpos;
+uniform float skybrightness;
 
 out vec3 fragpos;
 out vec3 chunkfragpos;
@@ -32,6 +33,7 @@ void main() {
 	faceid = data.x & 3u;
 
 	float sky = float(data.y & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;
+	sky *= skybrightness;
 	float r = float((data.y >> 4) & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;
 	float g = float(data.z & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;
 	float b = float((data.z >> 4) & 0xfu) / 15.0 * (1.0 - MIN_LIGHT) + MIN_LIGHT;

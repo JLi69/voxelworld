@@ -184,6 +184,7 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
         gamestate.cam.position.z,
     );
     cloud_shader.uniform_float("total_time", time_passed);
+    cloud_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
     set_fog(gamestate, &cloud_shader, get_skycolor(gamestate.world.time));
     draw_elements(quad);
 
@@ -379,5 +380,19 @@ pub fn display_sky(gamestate: &Game) {
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
+    }
+}
+
+pub fn get_sky_brightness(t: f32) -> f32 {
+    if t < TRANSITION_TIME {
+        lerp(0.0, 1.0, t / TRANSITION_TIME * 0.5 + 0.5)
+    } else if t > 1.0 - TRANSITION_TIME {
+        lerp(0.0, 1.0, (t - 1.0 + TRANSITION_TIME) / TRANSITION_TIME * 0.5)
+    } else if ((0.5 - TRANSITION_TIME)..(0.5 + TRANSITION_TIME)).contains(&t) {
+        lerp(1.0, 0.0, (t - 0.5 + TRANSITION_TIME) / TRANSITION_TIME * 0.5)
+    } else if (0.5..1.0).contains(&t) {
+        0.0
+    } else {
+        1.0
     }
 }

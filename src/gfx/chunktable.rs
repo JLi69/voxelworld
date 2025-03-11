@@ -1,5 +1,5 @@
 use super::buildchunk::Indices;
-use super::display::get_skycolor;
+use super::display::{get_skycolor, get_sky_brightness};
 use super::fluid::generate_fluid_vertex_data;
 use super::frustum::Frustum;
 use super::nonvoxel::generate_non_voxel_vertex_data;
@@ -445,6 +445,7 @@ impl ChunkVaoTable {
             gamestate.cam.position.y,
             gamestate.cam.position.z,
         );
+        chunkshader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
 
         //Set fog color
         set_fog(gamestate, &chunkshader, get_skycolor(gamestate.world.time));
