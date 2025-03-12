@@ -334,7 +334,7 @@ mod tests {
         assert_eq!(light.g(), 2);
         assert_eq!(light.b(), 3);
         assert_eq!(light.get_rgb(), (1, 2, 3));
-        assert_eq!(light.get_client(), (4, 4, 4));
+        assert_eq!(light.skylight(), 4);
     }
 
     #[test]
@@ -350,6 +350,6 @@ mod tests {
         light.set_green(8u16);
         light.set_blue(14u16);
         assert_eq!(light.get_rgb(), (2, 8, 14));
-        assert_eq!(light.get_client(), (8, 8, 14));
+        assert_eq!(light.skylight(), 8);
     }
 }
