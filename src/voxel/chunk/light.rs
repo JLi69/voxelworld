@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::Chunk;
 use crate::voxel::{
-    light::{LightSrc, SkyLightMap, LU},
+    light::{LightSrc, SkyLightMap, LU, skylight_can_pass},
     world::light::calculate_sky_light,
     World, CHUNK_SIZE_I32,
 };
@@ -32,6 +32,23 @@ impl Chunk {
         //vector will be empty but once we start updating the light in the chunk
         //then the vector will be allocated and thus be nonempty
         !self.light.is_empty()
+    }
+
+    //Returns Some(y) if a block is found in a column,
+    //None otherwise
+    pub fn get_tallest_sky_block(&self, x: i32, z: i32) -> Option<i32> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let pos = self.get_chunk_pos();
+        for y in ((pos.y * CHUNK_SIZE_I32)..((pos.y + 1) * CHUNK_SIZE_I32)).rev() {
+            if skylight_can_pass(self.get_block(x, y, z)) {
+                continue;
+            }
+            return Some(y);
+        }
+        None
     }
 
     //Sets any block above the maximum block to be 15 for sky light

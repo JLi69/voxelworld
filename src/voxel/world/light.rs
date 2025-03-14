@@ -1,6 +1,6 @@
 use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
-    light::{Light, LightSrc, SkyLightMap, LU},
+    light::{Light, LightSrc, SkyLightMap, LU, skylight_can_pass},
     world_to_chunk_position, Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -153,8 +153,12 @@ pub fn calculate_light(world: &World, x: i32, y: i32, z: i32, block: Block) -> L
 }
 
 pub fn calculate_sky_light(world: &World, x: i32, y: i32, z: i32, block: Block) -> u16 {
+    if world.get_skylightmap(x, z).unwrap_or(i32::MIN) < y {
+        return 15;
+    }
+
     if light_can_pass(block) {
-        let mut light = world.get_light(x, y, z).skylight();
+        let mut light = 0;
         for (dx, dy, dz) in ADJ {
             let adj_light = world.get_light(x + dx, y + dy, z + dz);
             light = light.max(attenuate(adj_light.skylight()));
@@ -198,6 +202,42 @@ fn propagate_channel_updates(
             }
         }
     }
+    updated
+}
+
+pub fn propagate_sky_updates(world: &mut World, blocks: &[(i32, i32, i32)]) -> ChunkList {
+    let mut queue = VecDeque::new();
+    for (x, y, z) in blocks {
+        queue.push_back((*x, *y, *z));
+    }
+    let mut updated = ChunkList::new();
+    let mut visited = HashSet::new();
+    while !queue.is_empty() {
+        let top = queue.pop_front();
+        if let Some((x, y, z)) = top {
+            let light = world.get_light(x, y, z);
+            let block = world.get_block(x, y, z);
+            let val = calculate_sky_light(world, x, y, z, block);
+            if light.skylight() == val {
+                continue;
+            }
+            get_chunktable_updates(x, y, z, &mut updated);
+            world.update_light(x, y, z, LU::new(Some(val), None, None, None));
+
+            for (dx, dy, dz) in ADJ {
+                if visited.contains(&(x + dx, y + dy, z + dz)) {
+                    continue;
+                }
+                let adj_block = world.get_block(x + dx, y + dy, z + dz);
+                if !light_can_pass(adj_block) {
+                    visited.insert((x + dx, y + dy, z + dz));
+                    continue;
+                }
+                queue.push_back((x + dx, y + dy, z + dz));
+            }
+        }
+    }
+
     updated
 }
 
@@ -497,6 +537,13 @@ impl World {
         }
     }
 
+    pub fn set_skylightmap(&mut self, x: i32, z: i32, val: Option<i32>) {
+        let (chunkx, _, chunkz) = world_to_chunk_position(x, 0, z);
+        if let Some(map) = self.skylightmap.get_mut(&(chunkx, chunkz)) {
+            map.set(x, z, val);
+        }
+    }
+
     //Called when the world is first loaded
     pub fn init_sky_light(&mut self) {
         let start = std::time::Instant::now();
@@ -549,6 +596,65 @@ impl World {
         eprintln!("Took {time} ms to init sky light");
     }
 
+    fn update_sky_light(&mut self, positions: &[(i32, i32, i32)]) -> ChunkList {
+        let mut updated_map_vals = HashMap::<(i32, i32), i32>::new();
+        
+        for (x, y, z) in positions.iter().copied() {
+            let height = self.get_skylightmap(x, z).unwrap_or(i32::MIN);
+            let block = self.get_block(x, y, z);
+            if y > height && !skylight_can_pass(block) {
+                let updated_y = updated_map_vals.get(&(x, z)).unwrap_or(&i32::MIN);
+                updated_map_vals.insert((x, z), (*updated_y).max(y));
+            } 
+        }
+
+        //Columns with no blocks 
+        let mut no_blocks = HashSet::<(i32, i32)>::new();
+        //Check if any blocks have been removed and get the new highest block
+        //that is likely lower down
+        for (x, y, z) in positions.iter().copied() {
+            let height = self.get_skylightmap(x, z).unwrap_or(i32::MIN);
+            let block = self.get_block(x, y, z); 
+            if updated_map_vals.contains_key(&(x, z)) {
+                continue;
+            }
+            //Check if the highest block has been removed and then
+            //attempt to obtain the next highest block
+            if y == height && skylight_can_pass(block) {
+                let (chunkx, _, chunkz) = world_to_chunk_position(x, y, z);
+                let mut chunks: Vec<(i32, i32, i32)> = self.chunks.keys()
+                    .filter(|(px, _, pz)| *px == chunkx && *pz == chunkz)
+                    .copied()
+                    .collect();
+                chunks.sort_by(|(_, y1, _), (_, y2, _)| y2.cmp(y1));
+                for (px, py, pz) in chunks {
+                    if let Some(chunk) = self.chunks.get(&(px, py, pz)) { 
+                        let tallest = chunk.get_tallest_sky_block(x, z);
+                        if let Some(tallest) = tallest {
+                            updated_map_vals.insert((x, z), tallest);
+                            break;
+                        }
+                    }
+                }
+
+                if !updated_map_vals.contains_key(&(x, z)) {
+                    no_blocks.insert((x, z));
+                }
+            } 
+        }
+
+        //Update the position of the tallest blocks
+        for (x, _, z) in positions.iter().copied() {
+            if let Some(y) = updated_map_vals.get(&(x, z)) {
+                self.set_skylightmap(x, z, Some(*y));
+            } else if no_blocks.contains(&(x, z)) {
+                self.set_skylightmap(x, z, None);
+            }
+        }
+
+        propagate_sky_updates(self, positions)
+    }
+
     //Updates block light upon a single block change
     //Returns a vector of chunks that need to be updated
     pub fn update_block_light(&mut self, positions: &[(i32, i32, i32)]) -> ChunkList {
@@ -577,6 +683,8 @@ impl World {
             .map(|(x, y, z, _)| (*x, *y, *z))
             .collect();
         updated.extend(propagate_updates(self, &block_updates));
+
+        updated.extend(self.update_sky_light(positions));
 
         updated
     }
