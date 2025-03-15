@@ -1,5 +1,5 @@
 use super::buildchunk::Indices;
-use super::display::{get_skycolor, get_sky_brightness};
+use super::display::{get_sky_brightness, get_skycolor};
 use super::fluid::generate_fluid_vertex_data;
 use super::frustum::Frustum;
 use super::nonvoxel::generate_non_voxel_vertex_data;

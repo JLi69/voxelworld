@@ -108,7 +108,7 @@ impl Light {
     set_channel!(set_blue, 0);
     set_channel!(set_green, 4);
     set_channel!(set_red, 8);
-    set_channel!(set_sky, 12); 
+    set_channel!(set_sky, 12);
 
     //Returns the rgb values as a tuple (without the sky)
     pub fn get_rgb<T: From<u16>>(&self) -> (T, T, T) {

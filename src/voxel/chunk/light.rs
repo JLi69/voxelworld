@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::Chunk;
 use crate::voxel::{
-    light::{LightSrc, SkyLightMap, LU, skylight_can_pass},
+    light::{skylight_can_pass, LightSrc, SkyLightMap, LU},
     world::light::calculate_sky_light,
     World, CHUNK_SIZE_I32,
 };

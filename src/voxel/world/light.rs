@@ -1,6 +1,6 @@
 use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
-    light::{Light, LightSrc, SkyLightMap, LU, skylight_can_pass},
+    light::{skylight_can_pass, Light, LightSrc, SkyLightMap, LU},
     world_to_chunk_position, Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -598,23 +598,23 @@ impl World {
 
     fn update_sky_light(&mut self, positions: &[(i32, i32, i32)]) -> ChunkList {
         let mut updated_map_vals = HashMap::<(i32, i32), i32>::new();
-        
+
         for (x, y, z) in positions.iter().copied() {
             let height = self.get_skylightmap(x, z).unwrap_or(i32::MIN);
             let block = self.get_block(x, y, z);
             if y > height && !skylight_can_pass(block) {
                 let updated_y = updated_map_vals.get(&(x, z)).unwrap_or(&i32::MIN);
                 updated_map_vals.insert((x, z), (*updated_y).max(y));
-            } 
+            }
         }
 
-        //Columns with no blocks 
+        //Columns with no blocks
         let mut no_blocks = HashSet::<(i32, i32)>::new();
         //Check if any blocks have been removed and get the new highest block
         //that is likely lower down
         for (x, y, z) in positions.iter().copied() {
             let height = self.get_skylightmap(x, z).unwrap_or(i32::MIN);
-            let block = self.get_block(x, y, z); 
+            let block = self.get_block(x, y, z);
             if updated_map_vals.contains_key(&(x, z)) {
                 continue;
             }
@@ -622,13 +622,15 @@ impl World {
             //attempt to obtain the next highest block
             if y == height && skylight_can_pass(block) {
                 let (chunkx, _, chunkz) = world_to_chunk_position(x, y, z);
-                let mut chunks: Vec<(i32, i32, i32)> = self.chunks.keys()
+                let mut chunks: Vec<(i32, i32, i32)> = self
+                    .chunks
+                    .keys()
                     .filter(|(px, _, pz)| *px == chunkx && *pz == chunkz)
                     .copied()
                     .collect();
                 chunks.sort_by(|(_, y1, _), (_, y2, _)| y2.cmp(y1));
                 for (px, py, pz) in chunks {
-                    if let Some(chunk) = self.chunks.get(&(px, py, pz)) { 
+                    if let Some(chunk) = self.chunks.get(&(px, py, pz)) {
                         let tallest = chunk.get_tallest_sky_block(x, z);
                         if let Some(tallest) = tallest {
                             updated_map_vals.insert((x, z), tallest);
@@ -640,7 +642,7 @@ impl World {
                 if !updated_map_vals.contains_key(&(x, z)) {
                     no_blocks.insert((x, z));
                 }
-            } 
+            }
         }
 
         //Update the position of the tallest blocks

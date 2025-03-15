@@ -387,9 +387,17 @@ pub fn get_sky_brightness(t: f32) -> f32 {
     if t < TRANSITION_TIME {
         lerp(0.0, 1.0, t / TRANSITION_TIME * 0.5 + 0.5)
     } else if t > 1.0 - TRANSITION_TIME {
-        lerp(0.0, 1.0, (t - 1.0 + TRANSITION_TIME) / TRANSITION_TIME * 0.5)
+        lerp(
+            0.0,
+            1.0,
+            (t - 1.0 + TRANSITION_TIME) / TRANSITION_TIME * 0.5,
+        )
     } else if ((0.5 - TRANSITION_TIME)..(0.5 + TRANSITION_TIME)).contains(&t) {
-        lerp(1.0, 0.0, (t - 0.5 + TRANSITION_TIME) / TRANSITION_TIME * 0.5)
+        lerp(
+            1.0,
+            0.0,
+            (t - 0.5 + TRANSITION_TIME) / TRANSITION_TIME * 0.5,
+        )
     } else if (0.5..1.0).contains(&t) {
         0.0
     } else {
