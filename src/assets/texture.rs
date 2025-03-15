@@ -22,7 +22,7 @@ pub fn load_image_pixels(path: &str) -> Result<(Vec<u32>, png::OutputInfo), Stri
             buf[i * 4 + 3] as u32,
         );
 
-        pixels[i] = a << 24 | b << 16 | g << 8 | r;
+        pixels[i] = (a << 24) | (b << 16) | (g << 8) | r;
     }
 
     Ok((pixels, info))

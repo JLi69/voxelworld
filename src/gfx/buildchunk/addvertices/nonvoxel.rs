@@ -303,11 +303,11 @@ fn gen_fence_vertices(block: Block) -> BlockMesh {
         tc
     });
 
-    let (verts, tc) = if block.geometry & 1 << 0 != 0 && block.geometry & 1 << 2 != 0 {
+    let (verts, tc) = if block.geometry & (1 << 0) != 0 && block.geometry & (1 << 2) != 0 {
         gen_fence_rail(&vertices, &texcoords, &normals, 0.0, 0.0, 1.0, 1.0 / 8.0)
-    } else if block.geometry & 1 << 0 != 0 {
+    } else if block.geometry & (1 << 0) != 0 {
         gen_fence_rail(&vertices, &texcoords, &normals, 0.25, 0.0, 0.5, 1.0 / 8.0)
-    } else if block.geometry & 1 << 2 != 0 {
+    } else if block.geometry & (1 << 2) != 0 {
         gen_fence_rail(&vertices, &texcoords, &normals, -0.25, 0.0, 0.5, 1.0 / 8.0)
     } else {
         (vec![], vec![])
@@ -315,11 +315,11 @@ fn gen_fence_vertices(block: Block) -> BlockMesh {
     fence_vertices.extend(verts);
     fence_texcoords.extend(tc);
 
-    let (verts, tc) = if block.geometry & 1 << 1 != 0 && block.geometry & 1 << 3 != 0 {
+    let (verts, tc) = if block.geometry & (1 << 1) != 0 && block.geometry & (1 << 3) != 0 {
         gen_fence_rail(&vertices, &texcoords, &normals, 0.0, 0.0, 1.0 / 8.0, 1.0)
-    } else if block.geometry & 1 << 1 != 0 {
+    } else if block.geometry & (1 << 1) != 0 {
         gen_fence_rail(&vertices, &texcoords, &normals, 0.0, 0.25, 1.0 / 8.0, 0.5)
-    } else if block.geometry & 1 << 3 != 0 {
+    } else if block.geometry & (1 << 3) != 0 {
         gen_fence_rail(&vertices, &texcoords, &normals, 0.0, -0.25, 1.0 / 8.0, 0.5)
     } else {
         (vec![], vec![])
