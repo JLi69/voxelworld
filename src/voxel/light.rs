@@ -77,6 +77,7 @@ macro_rules! set_channel {
 }
 
 //Unused macro, for getting maximum of client and block light
+#[allow(unused_macros)]
 macro_rules! get_client {
     ($fn_name: ident, $channel:ident) => {
         pub fn $fn_name<T: From<u16> + Ord>(&self) -> T {
@@ -317,7 +318,7 @@ mod tests {
             assert_eq!(light.b(), 0);
             assert_eq!(light.skylight(), v);
         }
-    } 
+    }
 
     #[test]
     pub fn test_set() {

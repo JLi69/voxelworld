@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use super::Chunk;
 use crate::voxel::{
     light::{skylight_can_pass, Light, LightSrc, SkyLightMap, LU},
     world::light::calculate_sky_light,
     World, CHUNK_SIZE, CHUNK_SIZE_I32,
 };
+use std::collections::HashMap;
 
 impl Chunk {
     //Returns a list of light sources and their positions
@@ -111,7 +111,7 @@ impl Chunk {
                 }
             }
         }
-    } 
+    }
 
     pub fn get_sky_srcs_newly_loaded(
         &self,
@@ -136,7 +136,7 @@ impl Chunk {
                     let light = calculate_sky_light(world, x, y, z, b);
                     if light != 14 {
                         continue;
-                    } 
+                    }
                     srcs.push(((x, y, z), LightSrc::new(light, light, light)));
                 }
             }

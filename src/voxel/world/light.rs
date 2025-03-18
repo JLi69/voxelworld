@@ -703,7 +703,7 @@ impl World {
         let mut srcs = vec![];
         for chunk in self.chunks.values() {
             chunk.get_sky_light_srcs(self, &heights, &mut srcs);
-        } 
+        }
         propagate_sky_fast(self, &srcs);
 
         let time = start.elapsed().as_millis();
@@ -916,7 +916,7 @@ impl World {
                 }
             }
         }
-    
+
         //Propagate the sky light
         let mut neighbors = ChunkList::new();
         for (x, y, z) in to_update.iter().copied() {
@@ -927,25 +927,20 @@ impl World {
         }
 
         let mut updated = to_update.clone();
-        let heights = self.get_skylightmap_heights(
-            Some(HashSet::from_iter(neighbors.iter().copied().map(|(x, _, z)| (x, z))))
-        );
-        let mut srcs = vec![]; 
-        for pos in &neighbors { 
+        let heights = self.get_skylightmap_heights(Some(HashSet::from_iter(
+            neighbors.iter().copied().map(|(x, _, z)| (x, z)),
+        )));
+        let mut srcs = vec![];
+        for pos in &neighbors {
             if let Some(chunk) = self.chunks.get(pos) {
                 chunk.get_sky_srcs_newly_loaded(self, &heights, &mut srcs);
             }
         }
-       
+
         let mut sky_srcs = HashMap::new();
         for pos in &to_update {
             if let Some(chunk) = self.chunks.get(pos) {
-                get_neighbor_sky_srcs(
-                    chunk,
-                    &self.get_adjacent(chunk),
-                    &mut sky_srcs,
-                    &to_update,
-                );
+                get_neighbor_sky_srcs(chunk, &self.get_adjacent(chunk), &mut sky_srcs, &to_update);
             }
         }
         for ((x, y, z), sky_src) in sky_srcs {
@@ -968,7 +963,7 @@ impl World {
         //eprintln!("validating `to_update`...");
         //validate_sky_light(self, &to_update);
         //eprintln!("validating `updated`...");
-        //validate_sky_light(self, &updated); 
+        //validate_sky_light(self, &updated);
 
         updated
     }
