@@ -205,6 +205,19 @@ fn propagate_channel_updates(
     updated
 }
 
+pub fn propagate_sky(world: &mut World, srcs: &[((i32, i32, i32), LightSrc)]) -> ChunkList {
+    let mut queue = VecDeque::new();
+    for ((x, y, z), src) in srcs.iter().copied() {
+        queue.push_back((x, y, z, src.r));
+    }
+    propagate_channel(
+        &mut queue,
+        world,
+        |light| light.skylight(),
+        |v| LU::new(Some(v), None, None, None),
+    )
+}
+
 pub fn propagate_sky_updates(world: &mut World, blocks: &[(i32, i32, i32)]) -> ChunkList {
     let mut queue = VecDeque::new();
     for (x, y, z) in blocks {
@@ -294,6 +307,28 @@ fn validate_light(world: &World, chunks: &HashSet<(i32, i32, i32)>) {
                     let expected = calculate_light(world, ix, iy, iz, b);
                     let light = world.get_light(ix, iy, iz);
                     assert_eq!(expected.get_rgb::<u16>(), light.get_rgb())
+                }
+            }
+        }
+    }
+}
+
+//Do the same thing as `validate_light` but with sky light
+#[allow(dead_code)]
+fn validate_sky_light(world: &World, chunks: &HashSet<(i32, i32, i32)>) {
+    for (chunkx, chunky, chunkz) in chunks.iter().copied() {
+        if let Some(chunk) = world.chunks.get(&(chunkx, chunky, chunkz)) {
+            let startx = chunkx * CHUNK_SIZE_I32;
+            let starty = chunky * CHUNK_SIZE_I32;
+            let startz = chunkz * CHUNK_SIZE_I32;
+            for x in startx..(startx + CHUNK_SIZE_I32) {
+                for y in starty..(starty + CHUNK_SIZE_I32) {
+                    for z in startz..(startz + CHUNK_SIZE_I32) {
+                        let b = chunk.get_block(x, y, z);
+                        let light = chunk.get_light(x, y, z).skylight();
+                        let expected = calculate_sky_light(world, x, y, z, b);
+                        assert_eq!(expected, light);
+                    }
                 }
             }
         }
@@ -513,6 +548,100 @@ pub fn get_neighbor_srcs(
     });
 }
 
+pub fn add_neighbor_sky_src(
+    pos: (i32, i32, i32),
+    diff: (i32, i32, i32),
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    srcs: &mut HashMap<(i32, i32, i32), u16>,
+) {
+    let (x, y, z) = pos;
+    let (dx, dy, dz) = diff;
+
+    //Ignore any block that is opaque
+    if !light_can_pass(chunk.get_block(x, y, z)) {
+        return;
+    }
+
+    //Get the current source in srcs
+    let current_src = srcs.get(&(x, y, z)).copied().unwrap_or(0);
+    let adj_light = if let Some(adj_chunk) = adj_chunk {
+        adj_chunk.get_light(x + dx, y + dy, z + dz).skylight()
+    } else {
+        return;
+    };
+
+    let light = current_src.max(attenuate(adj_light));
+
+    let current_light = chunk.get_light(x, y, z).skylight();
+    if light < current_light {
+        return;
+    }
+
+    srcs.insert((x, y, z), light);
+}
+
+pub fn scan_neighbor_sky<T>(
+    chunk: &Chunk,
+    adj_chunk: Option<&Chunk>,
+    diff: (i32, i32, i32),
+    srcs: &mut HashMap<(i32, i32, i32), u16>,
+    chunks: &HashSet<(i32, i32, i32)>,
+    get_pos: T,
+) where
+    T: Fn(i32, i32) -> (i32, i32, i32),
+{
+    if adj_chunk.is_none() {
+        return;
+    }
+
+    if contains_chunk(adj_chunk, chunks) {
+        return;
+    }
+
+    for i in 0..CHUNK_SIZE_I32 {
+        for j in 0..CHUNK_SIZE_I32 {
+            let pos = get_pos(i, j);
+            add_neighbor_sky_src(pos, diff, chunk, adj_chunk, srcs);
+        }
+    }
+}
+
+pub fn get_neighbor_sky_srcs(
+    chunk: &Chunk,
+    adj_chunks: &[Option<&Chunk>; 6],
+    srcs: &mut HashMap<(i32, i32, i32), u16>,
+    chunks: &HashSet<(i32, i32, i32)>,
+) {
+    let chunkpos = chunk.get_chunk_pos();
+    let startx = chunkpos.x * CHUNK_SIZE_I32;
+    let starty = chunkpos.y * CHUNK_SIZE_I32;
+    let startz = chunkpos.z * CHUNK_SIZE_I32;
+    let endx = startx + CHUNK_SIZE_I32 - 1;
+    let endy = starty + CHUNK_SIZE_I32 - 1;
+    let endz = startz + CHUNK_SIZE_I32 - 1;
+
+    scan_neighbor_sky(chunk, adj_chunks[4], (0, 0, -1), srcs, chunks, |i, j| {
+        (startx + i, starty + j, startz)
+    });
+    scan_neighbor_sky(chunk, adj_chunks[1], (0, -1, 0), srcs, chunks, |i, j| {
+        (startx + i, starty, startz + j)
+    });
+    scan_neighbor_sky(chunk, adj_chunks[2], (-1, 0, 0), srcs, chunks, |i, j| {
+        (startx, starty + i, startz + j)
+    });
+
+    scan_neighbor_sky(chunk, adj_chunks[5], (0, 0, 1), srcs, chunks, |i, j| {
+        (startx + i, starty + j, endz)
+    });
+    scan_neighbor_sky(chunk, adj_chunks[0], (0, 1, 0), srcs, chunks, |i, j| {
+        (startx + i, endy, startz + j)
+    });
+    scan_neighbor_sky(chunk, adj_chunks[3], (1, 0, 0), srcs, chunks, |i, j| {
+        (endx, starty + i, startz + j)
+    });
+}
+
 impl World {
     //Called when the world is first loaded
     pub fn init_block_light(&mut self) {
@@ -548,11 +677,11 @@ impl World {
     pub fn init_sky_light(&mut self) {
         let start = std::time::Instant::now();
 
-        for (x, _, z) in self.chunks.keys() {
-            if self.skylightmap.contains_key(&(*x, *z)) {
+        for (x, _, z) in self.chunks.keys().copied() {
+            if self.skylightmap.contains_key(&(x, z)) {
                 continue;
             }
-            self.skylightmap.insert((*x, *z), SkyLightMap::new(*x, *z));
+            self.skylightmap.insert((x, z), SkyLightMap::new(x, z));
         }
 
         for ((x, _, z), chunk) in &self.chunks {
@@ -570,10 +699,32 @@ impl World {
             }
         }
 
-        //Find the lowest adjacent height, this will be used to 'cull' out
-        //columns in chunks that are too low down to be affected by sky light
+        let heights = self.get_skylightmap_heights(None);
+        let mut srcs = vec![];
+        for chunk in self.chunks.values() {
+            chunk.get_sky_light_srcs(self, &heights, &mut srcs);
+        } 
+        propagate_sky_fast(self, &srcs);
+
+        let time = start.elapsed().as_millis();
+        eprintln!("Took {time} ms to init sky light");
+    }
+
+    //Find the lowest adjacent height, this will be used to 'cull' out
+    //columns in chunks that are too low down to be affected by sky light
+    //if include is none, then by default it will include all chunks
+    fn get_skylightmap_heights(
+        &self,
+        include: Option<HashSet<(i32, i32)>>,
+    ) -> HashMap<(i32, i32), i32> {
         let mut heights = HashMap::<(i32, i32), i32>::new();
         for map in self.skylightmap.values() {
+            if let Some(include) = &include {
+                if !include.contains(&(map.x, map.z)) {
+                    continue;
+                }
+            }
+
             for x in (map.x * CHUNK_SIZE_I32)..((map.x + 1) * CHUNK_SIZE_I32) {
                 for z in (map.z * CHUNK_SIZE_I32)..((map.z + 1) * CHUNK_SIZE_I32) {
                     let mut h = map.get(x, z).unwrap_or(i32::MAX);
@@ -585,15 +736,7 @@ impl World {
                 }
             }
         }
-
-        let mut srcs = vec![];
-        for chunk in self.chunks.values() {
-            chunk.get_sky_light_srcs(self, &heights, &mut srcs);
-        }
-        propagate_sky_fast(self, &srcs);
-
-        let time = start.elapsed().as_millis();
-        eprintln!("Took {time} ms to init sky light");
+        heights
     }
 
     fn update_sky_light(&mut self, positions: &[(i32, i32, i32)]) -> ChunkList {
@@ -701,8 +844,137 @@ impl World {
         }
     }
 
+    //Initialize sky light in newly loaded chunks
+    //This function also updates any other chunks in the world that might be affected
+    //by new chunks being loaded (such as chunks with blocks being loaded on top
+    //of the world. There also seem to be some issues with correctly generating
+    //light correctly but it seems that the issues are minor/uncommon enough that it
+    //isn't too big of a deal.
+    //NOTE: I am not entirely sure about the performance of this function at
+    //the moment, there could be room for optimizations and there could be some
+    //cases where this function causes some slight issues with performance but
+    //those cases likely won't happen to most users (I hope).
+    fn init_sky_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) -> ChunkList {
+        let start = std::time::Instant::now();
+
+        //Clean out sky light map
+        let mut xz_coords = HashSet::<(i32, i32)>::new();
+        for (x, _, z) in self.chunks.keys().copied() {
+            xz_coords.insert((x, z));
+        }
+        for (x, _, z) in self.chunk_cache.keys().copied() {
+            xz_coords.insert((x, z));
+        }
+        let mut to_remove = vec![];
+        for pos in self.skylightmap.keys().copied() {
+            if xz_coords.contains(&pos) {
+                continue;
+            }
+            to_remove.push(pos);
+        }
+        for pos in to_remove {
+            self.skylightmap.remove(&pos);
+        }
+
+        //Update the sky light map
+        for pos in chunks.iter().copied() {
+            if let Some(chunk) = self.chunks.get(&pos) {
+                let (x, _, z) = pos;
+                if let Some(map) = self.skylightmap.get_mut(&(x, z)) {
+                    map.init_map_from_chunk(chunk);
+                } else {
+                    let mut map = SkyLightMap::new(x, z);
+                    map.init_map_from_chunk(chunk);
+                    self.skylightmap.insert((x, z), map);
+                }
+            }
+        }
+
+        //Get any chunks that need to be updated
+        let mut to_update = ChunkList::from_iter(chunks.iter().copied());
+        for (x, y, z) in chunks.iter().copied() {
+            if let Some(chunk) = self.chunks.get(&(x, y, z)) {
+                if chunk.is_empty() {
+                    continue;
+                }
+            }
+
+            for (x2, y2, z2) in self.chunks.keys().copied() {
+                if x == x2 && z == z2 && y2 <= y {
+                    to_update.insert((x2, y2, z2));
+                }
+            }
+        }
+
+        //Begin initialization of sky light
+        for pos in to_update.iter().copied() {
+            if let Some(chunk) = self.chunks.get_mut(&pos) {
+                let (x, _, z) = pos;
+                if let Some(map) = self.skylightmap.get(&(x, z)) {
+                    chunk.clear_sky_light();
+                    chunk.init_sky_light(map);
+                }
+            }
+        }
+    
+        //Propagate the sky light
+        let mut neighbors = ChunkList::new();
+        for (x, y, z) in to_update.iter().copied() {
+            neighbors.insert((x, y, z));
+            for (dx, dy, dz) in ADJ {
+                neighbors.insert((x + dx, y + dy, z + dz));
+            }
+        }
+
+        let mut updated = to_update.clone();
+        let heights = self.get_skylightmap_heights(
+            Some(HashSet::from_iter(neighbors.iter().copied().map(|(x, _, z)| (x, z))))
+        );
+        let mut srcs = vec![]; 
+        for pos in &neighbors { 
+            if let Some(chunk) = self.chunks.get(pos) {
+                chunk.get_sky_srcs_newly_loaded(self, &heights, &mut srcs);
+            }
+        }
+       
+        let mut sky_srcs = HashMap::new();
+        for pos in &to_update {
+            if let Some(chunk) = self.chunks.get(pos) {
+                get_neighbor_sky_srcs(
+                    chunk,
+                    &self.get_adjacent(chunk),
+                    &mut sky_srcs,
+                    &to_update,
+                );
+            }
+        }
+        for ((x, y, z), sky_src) in sky_srcs {
+            srcs.push(((x, y, z), LightSrc::new(sky_src, sky_src, sky_src)));
+        }
+        updated.extend(propagate_sky(self, &srcs));
+
+        let time = start.elapsed().as_millis();
+        eprintln!("Took {time} ms to init sky light in new chunks");
+
+        //For debug purposes
+        //Uncomment the following line if you want to verify if the skylight
+        //generated is correct
+        //It seems that as of this moment, these checks seem to mostly work,
+        //however, the only issue currently is that these checks seem to fail
+        //occasionally and it could be that this is due to the fact that the
+        //propagation of sky light is incorrect. However, this seems to happen
+        //in a somewhat uncommon fashion so I'll let it slide for now.
+        //Hopefully this doesn't cause too many issues in the future...
+        //eprintln!("validating `to_update`...");
+        //validate_sky_light(self, &to_update);
+        //eprintln!("validating `updated`...");
+        //validate_sky_light(self, &updated); 
+
+        updated
+    }
+
     //Takes in a list of newly loaded chunks and generates the light for those chunks
-    pub fn init_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) {
+    pub fn init_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) -> ChunkList {
         let start = std::time::Instant::now();
 
         let mut srcs = vec![];
@@ -759,5 +1031,8 @@ impl World {
 
         let time = start.elapsed().as_millis();
         eprintln!("Took {time} ms to init light in new chunks");
+
+        //Initialize sky light in new chunks and return any chunks that have been updated
+        self.init_sky_light_new_chunks(chunks)
     }
 }

@@ -422,7 +422,8 @@ impl World {
             start.elapsed().as_millis()
         );
 
-        self.init_light_new_chunks(&to_generate);
+        let mut update_list = to_generate.clone();
+        update_list.extend(self.init_light_new_chunks(&to_generate));
 
         update_chunk_tables(
             chunktables,
@@ -431,7 +432,7 @@ impl World {
             self.centerz,
             self.range,
             &self.chunks,
-            &to_generate,
+            &update_list,
         );
     }
 

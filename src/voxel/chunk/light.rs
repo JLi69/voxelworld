@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-
 use super::Chunk;
 use crate::voxel::{
-    light::{skylight_can_pass, LightSrc, SkyLightMap, LU},
+    light::{skylight_can_pass, Light, LightSrc, SkyLightMap, LU},
     world::light::calculate_sky_light,
-    World, CHUNK_SIZE_I32,
+    World, CHUNK_SIZE, CHUNK_SIZE_I32,
 };
 
 impl Chunk {
@@ -51,9 +50,20 @@ impl Chunk {
         None
     }
 
+    //Set all sky light to be 0
+    pub fn clear_sky_light(&mut self) {
+        for light in &mut self.light {
+            light.set_sky(0u16);
+        }
+    }
+
     //Sets any block above the maximum block to be 15 for sky light
     //Leaves everything else as 0
     pub fn init_sky_light(&mut self, map: &SkyLightMap) {
+        if self.light.is_empty() {
+            self.light = vec![Light::black(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
+        }
+
         let pos = self.get_chunk_pos();
         for x in (pos.x * CHUNK_SIZE_I32)..((pos.x + 1) * CHUNK_SIZE_I32) {
             for z in (pos.z * CHUNK_SIZE_I32)..((pos.z + 1) * CHUNK_SIZE_I32) {
@@ -83,20 +93,50 @@ impl Chunk {
         for x in (pos.x * CHUNK_SIZE_I32)..((pos.x + 1) * CHUNK_SIZE_I32) {
             for z in (pos.z * CHUNK_SIZE_I32)..((pos.z + 1) * CHUNK_SIZE_I32) {
                 if let Some(height) = heights.get(&(x, z)) {
-                    if *height >= (self.get_chunk_pos().y + 1) * CHUNK_SIZE_I32 {
+                    if *height >= (pos.y + 1) * CHUNK_SIZE_I32 {
                         continue;
                     }
                 }
 
                 for y in (pos.y * CHUNK_SIZE_I32)..((pos.y + 1) * CHUNK_SIZE_I32) {
                     if self.get_light(x, y, z).skylight() == 15 {
-                        continue;
+                        break;
                     }
                     let b = self.get_block(x, y, z);
                     let light = calculate_sky_light(world, x, y, z, b);
-                    if self.get_light(x, y, z).skylight() == light {
+                    if self.get_light(x, y, z).skylight() >= light {
                         continue;
                     }
+                    srcs.push(((x, y, z), LightSrc::new(light, light, light)));
+                }
+            }
+        }
+    } 
+
+    pub fn get_sky_srcs_newly_loaded(
+        &self,
+        world: &World,
+        heights: &HashMap<(i32, i32), i32>,
+        srcs: &mut Vec<((i32, i32, i32), LightSrc)>,
+    ) {
+        let pos = self.get_chunk_pos();
+        for x in (pos.x * CHUNK_SIZE_I32)..((pos.x + 1) * CHUNK_SIZE_I32) {
+            for z in (pos.z * CHUNK_SIZE_I32)..((pos.z + 1) * CHUNK_SIZE_I32) {
+                if let Some(height) = heights.get(&(x, z)) {
+                    if *height >= (pos.y + 1) * CHUNK_SIZE_I32 {
+                        continue;
+                    }
+                }
+
+                for y in (pos.y * CHUNK_SIZE_I32)..((pos.y + 1) * CHUNK_SIZE_I32) {
+                    if self.get_light(x, y, z).skylight() == 15 {
+                        break;
+                    }
+                    let b = self.get_block(x, y, z);
+                    let light = calculate_sky_light(world, x, y, z, b);
+                    if light != 14 {
+                        continue;
+                    } 
                     srcs.push(((x, y, z), LightSrc::new(light, light, light)));
                 }
             }

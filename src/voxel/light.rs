@@ -91,13 +91,6 @@ impl Light {
         Self { light_data: 0 }
     }
 
-    //All channels are set to the corresponding values
-    pub fn new<T: Into<u16>>(sky: T, r: T, g: T, b: T) -> Self {
-        Self {
-            light_data: (sky.into() << 12) | (r.into() << 8) | (g.into() << 4) | b.into(),
-        }
-    }
-
     //Get the channel values
     get_channel!(blue, 0);
     get_channel!(green, 4);
@@ -324,18 +317,7 @@ mod tests {
             assert_eq!(light.b(), 0);
             assert_eq!(light.skylight(), v);
         }
-    }
-
-    #[test]
-    pub fn test_light_creation() {
-        let light = Light::new(4u16, 1u16, 2u16, 3u16);
-        assert_eq!(light.skylight(), 4);
-        assert_eq!(light.r(), 1);
-        assert_eq!(light.g(), 2);
-        assert_eq!(light.b(), 3);
-        assert_eq!(light.get_rgb(), (1, 2, 3));
-        assert_eq!(light.skylight(), 4);
-    }
+    } 
 
     #[test]
     pub fn test_set() {
