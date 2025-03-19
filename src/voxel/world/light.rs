@@ -162,6 +162,9 @@ pub fn calculate_sky_light(world: &World, x: i32, y: i32, z: i32, block: Block) 
         for (dx, dy, dz) in ADJ {
             let adj_light = world.get_light(x + dx, y + dy, z + dz);
             light = light.max(attenuate(adj_light.skylight()));
+            if light == 14 {
+                return 14;
+            }
         }
         light
     } else {
