@@ -21,6 +21,8 @@ pub use world::World;
 pub const CHUNK_SIZE: usize = 16;
 pub const CHUNK_SIZE_I32: i32 = CHUNK_SIZE as i32;
 pub const CHUNK_SIZE_F32: f32 = CHUNK_SIZE as f32;
+pub const CHUNK_LEN: usize = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
+pub const CHUNK_LEN_U32: u32 = CHUNK_LEN as u32;
 pub const EMPTY_BLOCK: u8 = 0;
 pub const INDESTRUCTIBLE: u8 = 3;
 

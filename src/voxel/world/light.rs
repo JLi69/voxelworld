@@ -1,7 +1,7 @@
 use super::{block_update::get_chunktable_updates, World};
 use crate::voxel::{
     light::{skylight_can_pass, Light, LightSrc, SkyLightMap, LU},
-    world_to_chunk_position, Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK,
+    world_to_chunk_position, Block, Chunk, CHUNK_LEN_U32, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use std::collections::{HashMap, HashSet, VecDeque};
 
@@ -577,7 +577,7 @@ pub fn add_neighbor_sky_src(
     let light = current_src.max(attenuate(adj_light));
 
     let current_light = chunk.get_light(x, y, z).skylight();
-    if light < current_light {
+    if light < current_light || light == 0 {
         return;
     }
 
@@ -895,27 +895,41 @@ impl World {
 
         //Get any chunks that need to be updated
         let mut to_update = ChunkList::from_iter(chunks.iter().copied());
+        let mut under_chunk = HashMap::<(i32, i32, i32), i32>::new();
         for (x, y, z) in chunks.iter().copied() {
+            let mut under = vec![];
+            for (x2, y2, z2) in self.chunks.keys().copied() {
+                if x == x2 && z == z2 && y2 <= y {
+                    under.push((x2, y2, z2));
+                }
+            }
+            under_chunk.insert((x, y, z), under.len() as i32);
+
             if let Some(chunk) = self.chunks.get(&(x, y, z)) {
                 if chunk.is_empty() {
                     continue;
                 }
             }
 
-            for (x2, y2, z2) in self.chunks.keys().copied() {
-                if x == x2 && z == z2 && y2 <= y {
-                    to_update.insert((x2, y2, z2));
-                }
-            }
+            to_update.extend(under);
         }
 
         //Begin initialization of sky light
+        let mut skip = ChunkList::new();
         for pos in to_update.iter().copied() {
             if let Some(chunk) = self.chunks.get_mut(&pos) {
                 let (x, _, z) = pos;
                 if let Some(map) = self.skylightmap.get(&(x, z)) {
                     chunk.clear_sky_light();
-                    chunk.init_sky_light(map);
+                    let count = chunk.init_sky_light(map);
+                    let under = under_chunk.get(&pos).copied().unwrap_or(1);
+                    if count == 0 {
+                        //On bottom
+                        skip.insert(pos);
+                    } else if under == self.range * 2 + 1 && count == CHUNK_LEN_U32 {
+                        //On top
+                        skip.insert(pos);
+                    }
                 }
             }
         }
@@ -924,6 +938,9 @@ impl World {
         let mut neighbors = ChunkList::new();
         for (x, y, z) in to_update.iter().copied() {
             neighbors.insert((x, y, z));
+            if skip.contains(&(x, y, z)) {
+                continue;
+            }
             for (dx, dy, dz) in ADJ {
                 neighbors.insert((x + dx, y + dy, z + dz));
             }
@@ -931,10 +948,17 @@ impl World {
 
         let mut updated = to_update.clone();
         let heights = self.get_skylightmap_heights(Some(HashSet::from_iter(
-            neighbors.iter().copied().map(|(x, _, z)| (x, z)),
+            neighbors
+                .iter()
+                .copied()
+                .filter(|pos| !skip.contains(pos))
+                .map(|(x, _, z)| (x, z)),
         )));
         let mut srcs = vec![];
         for pos in &neighbors {
+            if skip.contains(pos) {
+                continue;
+            }
             if let Some(chunk) = self.chunks.get(pos) {
                 chunk.get_sky_srcs_newly_loaded(self, &heights, &mut srcs);
             }
@@ -955,14 +979,14 @@ impl World {
         eprintln!("Took {time} ms to init sky light in new chunks");
 
         //For debug purposes
-        //Uncomment the following line if you want to verify if the skylight
-        //generated is correct
         //It seems that as of this moment, these checks seem to mostly work,
         //however, the only issue currently is that these checks seem to fail
         //occasionally and it could be that this is due to the fact that the
         //propagation of sky light is incorrect. However, this seems to happen
         //in a somewhat uncommon fashion so I'll let it slide for now.
         //Hopefully this doesn't cause too many issues in the future...
+        //Uncomment the following line if you want to verify if the skylight
+        //generated is correct
         //eprintln!("validating `to_update`...");
         //validate_sky_light(self, &to_update);
         //eprintln!("validating `updated`...");

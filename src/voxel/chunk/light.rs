@@ -59,12 +59,14 @@ impl Chunk {
 
     //Sets any block above the maximum block to be 15 for sky light
     //Leaves everything else as 0
-    pub fn init_sky_light(&mut self, map: &SkyLightMap) {
+    //Returns amount of light spawned
+    pub fn init_sky_light(&mut self, map: &SkyLightMap) -> u32 {
         if self.light.is_empty() {
             self.light = vec![Light::black(); CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE];
         }
 
         let pos = self.get_chunk_pos();
+        let mut count = 0;
         for x in (pos.x * CHUNK_SIZE_I32)..((pos.x + 1) * CHUNK_SIZE_I32) {
             for z in (pos.z * CHUNK_SIZE_I32)..((pos.z + 1) * CHUNK_SIZE_I32) {
                 if let Some(height) = map.get(x, z) {
@@ -73,14 +75,17 @@ impl Chunk {
                     }
                 }
 
+                let height = map.get(x, z).unwrap_or(i32::MIN);
                 for y in ((pos.y * CHUNK_SIZE_I32)..((pos.y + 1) * CHUNK_SIZE_I32)).rev() {
-                    if y <= map.get(x, z).unwrap_or(i32::MIN) {
+                    if y <= height {
                         break;
                     }
                     self.update_light(x, y, z, LU::new(Some(15), None, None, None));
+                    count += 1;
                 }
             }
         }
+        count
     }
 
     pub fn get_sky_light_srcs(
