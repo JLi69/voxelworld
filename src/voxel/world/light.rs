@@ -847,20 +847,8 @@ impl World {
         }
     }
 
-    //Initialize sky light in newly loaded chunks
-    //This function also updates any other chunks in the world that might be affected
-    //by new chunks being loaded (such as chunks with blocks being loaded on top
-    //of the world. There also seem to be some issues with correctly generating
-    //light correctly but it seems that the issues are minor/uncommon enough that it
-    //isn't too big of a deal.
-    //NOTE: I am not entirely sure about the performance of this function at
-    //the moment, there could be room for optimizations and there could be some
-    //cases where this function causes some slight issues with performance but
-    //those cases likely won't happen to most users (I hope).
-    fn init_sky_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) -> ChunkList {
-        let start = std::time::Instant::now();
-
-        //Clean out sky light map
+    //Clean out sky light map
+    fn clean_skylightmap(&mut self) {
         let mut xz_coords = HashSet::<(i32, i32)>::new();
         for (x, _, z) in self.chunks.keys().copied() {
             xz_coords.insert((x, z));
@@ -878,6 +866,67 @@ impl World {
         for pos in to_remove {
             self.skylightmap.remove(&pos);
         }
+    }
+
+    //Get any chunks that need to be updated and how many chunks are under a chunk
+    fn get_to_update(
+        &self,
+        chunks: &HashSet<(i32, i32, i32)>
+    ) -> (ChunkList, HashMap<(i32, i32, i32), i32>) {
+        let mut to_update = ChunkList::from_iter(chunks.iter().copied());
+        let mut columns = HashMap::<(i32, i32), Vec<i32>>::new();
+        let mut under_chunk = HashMap::<(i32, i32, i32), i32>::new();
+
+        for (x, y, z) in self.chunks.keys().copied() {
+            if let Some(column) = columns.get_mut(&(x, z)) {
+                column.push(y);
+            } else {
+                columns.insert((x, z), vec![y]);
+            }
+        }
+
+        for (x, y, z) in chunks.iter().copied() {
+            let column = if let Some(column) = columns.get(&(x, z)) {
+                column
+            } else {
+                &vec![]
+            };
+
+            let mut under = vec![];
+            for y2 in column.iter().copied() {
+                if y2 <= y {
+                    under.push((x, y2, z));
+                }
+            }
+            under_chunk.insert((x, y, z), under.len() as i32);
+
+            if let Some(chunk) = self.chunks.get(&(x, y, z)) {
+                if chunk.is_empty() {
+                    continue;
+                }
+            }
+
+            to_update.extend(under);
+        }
+
+        (to_update, under_chunk)
+    }
+
+    //Initialize sky light in newly loaded chunks
+    //This function also updates any other chunks in the world that might be affected
+    //by new chunks being loaded (such as chunks with blocks being loaded on top
+    //of the world. There also seem to be some issues with correctly generating
+    //light correctly but it seems that the issues are minor/uncommon enough that it
+    //isn't too big of a deal.
+    //NOTE: I am not entirely sure about the performance of this function at
+    //the moment, there could be room for optimizations and there could be some
+    //cases where this function causes some slight issues with performance but
+    //those cases likely won't happen to most users (I hope).
+    fn init_sky_light_new_chunks(&mut self, chunks: &HashSet<(i32, i32, i32)>) -> ChunkList {
+        let start = std::time::Instant::now();
+
+        //Clean out sky light map
+        self.clean_skylightmap();
 
         //Update the sky light map
         for pos in chunks.iter().copied() {
@@ -894,43 +943,53 @@ impl World {
         }
 
         //Get any chunks that need to be updated
-        let mut to_update = ChunkList::from_iter(chunks.iter().copied());
-        let mut under_chunk = HashMap::<(i32, i32, i32), i32>::new();
-        for (x, y, z) in chunks.iter().copied() {
-            let mut under = vec![];
-            for (x2, y2, z2) in self.chunks.keys().copied() {
-                if x == x2 && z == z2 && y2 <= y {
-                    under.push((x2, y2, z2));
-                }
-            }
-            under_chunk.insert((x, y, z), under.len() as i32);
-
-            if let Some(chunk) = self.chunks.get(&(x, y, z)) {
-                if chunk.is_empty() {
-                    continue;
-                }
-            }
-
-            to_update.extend(under);
-        }
+        let (to_update, under_chunk) = self.get_to_update(chunks);
 
         //Begin initialization of sky light
         let mut skip = ChunkList::new();
+        let mut counts = HashMap::<(i32, i32, i32), u32>::new();
         for pos in to_update.iter().copied() {
             if let Some(chunk) = self.chunks.get_mut(&pos) {
                 let (x, _, z) = pos;
                 if let Some(map) = self.skylightmap.get(&(x, z)) {
                     chunk.clear_sky_light();
                     let count = chunk.init_sky_light(map);
+                    counts.insert(pos, count);
                     let under = under_chunk.get(&pos).copied().unwrap_or(1);
-                    if count == 0 {
-                        //On bottom
-                        skip.insert(pos);
-                    } else if under == self.range * 2 + 1 && count == CHUNK_LEN_U32 {
+                    if under == self.range * 2 + 1 && count == CHUNK_LEN_U32 {
                         //On top
                         skip.insert(pos);
                     }
                 }
+            }
+        }
+
+        for ((x, y, z), count) in counts.iter() {
+            if skip.contains(&(*x, *y, *z)) {
+                continue;
+            }
+
+            if *count > 0 {
+                continue;
+            }
+ 
+            let under = under_chunk.get(&(*x, *y, *z)).copied().unwrap_or(1);
+            if under > 1 {
+                continue;
+            }
+
+            let mut can_skip = true;
+            for (dx, dy, dz) in ADJ {
+                let adj = (x + dx, y + dy, z + dz);
+                let adj_count = counts.get(&adj);
+                if adj_count.copied().unwrap_or(0) != 0 {
+                    can_skip = false;
+                    break;
+                }
+            }
+
+            if can_skip {
+                skip.insert((*x, *y, *z));
             }
         }
 

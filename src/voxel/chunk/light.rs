@@ -69,13 +69,11 @@ impl Chunk {
         let mut count = 0;
         for x in (pos.x * CHUNK_SIZE_I32)..((pos.x + 1) * CHUNK_SIZE_I32) {
             for z in (pos.z * CHUNK_SIZE_I32)..((pos.z + 1) * CHUNK_SIZE_I32) {
-                if let Some(height) = map.get(x, z) {
-                    if height >= (self.get_chunk_pos().y + 1) * CHUNK_SIZE_I32 {
-                        continue;
-                    }
+                let height = map.get(x, z).unwrap_or(i32::MIN);
+                if height >= (self.get_chunk_pos().y + 1) * CHUNK_SIZE_I32 {
+                    continue;
                 }
 
-                let height = map.get(x, z).unwrap_or(i32::MIN);
                 for y in ((pos.y * CHUNK_SIZE_I32)..((pos.y + 1) * CHUNK_SIZE_I32)).rev() {
                     if y <= height {
                         break;
