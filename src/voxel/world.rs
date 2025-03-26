@@ -364,4 +364,9 @@ impl World {
         let pos = world_to_chunk_position(x, y, z);
         !self.chunks.contains_key(&pos)
     }
+
+    //Returns the chunk coordinates of the center of the world
+    pub fn get_center(&self) -> (i32, i32, i32) {
+        (self.centerx, self.centery, self.centerz)
+    }
 }

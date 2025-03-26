@@ -453,8 +453,18 @@ impl ChunkVaoTable {
         set_dyn_light(gamestate, &chunkshader);
 
         let mut drawn_count = 0;
+        let (centerx, centery, centerz) = gamestate.world.get_center();
         for ((chunkx, chunky, chunkz), vao) in &self.vaos {
             if vao.vert_count == 0 {
+                continue;
+            }
+
+            //Cull out chunks that are too far away
+            let dist2 = (*chunkx - centerx) * (*chunkx - centerx)
+                + (*chunky - centery) * (*chunky - centery)
+                + (*chunkz - centerz) * (*chunkz - centerz);
+            let range = gamestate.world.get_range(); 
+            if dist2 > (range + 1) * (range + 1) {
                 continue;
             }
 
