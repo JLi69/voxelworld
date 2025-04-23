@@ -47,6 +47,8 @@ pub fn set_dyn_light(gamestate: &Game, shader: &ShaderProgram) {
         } else {
             shader.uniform_vec3f("lightcolor", 0.0, 0.0, 0.0);
         }
+    } else {
+        shader.uniform_vec3f("lightcolor", 0.0, 0.0, 0.0);
     }
 }
 
