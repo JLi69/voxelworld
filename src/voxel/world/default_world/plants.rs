@@ -38,7 +38,9 @@ pub fn generate_plants(
             &world_generator.steepness,
         );
 
-        if chunk.get_block(*x, h + 1, *z) != Block::new() {
+        let replace = chunk.get_block(*x, h + 1, *z);
+        //Replace any non solid block or empty block
+        if !(replace == Block::new() || replace.shape() != 0) {
             continue;
         }
 
@@ -49,6 +51,28 @@ pub fn generate_plants(
 
         //Check to make sure we are not in a cave (an empty block)
         if is_noise_cave(*x, h, *z, &world_generator.noise_cave_generator) {
+            continue;
+        }
+
+        let temperature = world_generator.get_temperature(*x, *z);
+        //Desert biome
+        if temperature > 0.75 {
+            match rand_val {
+                //Dead bush
+                0..20 => chunk.set_block(*x, h + 1, *z, Block::new_id(90)),
+                //Mushroom (very rare)
+                20 => chunk.set_block(*x, h + 1, *z, Block::new_id(48)), 
+                _ => {}
+            }
+            continue;
+        }
+        
+        //Cold biome
+        if temperature < 0.25 { 
+            if (0..10).contains(&rand_val) {
+                //Mushroom
+                chunk.set_block(*x, h + 1, *z, Block::new_id(48));
+            }
             continue;
         }
 

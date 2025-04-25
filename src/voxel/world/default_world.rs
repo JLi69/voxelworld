@@ -22,7 +22,7 @@ use super::{
 use crate::voxel::{
     region::{chunkpos_to_regionpos, Region},
     world::gen_more::update_chunk_tables,
-    Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE,
+    Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE, EMPTY_BLOCK,
 };
 use crate::{gfx::ChunkTables, voxel::CHUNK_SIZE_I32};
 use cgmath::Vector3;
@@ -59,7 +59,7 @@ impl GenInfoTable {
             plant_positions: HashMap::new(),
             sugarcane_positions: HashMap::new(),
         }
-    }
+    } 
 
     fn generate_heights(
         &mut self,
@@ -178,6 +178,29 @@ impl GenInfoTable {
     }
 }
 
+fn get_surface_block(temperature: f64) -> Block {
+    if temperature > 0.75 {
+        //Desert, sand
+        Block::new_id(11)
+    } else if temperature < 0.25 {
+        //Cold, snowy grass
+        Block::new_id(87)
+    } else {
+        Block::new_id(1)
+    }
+}
+
+//Blocks such as dirt right beneath the surface layer
+fn get_under_block(temperature: f64) -> Block {
+    if temperature > 0.75 {
+        //Desert, sand
+        Block::new_id(11)
+    } else {
+        //Dirt
+        Block::new_id(4)
+    }
+}
+
 fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenerator) {
     let chunkpos = chunk.get_chunk_pos();
     let posx = chunkpos.x * CHUNK_SIZE_I32;
@@ -200,11 +223,13 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
             let height = gen_info.heights[index];
             let h = (height + 1).max(SEA_LEVEL + 1);
 
-            if h < posy {
+            if h + 1 < posy {
                 continue;
             }
 
-            for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
+            let temperature = world_generator.get_temperature(x, z);
+
+            for y in posy..(posy + CHUNK_SIZE_I32).min(h + 1) {
                 let indestructible = (y == BOTTOM_OF_WORLD)
                     || (y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2)
                     || (y == BOTTOM_OF_WORLD + 2 && rng.i32(0..6) == 0);
@@ -220,6 +245,10 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
 
                 if y <= SEA_LEVEL && y > height {
                     chunk.set_block(x, y, z, Block::new_fluid(12));
+                    if y == SEA_LEVEL && temperature < 0.25 {
+                        //Ice on top of water if we are in a cold biome
+                        chunk.set_block(x, y, z, Block::new_id(85));
+                    }
                 }
 
                 //Sand
@@ -231,14 +260,22 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
                 //Generate noise caves
                 if is_noise_cave(x, y, z, &world_generator.noise_cave_generator) {
                     continue;
-                } 
+                }
 
-                if y == height {
-                    //Grass
-                    chunk.set_block(x, y, z, Block::new_id(1));
-                } else if y > height - 3 && y < height {
-                    //Dirt
-                    chunk.set_block(x, y, z, Block::new_id(4));
+                if y == height + 1 && 
+                    temperature < 0.25 && 
+                    chunk.get_block(x, y, z).id == EMPTY_BLOCK 
+                {
+                    //Snow slabs in cold biomes
+                    let mut snow_slab = Block::new_id(86);
+                    snow_slab.set_shape(1);
+                    chunk.set_block(x, y, z, snow_slab);
+                } else if y == height {
+                    let surface_block = get_surface_block(temperature);
+                    chunk.set_block(x, y, z, surface_block);
+                } else if y > height - 4 && y < height {
+                    let under_block = get_under_block(temperature);
+                    chunk.set_block(x, y, z, under_block);
                 } else if y < height && y > -64 {
                     //Stone
                     chunk.set_block(x, y, z, Block::new_id(2));

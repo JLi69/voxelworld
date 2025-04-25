@@ -114,6 +114,8 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[82] |= CAN_ROTATE_FLAG;
         //Dead bush
         set_plant_flags(90);
+        //Snowy leaves
+        VOXEL_FLAGS[91] |= TRANSPARENT_FLAG;
     }
 }
 

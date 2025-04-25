@@ -500,7 +500,7 @@ pub fn place_block(
         //to differentiate between naturally generated leaves and 'artificial'
         //leaves. This is kind of a hack but I don't want to come up with
         //a better solution.
-        if block.id == 7 && block.geometry == 0 {
+        if (block.id == 7 || block.id == 91) && block.geometry == 0 {
             block.set_orientation(1);
         }
     } else {

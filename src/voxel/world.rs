@@ -13,7 +13,7 @@ use super::{
 };
 use crate::gfx::ChunkTables;
 use cgmath::Vector3;
-use noise::{Fbm, Perlin};
+use noise::{Fbm, Perlin, NoiseFn};
 use std::collections::{HashMap, HashSet};
 
 pub const OCTAVES: usize = 5;
@@ -53,6 +53,11 @@ impl WorldGenerator {
             temperature: Perlin::new(seed + 4),
             world_seed: seed,
         }
+    }
+
+    pub fn get_temperature(&self, x: i32, z: i32) -> f64 {
+        let temp_point = [ x as f64 / 384.0, z as f64 / 384.0 ];
+        self.temperature.get(temp_point) * 0.5 + 0.5
     }
 }
 

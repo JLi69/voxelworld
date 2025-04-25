@@ -38,30 +38,31 @@ fn gen_tree_positions(
     }
 }
 
-fn place_leaves(chunk: &mut Chunk, x: i32, y: i32, z: i32) {
-    if chunk.get_block(x, y, z).id != EMPTY_BLOCK {
+fn place_leaves(chunk: &mut Chunk, x: i32, y: i32, z: i32, id: u8) {
+    let replace = chunk.get_block(x, y, z);
+    if replace.id != EMPTY_BLOCK && replace.shape() == 0 {
         return;
     }
-    chunk.set_block(x, y, z, Block::new_id(7));
+    chunk.set_block(x, y, z, Block::new_id(id));
 }
 
-fn generate_leaves(chunk: &mut Chunk, starty: i32, x: i32, y: i32, z: i32, height: i32) {
+fn generate_leaves(chunk: &mut Chunk, starty: i32, x: i32, y: i32, z: i32, height: i32, id: u8) {
     if y == starty + height {
-        place_leaves(chunk, x, y, z);
-        place_leaves(chunk, x - 1, y, z);
-        place_leaves(chunk, x + 1, y, z);
-        place_leaves(chunk, x, y, z - 1);
-        place_leaves(chunk, x, y, z + 1);
+        place_leaves(chunk, x, y, z, id);
+        place_leaves(chunk, x - 1, y, z, id);
+        place_leaves(chunk, x + 1, y, z, id);
+        place_leaves(chunk, x, y, z - 1, id);
+        place_leaves(chunk, x, y, z + 1, id);
     } else if y == starty + height - 1 {
         for ix in (x - 1)..=(x + 1) {
             for iz in (z - 1)..=(z + 1) {
-                place_leaves(chunk, ix, y, iz);
+                place_leaves(chunk, ix, y, iz, id);
             }
         }
     } else if y >= starty + height - 3 {
         for ix in (x - 2)..=(x + 2) {
             for iz in (z - 2)..=(z + 2) {
-                place_leaves(chunk, ix, y, iz);
+                place_leaves(chunk, ix, y, iz, id);
             }
         }
     }
@@ -90,6 +91,71 @@ pub fn get_tree_gen_info(
     (tree_positions, tree_heights)
 }
 
+fn gen_cactus(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &WorldGenerator) {
+    let h = get_height(
+        x,
+        z,
+        &world_generator.terrain_generator,
+        &world_generator.elevation,
+        &world_generator.steepness,
+    );
+
+    //Below sea level
+    if h <= SAND_LEVEL {
+        return;
+    }
+
+    //Check to make sure we are not in a cave (an empty block)
+    if is_noise_cave(x, h, z, &world_generator.noise_cave_generator) {
+        return;
+    }
+
+    //Generate cactus
+    let cactus_height = (height - 3).clamp(1, 3);
+    for y in (h + 1)..(h + 1 + cactus_height) {
+        chunk.set_block(x, y, z, Block::new_id(88));
+    }
+}
+
+fn gen_tree(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &WorldGenerator) {
+    let h = get_height(
+        x,
+        z,
+        &world_generator.terrain_generator,
+        &world_generator.elevation,
+        &world_generator.steepness,
+    );
+
+    //Below sea level
+    if h <= SAND_LEVEL {
+        return;
+    }
+
+    //Check to make sure we are not in a cave (an empty block)
+    if is_noise_cave(x, h, z, &world_generator.noise_cave_generator) {
+        return;
+    }
+
+    let temperature = world_generator.get_temperature(x, z);
+    let leaf_id = if temperature < 0.25 {
+        //Snowy leaf in cold biomes
+        91 
+    } else {
+        //Normal leaf
+        7
+    };
+
+    for y in (h + 1)..(h + 1 + height) {
+        //Generate trunk
+        chunk.set_block(x, y, z, Block::new_id(8));
+
+        //Generate leaves
+        generate_leaves(chunk, h + 1, x, y, z, height, leaf_id);
+    }
+    generate_leaves(chunk, h + 1, x, h + 1 + height, z, height, leaf_id);
+}
+
+//Also generates cacti as well
 pub fn generate_trees(
     chunk: &mut Chunk,
     tree_positions: &[(i32, i32)],
@@ -103,42 +169,20 @@ pub fn generate_trees(
     let upper_z = chunkpos.z * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1;
 
     for (i, (x, z)) in tree_positions.iter().enumerate() {
+        //Do not generate trees in deserts
+        if world_generator.get_temperature(*x, *z) > 0.75 {
+            //Generate cacti instead
+            if i % 3 == 0 {
+                //Only a third of the time
+                gen_cactus(chunk, *x, *z, tree_heights[i], world_generator);
+            }
+            continue;
+        }
+
         if x - lower_x < -2 || x - upper_x > 2 || z - lower_z < -2 || z - upper_z > 2 {
             continue;
-        }
+        } 
 
-        let h = get_height(
-            *x,
-            *z,
-            &world_generator.terrain_generator,
-            &world_generator.elevation,
-            &world_generator.steepness,
-        );
-
-        //Below sea level
-        if h <= SAND_LEVEL {
-            continue;
-        }
-
-        //Check to make sure we are not in a cave (an empty block)
-        if is_noise_cave(*x, h, *z, &world_generator.noise_cave_generator) {
-            continue;
-        }
-
-        for y in (h + 1)..(h + 1 + tree_heights[i]) {
-            //Generate trunk
-            chunk.set_block(*x, y, *z, Block::new_id(8));
-
-            //Generate leaves
-            generate_leaves(chunk, h + 1, *x, y, *z, tree_heights[i]);
-        }
-        generate_leaves(
-            chunk,
-            h + 1,
-            *x,
-            h + 1 + tree_heights[i],
-            *z,
-            tree_heights[i],
-        );
+        gen_tree(chunk, *x, *z, tree_heights[i], world_generator);
     }
 }

@@ -271,7 +271,7 @@ impl World {
                     //Dirt
                     4 => update_dirt(self, x, y, z, to_update),
                     //Leaves
-                    7 => leaf_decay(self, x, y, z, to_update),
+                    7 | 91 => leaf_decay(self, x, y, z, to_update),
                     //Wet farmland
                     43 => update_wet_farmland(self, x, y, z, to_update),
                     //Dry farmland
