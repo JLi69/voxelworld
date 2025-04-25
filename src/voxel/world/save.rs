@@ -9,13 +9,16 @@ use std::{fs::File, io::Write};
 fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
     match world_gen_type {
         WorldGenType::Flat => "flat".to_string(),
-        WorldGenType::DefaultGen => "default".to_string(),
+        WorldGenType::OldGen => "old".to_string(),
+        WorldGenType::DefaultGen => "default2".to_string(),
     }
 }
 
 fn string_to_gen_type(s: &str) -> WorldGenType {
     if s == "flat" {
         WorldGenType::Flat
+    } else if s == "old" || s == "default" {
+        WorldGenType::OldGen
     } else {
         WorldGenType::DefaultGen
     }
@@ -211,6 +214,7 @@ impl World {
 
         match self.gen_type {
             WorldGenType::Flat => self.gen_flat_on_load(),
+            WorldGenType::OldGen => self.gen_old_on_load(),
             WorldGenType::DefaultGen => self.gen_default_on_load(),
         }
     }

@@ -34,7 +34,6 @@ pub fn generate_plants(
             *x,
             *z,
             &world_generator.terrain_generator,
-            &world_generator.elevation,
             &world_generator.steepness,
         );
 

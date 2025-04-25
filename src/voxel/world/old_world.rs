@@ -1,5 +1,5 @@
 /*
- * Default world generation
+ * Old world generation
  * */
 
 mod gen_trees;
@@ -69,7 +69,6 @@ impl GenInfoTable {
         self.heightmap = generate_heightmap(
             positions,
             &world_generator.terrain_generator,
-            &world_generator.elevation,
             &world_generator.steepness,
         );
     }
@@ -80,7 +79,6 @@ impl GenInfoTable {
             z,
             &mut self.heightmap,
             &world_generator.terrain_generator,
-            &world_generator.elevation,
             &world_generator.steepness,
         );
     }
@@ -184,7 +182,7 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     let posy = chunkpos.y * CHUNK_SIZE_I32;
     let posz = chunkpos.z * CHUNK_SIZE_I32;
 
-    if chunkpos.y < -4 || chunkpos.y > 5 {
+    if chunkpos.y < -4 || chunkpos.y > 4 {
         return;
     }
 
@@ -231,12 +229,20 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
                 //Generate noise caves
                 if is_noise_cave(x, y, z, &world_generator.noise_cave_generator) {
                     continue;
-                } 
+                }
+
+                let dirt_depth = if height > 48 {
+                    2
+                } else if height > 16 {
+                    3
+                } else {
+                    4
+                };
 
                 if y == height {
                     //Grass
                     chunk.set_block(x, y, z, Block::new_id(1));
-                } else if y > height - 3 && y < height {
+                } else if y > height - dirt_depth && y < height {
                     //Dirt
                     chunk.set_block(x, y, z, Block::new_id(4));
                 } else if y < height && y > -64 {
@@ -280,7 +286,7 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
 
 impl World {
     //Generates a world
-    pub fn gen_default(&mut self) {
+    pub fn gen_old(&mut self) {
         //Generate height map
         let positions = self.chunks.keys().copied().collect();
         let mut gen_info_table = GenInfoTable::new();
@@ -298,7 +304,7 @@ impl World {
     }
 
     //Generates more chunks
-    pub fn gen_more_default(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
+    pub fn gen_more_old(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
         //Check if the player is in the center chunk
         let x = (pos.x / CHUNK_SIZE_F32).floor() as i32;
         let y = (pos.y / CHUNK_SIZE_F32).floor() as i32;
@@ -431,7 +437,7 @@ impl World {
     }
 
     //Generates any missing chunks on load
-    pub fn gen_default_on_load(&mut self) {
+    pub fn gen_old_on_load(&mut self) {
         let mut to_generate = HashSet::new();
         for y in (self.centery - self.range)..=(self.centery + self.range) {
             for z in (self.centerz - self.range)..=(self.centerz + self.range) {

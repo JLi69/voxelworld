@@ -12,7 +12,7 @@ fn gen_tree_positions(
     heights: &mut Vec<i32>,
     world_seed: u32,
 ) {
-    let xz = [chunkx as f64 / 9.0 + 0.5, 0.0, chunkz as f64 / 9.0 + 0.5];
+    let xz = [chunkx as f64 / 3.0 + 0.5, 0.0, chunkz as f64 / 3.0 + 0.5];
     let noise_val = (tree_noise.get(xz) + 1.0) / 2.0;
     let tree_count = (noise_val * noise_val * 6.0).floor() as u32;
     let xu32 = chunkx as u32;
@@ -111,7 +111,6 @@ pub fn generate_trees(
             *x,
             *z,
             &world_generator.terrain_generator,
-            &world_generator.elevation,
             &world_generator.steepness,
         );
 

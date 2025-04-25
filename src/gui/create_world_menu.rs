@@ -80,6 +80,12 @@ fn display_create_world(
             menu_state.gen_type = WorldGenType::DefaultGen;
         }
 
+        let selected = menu_state.gen_type == WorldGenType::OldGen;
+        let text = menu_text("Old", 20.0, Color32::WHITE);
+        if ui.radio(selected, text).clicked() {
+            menu_state.gen_type = WorldGenType::OldGen;
+        }
+
         let selected = menu_state.gen_type == WorldGenType::Flat;
         let text = menu_text("Flat", 20.0, Color32::WHITE);
         if ui.radio(selected, text).clicked() {

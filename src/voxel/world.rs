@@ -1,5 +1,6 @@
 pub mod block_update;
 mod default_world;
+mod old_world;
 mod flat_world;
 mod gen_more;
 pub mod light;
@@ -27,6 +28,9 @@ struct WorldGenerator {
     pub noise_cave_generator: Perlin,
     pub tree_generator: Perlin,
     pub steepness: Perlin,
+    //For world generation 2.0
+    pub elevation: Fbm<Perlin>,
+    pub temperature: Perlin,
     world_seed: u32,
 }
 
@@ -36,11 +40,17 @@ impl WorldGenerator {
         terrain_noise.octaves = OCTAVES;
         terrain_noise.persistence = PERSISTENCE;
 
+        let mut elevation_noise = Fbm::new(seed + 5);
+        elevation_noise.octaves = 3;
+        elevation_noise.persistence = 0.25;
+
         Self {
             terrain_generator: terrain_noise,
             noise_cave_generator: Perlin::new(seed + 1),
             tree_generator: Perlin::new(seed + 2),
             steepness: Perlin::new(seed + 3),
+            elevation: elevation_noise,
+            temperature: Perlin::new(seed + 4),
             world_seed: seed,
         }
     }
@@ -48,8 +58,9 @@ impl WorldGenerator {
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum WorldGenType {
-    DefaultGen,
+    OldGen,
     Flat,
+    DefaultGen,
 }
 
 //World struct
@@ -99,7 +110,7 @@ impl World {
             centerz: 0,
             chunk_cache: HashMap::new(),
             world_generator: WorldGenerator::new(0),
-            gen_type: WorldGenType::DefaultGen,
+            gen_type: WorldGenType::OldGen,
             world_seed: 0,
             path: String::new(),
             block_update_timer: 0.0,
@@ -313,16 +324,18 @@ impl World {
     //Generate world
     pub fn generate_world(&mut self) {
         match self.gen_type {
-            WorldGenType::DefaultGen => self.gen_default(),
+            WorldGenType::OldGen => self.gen_old(),
             WorldGenType::Flat => self.gen_flat(),
+            WorldGenType::DefaultGen => self.gen_default(),
         }
     }
 
     //Generate more world
     pub fn generate_more(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
         match self.gen_type {
-            WorldGenType::DefaultGen => self.gen_more_default(pos, chunktables),
+            WorldGenType::OldGen => self.gen_more_old(pos, chunktables),
             WorldGenType::Flat => self.gen_more_flat(pos, chunktables),
+            WorldGenType::DefaultGen => self.gen_more_default(pos, chunktables),
         }
     }
 
