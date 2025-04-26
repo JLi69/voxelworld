@@ -169,6 +169,10 @@ impl Block {
 
     //Returns if the voxel can by replaced by player placing a block
     pub fn replaceable(&self) -> bool {
+        //Snow bottom slab is replaceable
+        if self.id == 86 && self.shape() == 1 && self.orientation() == 0 {
+            return true;
+        }
         get_flag(self.id) & REPLACEABLE != 0
     }
 

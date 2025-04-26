@@ -511,7 +511,7 @@ pub fn place_block(
     //If the player can interact with the block or if the block is
     //replacable (like tall grass) then don't attempt to shift the placed
     //block back
-    if (!raycast_block.replaceable() || raycast_block.id == block.id)
+    if (!raycast_block.replaceable() || raycast_block == block)
         && (!raycast_block.can_use() || player.is_crouching())
     {
         match axis {

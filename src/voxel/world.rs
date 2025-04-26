@@ -17,7 +17,7 @@ use noise::{Fbm, Perlin, NoiseFn};
 use std::collections::{HashMap, HashSet};
 
 pub const OCTAVES: usize = 5;
-pub const PERSISTENCE: f64 = 0.47;
+pub const PERSISTENCE: f64 = 0.5;
 const DEFAULT_TIME: f32 = 0.04;
 const MINUTES_PER_DAY: f32 = 20.0;
 const DAY_NIGHT_SPEED: f32 = 1.0 / (MINUTES_PER_DAY * 60.0);
@@ -56,8 +56,9 @@ impl WorldGenerator {
     }
 
     pub fn get_temperature(&self, x: i32, z: i32) -> f64 {
-        let temp_point = [ x as f64 / 384.0, z as f64 / 384.0 ];
-        self.temperature.get(temp_point) * 0.5 + 0.5
+        let offset = (self.world_seed % 2560) as f64 / 1280.0;
+        let point = [ x as f64 / 480.0 + offset, z as f64 / 480.0 + offset ];
+        self.temperature.get(point) * 0.5 + 0.5
     }
 }
 
