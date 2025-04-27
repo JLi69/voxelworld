@@ -1,9 +1,9 @@
 pub mod block_update;
 mod default_world;
-mod old_world;
 mod flat_world;
 mod gen_more;
 pub mod light;
+mod old_world;
 mod save;
 
 use super::{
@@ -13,7 +13,7 @@ use super::{
 };
 use crate::gfx::ChunkTables;
 use cgmath::Vector3;
-use noise::{Fbm, Perlin, NoiseFn, Simplex};
+use noise::{Fbm, NoiseFn, Perlin, Simplex};
 use std::collections::{HashMap, HashSet};
 
 pub const OCTAVES: usize = 5;
@@ -63,7 +63,7 @@ impl WorldGenerator {
 
     pub fn get_temperature(&self, x: i32, z: i32) -> f64 {
         let offset = (self.world_seed % 2560) as f64 / 1280.0;
-        let point = [ x as f64 / 480.0 + offset, z as f64 / 480.0 + offset ];
+        let point = [x as f64 / 480.0 + offset, z as f64 / 480.0 + offset];
         self.temperature.get(point) * 0.5 + 0.5
     }
 

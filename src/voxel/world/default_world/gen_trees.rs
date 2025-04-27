@@ -1,5 +1,5 @@
-use super::terrain::{is_noise_cave, get_height_mountain, get_height};
-use super::{WorldGenerator, SAND_LEVEL, is_mountain};
+use super::terrain::{get_height, get_height_mountain, is_noise_cave};
+use super::{is_mountain, WorldGenerator, SAND_LEVEL};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use noise::{NoiseFn, Perlin};
 use std::collections::HashSet;
@@ -135,7 +135,7 @@ fn gen_tree(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &Wo
     let temperature = world_generator.get_temperature(x, z);
     let leaf_id = if temperature < 0.25 {
         //Snowy leaf in cold biomes
-        91 
+        91
     } else {
         //Normal leaf
         7
@@ -177,7 +177,7 @@ pub fn generate_trees(
 
         if x - lower_x < -2 || x - upper_x > 2 || z - lower_z < -2 || z - upper_z > 2 {
             continue;
-        } 
+        }
 
         gen_tree(chunk, *x, *z, tree_heights[i], world_generator);
     }

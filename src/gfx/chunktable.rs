@@ -465,7 +465,7 @@ impl ChunkVaoTable {
             let dist2 = (*chunkx - centerx) * (*chunkx - centerx)
                 + (*chunky - centery) * (*chunky - centery)
                 + (*chunkz - centerz) * (*chunkz - centerz);
-            let range = gamestate.world.get_range(); 
+            let range = gamestate.world.get_range();
             if dist2 > (range + 1) * (range + 1) {
                 continue;
             }

@@ -1,4 +1,4 @@
-use crate::voxel::{CHUNK_SIZE_I32, world::WorldGenerator};
+use crate::voxel::{world::WorldGenerator, CHUNK_SIZE_I32};
 use noise::{NoiseFn, Perlin};
 use std::collections::HashMap;
 
@@ -25,10 +25,10 @@ pub fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
 }
 
 pub fn get_height(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
-    let base = world_generator.get_base_elevation(x, z); 
-    let steepness = world_generator.get_steepness(x, z); 
+    let base = world_generator.get_base_elevation(x, z);
+    let steepness = world_generator.get_steepness(x, z);
     let elevation = world_generator.get_elevation(x, z);
-    
+
     let transformed_noise = base + steepness * elevation;
     (transformed_noise * 64.0) as i32
 }

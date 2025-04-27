@@ -1,4 +1,8 @@
-use super::{is_noise_cave, terrain::{get_height_mountain, get_height}, WorldGenerator, SAND_LEVEL, SEA_LEVEL, is_mountain};
+use super::{
+    is_mountain, is_noise_cave,
+    terrain::{get_height, get_height_mountain},
+    WorldGenerator, SAND_LEVEL, SEA_LEVEL,
+};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use fastrand::Rng;
 
@@ -59,14 +63,14 @@ pub fn generate_plants(
                 //Dead bush
                 0..20 => chunk.set_block(*x, h + 1, *z, Block::new_id(90)),
                 //Mushroom (very rare)
-                20 => chunk.set_block(*x, h + 1, *z, Block::new_id(48)), 
+                20 => chunk.set_block(*x, h + 1, *z, Block::new_id(48)),
                 _ => {}
             }
             continue;
         }
-        
+
         //Cold biome
-        if temperature < 0.25 { 
+        if temperature < 0.25 {
             if (0..10).contains(&rand_val) {
                 //Mushroom
                 chunk.set_block(*x, h + 1, *z, Block::new_id(48));

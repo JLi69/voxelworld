@@ -10,7 +10,8 @@ mod terrain;
 use self::{
     gen_trees::get_tree_gen_info,
     ore::{generate_magma_blocks, generate_ore},
-    plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent}, terrain::{get_height, get_mountain, get_temperature},
+    plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
+    terrain::{get_height, get_mountain, get_temperature},
 };
 use crossbeam::{queue::ArrayQueue, thread};
 use std::collections::{HashMap, HashSet};
@@ -22,7 +23,7 @@ use super::{
 use crate::voxel::{
     region::{chunkpos_to_regionpos, Region},
     world::gen_more::update_chunk_tables,
-    Block, Chunk, CHUNK_SIZE_F32, INDESTRUCTIBLE, EMPTY_BLOCK,
+    Block, Chunk, CHUNK_SIZE_F32, EMPTY_BLOCK, INDESTRUCTIBLE,
 };
 use crate::{gfx::ChunkTables, voxel::CHUNK_SIZE_I32};
 use cgmath::Vector3;
@@ -65,7 +66,7 @@ impl GenInfoTable {
             plant_positions: HashMap::new(),
             sugarcane_positions: HashMap::new(),
         }
-    } 
+    }
 
     fn generate_heights(
         &mut self,
@@ -80,7 +81,13 @@ impl GenInfoTable {
     fn add_heights(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
         add_to_heightmap(x, z, &mut self.heightmap, world_generator, get_height);
         add_to_heightmap(x, z, &mut self.mountain, world_generator, get_mountain);
-        add_to_heightmap(x, z, &mut self.temperature, world_generator, get_temperature);
+        add_to_heightmap(
+            x,
+            z,
+            &mut self.temperature,
+            world_generator,
+            get_temperature,
+        );
     }
 
     fn generate_trees(
@@ -181,12 +188,12 @@ impl GenInfoTable {
 }
 
 pub fn is_mountain(mountain_h: i32, terrain_h: i32) -> bool {
-    mountain_h - 8 > terrain_h && mountain_h > 10
+    mountain_h - 8 > terrain_h && mountain_h > 10 + terrain_h.max(-16).abs() / 4
 }
 
 fn get_surface_block(temperature: i32, mountain_h: i32, terrain_h: i32) -> Block {
     if is_mountain(mountain_h, terrain_h) {
-        if mountain_h < terrain_h + 48 {
+        if mountain_h < (terrain_h + 42).min(50.max(terrain_h + 16)) || mountain_h < 32 {
             //Stone at lower heights
             return Block::new_id(2);
         } else {
@@ -289,9 +296,7 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
                     continue;
                 }
 
-                if y == height + 1 && 
-                    temperature < 25 && 
-                    chunk.get_block(x, y, z).id == EMPTY_BLOCK 
+                if y == height + 1 && temperature < 25 && chunk.get_block(x, y, z).id == EMPTY_BLOCK
                 {
                     //Snow slabs in cold biomes
                     let mut snow_slab = Block::new_id(86);

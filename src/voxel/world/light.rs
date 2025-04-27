@@ -871,7 +871,7 @@ impl World {
     //Get any chunks that need to be updated and how many chunks are under a chunk
     fn get_to_update(
         &self,
-        chunks: &HashSet<(i32, i32, i32)>
+        chunks: &HashSet<(i32, i32, i32)>,
     ) -> (ChunkList, HashMap<(i32, i32, i32), i32>) {
         let mut to_update = ChunkList::from_iter(chunks.iter().copied());
         let mut columns = HashMap::<(i32, i32), Vec<i32>>::new();
@@ -972,7 +972,7 @@ impl World {
             if *count > 0 {
                 continue;
             }
- 
+
             let under = under_chunk.get(&(*x, *y, *z)).copied().unwrap_or(1);
             if under > 1 {
                 continue;
