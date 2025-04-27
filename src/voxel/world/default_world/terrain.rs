@@ -33,6 +33,14 @@ pub fn get_height(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
     (transformed_noise * 64.0) as i32
 }
 
+pub fn get_temperature(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
+    (world_generator.get_temperature(x, z) * 100.0) as i32
+}
+
+pub fn get_mountain(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
+    (world_generator.get_mountain(x, z) * 80.0) as i32
+}
+
 pub fn get_height_mountain(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
     let mountain_h = (world_generator.get_mountain(x, z) * 80.0) as i32;
     get_height(x, z, world_generator).max(mountain_h)
@@ -41,6 +49,7 @@ pub fn get_height_mountain(x: i32, z: i32, world_generator: &WorldGenerator) -> 
 pub fn generate_heightmap(
     positions: &Vec<(i32, i32, i32)>,
     world_generator: &WorldGenerator,
+    height_func: fn(i32, i32, &WorldGenerator) -> i32,
 ) -> HeightMap {
     let mut heightmap = HeightMap::new();
 
@@ -54,7 +63,7 @@ pub fn generate_heightmap(
         for x in posx..(posx + CHUNK_SIZE_I32) {
             for z in posz..(posz + CHUNK_SIZE_I32) {
                 let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-                let h = get_height(x, z, world_generator);
+                let h = height_func(x, z, world_generator);
                 heights[index] = h;
             }
         }
@@ -69,6 +78,7 @@ pub fn add_to_heightmap(
     chunkz: i32,
     heightmap: &mut HeightMap,
     world_generator: &WorldGenerator,
+    height_func: fn(i32, i32, &WorldGenerator) -> i32,
 ) {
     if heightmap.contains_key(&(chunkx, chunkz)) {
         return;
@@ -79,7 +89,7 @@ pub fn add_to_heightmap(
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-            let h = get_height(x, z, world_generator);
+            let h = height_func(x, z, world_generator);
             heights[index] = h;
         }
     }
