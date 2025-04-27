@@ -1,4 +1,4 @@
-use super::{is_noise_cave, terrain::get_height, WorldGenerator, SAND_LEVEL, SEA_LEVEL};
+use super::{is_noise_cave, terrain::{get_height_mountain, get_height}, WorldGenerator, SAND_LEVEL, SEA_LEVEL, is_mountain};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use fastrand::Rng;
 
@@ -30,13 +30,11 @@ pub fn generate_plants(
 ) {
     for (x, z) in plant_positions {
         let rand_val = rng.i32(0..80);
-        let h = get_height(
-            *x,
-            *z,
-            &world_generator.terrain_generator,
-            &world_generator.elevation,
-            &world_generator.steepness,
-        );
+        let h = get_height_mountain(*x, *z, world_generator);
+        let terrain = get_height(*x, *z, world_generator);
+        if is_mountain(h, terrain) {
+            continue;
+        }
 
         let replace = chunk.get_block(*x, h + 1, *z);
         //Replace any non solid block or empty block

@@ -66,23 +66,11 @@ impl GenInfoTable {
         positions: &Vec<(i32, i32, i32)>,
         world_generator: &WorldGenerator,
     ) {
-        self.heightmap = generate_heightmap(
-            positions,
-            &world_generator.terrain_generator,
-            &world_generator.elevation,
-            &world_generator.steepness,
-        );
+        self.heightmap = generate_heightmap(positions, world_generator);
     }
 
     fn add_heights(&mut self, x: i32, z: i32, world_generator: &WorldGenerator) {
-        add_to_heightmap(
-            x,
-            z,
-            &mut self.heightmap,
-            &world_generator.terrain_generator,
-            &world_generator.elevation,
-            &world_generator.steepness,
-        );
+        add_to_heightmap(x, z, &mut self.heightmap, world_generator);
     }
 
     fn generate_trees(
@@ -178,7 +166,21 @@ impl GenInfoTable {
     }
 }
 
-fn get_surface_block(temperature: f64) -> Block {
+pub fn is_mountain(mountain_h: i32, terrain_h: i32) -> bool {
+    mountain_h - 8 > terrain_h && mountain_h > 10
+}
+
+fn get_surface_block(temperature: f64, mountain_h: i32, terrain_h: i32) -> Block {
+    if is_mountain(mountain_h, terrain_h) {
+        if mountain_h < terrain_h + 48 {
+            //Stone at lower heights
+            return Block::new_id(2);
+        } else {
+            //Snow
+            return Block::new_id(86);
+        }
+    }
+
     if temperature > 0.75 {
         //Desert, sand
         Block::new_id(11)
@@ -191,7 +193,12 @@ fn get_surface_block(temperature: f64) -> Block {
 }
 
 //Blocks such as dirt right beneath the surface layer
-fn get_under_block(temperature: f64) -> Block {
+fn get_under_block(temperature: f64, mountain_h: i32, terrain_h: i32) -> Block {
+    if is_mountain(mountain_h, terrain_h) {
+        //Stone
+        return Block::new_id(2);
+    }
+
     if temperature > 0.75 {
         //Desert, sand
         Block::new_id(11)
@@ -220,16 +227,18 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-            let height = gen_info.heights[index];
+            let terrain_h = gen_info.heights[index];
+            let mountain_h = (world_generator.get_mountain(x, z) * 80.0) as i32;
+            let height = terrain_h.max(mountain_h);
             let h = (height + 1).max(SEA_LEVEL + 1);
 
-            if h + 1 < posy {
+            if (h + 1).max(mountain_h + 1) < posy {
                 continue;
             }
 
             let temperature = world_generator.get_temperature(x, z);
 
-            for y in posy..(posy + CHUNK_SIZE_I32).min(h + 1) {
+            for y in posy..(posy + CHUNK_SIZE_I32).min((h + 1).max(mountain_h + 1)) {
                 let indestructible = (y == BOTTOM_OF_WORLD)
                     || (y == BOTTOM_OF_WORLD + 1 && rng.i32(0..4) < 2)
                     || (y == BOTTOM_OF_WORLD + 2 && rng.i32(0..6) == 0);
@@ -271,10 +280,10 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
                     snow_slab.set_shape(1);
                     chunk.set_block(x, y, z, snow_slab);
                 } else if y == height {
-                    let surface_block = get_surface_block(temperature);
+                    let surface_block = get_surface_block(temperature, mountain_h, terrain_h);
                     chunk.set_block(x, y, z, surface_block);
                 } else if y > height - 4 && y < height {
-                    let under_block = get_under_block(temperature);
+                    let under_block = get_under_block(temperature, mountain_h, terrain_h);
                     chunk.set_block(x, y, z, under_block);
                 } else if y < height && y > -64 {
                     //Stone
@@ -288,7 +297,9 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-            let height = gen_info.heights[index];
+            let terrain_h = gen_info.heights[index];
+            let mountain_h = (world_generator.get_mountain(x, z) * 80.0) as i32;
+            let height = terrain_h.max(mountain_h);
 
             if height < posy {
                 continue;

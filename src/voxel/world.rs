@@ -13,7 +13,7 @@ use super::{
 };
 use crate::gfx::ChunkTables;
 use cgmath::Vector3;
-use noise::{Fbm, Perlin, NoiseFn};
+use noise::{Fbm, Perlin, NoiseFn, Simplex};
 use std::collections::{HashMap, HashSet};
 
 pub const OCTAVES: usize = 5;
@@ -23,7 +23,7 @@ const MINUTES_PER_DAY: f32 = 20.0;
 const DAY_NIGHT_SPEED: f32 = 1.0 / (MINUTES_PER_DAY * 60.0);
 
 //Struct that contains information for generating the world
-struct WorldGenerator {
+pub struct WorldGenerator {
     pub terrain_generator: Fbm<Perlin>,
     pub noise_cave_generator: Perlin,
     pub tree_generator: Perlin,
@@ -31,6 +31,7 @@ struct WorldGenerator {
     //For world generation 2.0
     pub elevation: Fbm<Perlin>,
     pub temperature: Perlin,
+    pub mountain: Fbm<Simplex>,
     world_seed: u32,
 }
 
@@ -44,6 +45,10 @@ impl WorldGenerator {
         elevation_noise.octaves = 3;
         elevation_noise.persistence = 0.25;
 
+        let mut mountain_noise = Fbm::new(seed + 6);
+        mountain_noise.octaves = 4;
+        mountain_noise.persistence = 0.6;
+
         Self {
             terrain_generator: terrain_noise,
             noise_cave_generator: Perlin::new(seed + 1),
@@ -51,6 +56,7 @@ impl WorldGenerator {
             steepness: Perlin::new(seed + 3),
             elevation: elevation_noise,
             temperature: Perlin::new(seed + 4),
+            mountain: mountain_noise,
             world_seed: seed,
         }
     }
@@ -59,6 +65,29 @@ impl WorldGenerator {
         let offset = (self.world_seed % 2560) as f64 / 1280.0;
         let point = [ x as f64 / 480.0 + offset, z as f64 / 480.0 + offset ];
         self.temperature.get(point) * 0.5 + 0.5
+    }
+
+    pub fn get_base_elevation(&self, x: i32, z: i32) -> f64 {
+        let point = [x as f64 / 512.0, z as f64 / 512.0];
+        self.terrain_generator.get(point)
+    }
+
+    pub fn get_elevation(&self, x: i32, z: i32) -> f64 {
+        let point = [x as f64 / 16.0, z as f64 / 16.0];
+        self.elevation.get(point) * 0.5 + 0.5
+    }
+
+    pub fn get_steepness(&self, x: i32, z: i32) -> f64 {
+        let point = [x as f64 / 384.0, z as f64 / 384.0];
+        let val = self.steepness.get(point) * 0.5 + 0.5;
+        val.abs().powf((1.0 - val) * 3.0)
+    }
+
+    pub fn get_mountain(&self, x: i32, z: i32) -> f64 {
+        let point = [x as f64 / 384.0, z as f64 / 384.0];
+        let normalized = self.mountain.get(point) * 0.5 + 0.5;
+        let clamped = ((normalized - 0.3) / 0.7).clamp(0.0, 1.0);
+        clamped * 2.0 - 1.0
     }
 }
 

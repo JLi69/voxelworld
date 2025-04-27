@@ -1,5 +1,5 @@
-use crate::voxel::CHUNK_SIZE_I32;
-use noise::{Fbm, NoiseFn, Perlin};
+use crate::voxel::{CHUNK_SIZE_I32, world::WorldGenerator};
+use noise::{NoiseFn, Perlin};
 use std::collections::HashMap;
 
 pub type HeightMap = HashMap<(i32, i32), Vec<i32>>;
@@ -24,32 +24,23 @@ pub fn is_noise_cave(x: i32, y: i32, z: i32, cave_noise: &Perlin) -> bool {
     cave_noise.get(xyz) < cave_perc(y, -64, -51, 64)
 }
 
-pub fn get_height(
-    x: i32,
-    z: i32,
-    base_elevation: &Fbm<Perlin>,
-    elevation: &Fbm<Perlin>,
-    steepness: &Perlin,
-) -> i32 {
-    let point = [x as f64 / 512.0, z as f64 / 512.0];
-    let base = base_elevation.get(point);
-    
-    let steepness_point = [x as f64 / 384.0, z as f64 / 384.0];
-    let val = steepness.get(steepness_point) * 0.5 + 0.5;
-    let steepness = val.abs().powf((1.0 - val) * 3.0);
-    
-    let elevation_point = [x as f64 / 16.0, z as f64 / 16.0];
-    let elevation = elevation.get(elevation_point) * 0.5 + 0.5;
+pub fn get_height(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
+    let base = world_generator.get_base_elevation(x, z); 
+    let steepness = world_generator.get_steepness(x, z); 
+    let elevation = world_generator.get_elevation(x, z);
     
     let transformed_noise = base + steepness * elevation;
     (transformed_noise * 64.0) as i32
 }
 
+pub fn get_height_mountain(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
+    let mountain_h = (world_generator.get_mountain(x, z) * 80.0) as i32;
+    get_height(x, z, world_generator).max(mountain_h)
+}
+
 pub fn generate_heightmap(
     positions: &Vec<(i32, i32, i32)>,
-    base_elevation: &Fbm<Perlin>,
-    elevation: &Fbm<Perlin>,
-    steepness: &Perlin,
+    world_generator: &WorldGenerator,
 ) -> HeightMap {
     let mut heightmap = HeightMap::new();
 
@@ -63,7 +54,7 @@ pub fn generate_heightmap(
         for x in posx..(posx + CHUNK_SIZE_I32) {
             for z in posz..(posz + CHUNK_SIZE_I32) {
                 let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-                let h = get_height(x, z, base_elevation, elevation, steepness);
+                let h = get_height(x, z, world_generator);
                 heights[index] = h;
             }
         }
@@ -77,9 +68,7 @@ pub fn add_to_heightmap(
     chunkx: i32,
     chunkz: i32,
     heightmap: &mut HeightMap,
-    base_elevation: &Fbm<Perlin>,
-    elevation: &Fbm<Perlin>,
-    steepness: &Perlin,
+    world_generator: &WorldGenerator,
 ) {
     if heightmap.contains_key(&(chunkx, chunkz)) {
         return;
@@ -90,7 +79,7 @@ pub fn add_to_heightmap(
     for x in posx..(posx + CHUNK_SIZE_I32) {
         for z in posz..(posz + CHUNK_SIZE_I32) {
             let index = ((z - posz) * CHUNK_SIZE_I32 + (x - posx)) as usize;
-            let h = get_height(x, z, base_elevation, elevation, steepness);
+            let h = get_height(x, z, world_generator);
             heights[index] = h;
         }
     }

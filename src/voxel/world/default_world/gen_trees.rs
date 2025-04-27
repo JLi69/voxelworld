@@ -1,5 +1,5 @@
-use super::terrain::{get_height, is_noise_cave};
-use super::{WorldGenerator, SAND_LEVEL};
+use super::terrain::{is_noise_cave, get_height_mountain, get_height};
+use super::{WorldGenerator, SAND_LEVEL, is_mountain};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use noise::{NoiseFn, Perlin};
 use std::collections::HashSet;
@@ -92,13 +92,11 @@ pub fn get_tree_gen_info(
 }
 
 fn gen_cactus(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &WorldGenerator) {
-    let h = get_height(
-        x,
-        z,
-        &world_generator.terrain_generator,
-        &world_generator.elevation,
-        &world_generator.steepness,
-    );
+    let h = get_height_mountain(x, z, world_generator);
+    let terrain = get_height(x, z, world_generator);
+    if is_mountain(h, terrain) {
+        return;
+    }
 
     //Below sea level
     if h <= SAND_LEVEL {
@@ -118,13 +116,11 @@ fn gen_cactus(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &
 }
 
 fn gen_tree(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &WorldGenerator) {
-    let h = get_height(
-        x,
-        z,
-        &world_generator.terrain_generator,
-        &world_generator.elevation,
-        &world_generator.steepness,
-    );
+    let h = get_height_mountain(x, z, world_generator);
+    let terrain = get_height(x, z, world_generator);
+    if is_mountain(h, terrain) {
+        return;
+    }
 
     //Below sea level
     if h <= SAND_LEVEL {
