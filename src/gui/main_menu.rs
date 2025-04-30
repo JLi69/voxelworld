@@ -2,7 +2,7 @@ use super::egui_backend;
 use super::{init_egui_input_state, set_ui_gl_state};
 use super::{menu_text, transparent_frame};
 use crate::game::{EventHandler, Game};
-use crate::gfx;
+use crate::{gfx, gui};
 use egui_backend::egui::{self, Color32};
 use glfw::{Context, CursorMode, Glfw, PWindow};
 
@@ -24,7 +24,7 @@ fn display_main_title(ctx: &egui::Context) {
         .show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(64.0);
-                ui.label(menu_text("VOXELWORLD", 64.0, Color32::WHITE));
+                ui.label(menu_text("VOXELWORLD", 64.0, Color32::DARK_GRAY));
             });
         });
 }
@@ -90,9 +90,18 @@ pub fn run_main_menu(
     let start = std::time::Instant::now();
     let mut selected = None;
     while !window.should_close() && selected.is_none() {
+        gfx::set_default_gl_state();
         //Display
         gfx::clear();
 
+        //Update perspective matrix
+        let persp = gfx::calculate_perspective(window, &gamestate.cam);
+        gamestate.persp = persp;
+        let aspect = gfx::calculate_aspect(window);
+        gamestate.aspect = aspect;
+        gfx::display::display_clouds_menu(gamestate, start.elapsed().as_secs_f32() * 2.0);
+
+        gui::set_ui_gl_state();
         //Update input state
         input_state.input.time = Some(start.elapsed().as_secs_f64());
         input_state.pixels_per_point = native_pixels_per_point;

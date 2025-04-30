@@ -44,9 +44,7 @@ pub fn set_ui_gl_state() {
 
 //Creates an egui frame that is completely transparent
 fn transparent_frame() -> egui::Frame {
-    egui::Frame::none()
-        .fill(egui::Color32::TRANSPARENT)
-        .inner_margin(egui::Margin::symmetric(16.0, 16.0))
+    egui::Frame::none().inner_margin(egui::Margin::symmetric(16.0, 16.0))
 }
 
 //Generates text to be displayed

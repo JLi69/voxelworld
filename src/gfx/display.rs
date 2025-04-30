@@ -155,6 +155,42 @@ pub fn display_suffocation_screen(gamestate: &Game, w: i32, h: i32) {
     }
 }
 
+pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
+    unsafe {
+        gl::Disable(gl::CULL_FACE);
+    }
+
+    gamestate.textures.bind("clouds");
+    gamestate.shaders.use_program("clouds");
+    let cloud_shader = gamestate.shaders.get("clouds");
+    let quad = gamestate.models.bind("quad2d");
+
+    let persp = gamestate.persp;
+    cloud_shader.uniform_matrix4f("persp", &persp);
+    let view = gamestate.cam.get_view();
+    cloud_shader.uniform_matrix4f("view", &view);
+    let mut transform = Matrix4::identity();
+    let sz = 7.0 * CHUNK_SIZE_F32 * 16.0;
+    transform = Matrix4::from_nonuniform_scale(sz, 0.0, sz) * transform;
+    transform = Matrix4::from_translation(Vector3::new(0.0, 120.0, 0.0)) * transform;
+    cloud_shader.uniform_matrix4f("transform", &transform);
+    cloud_shader.uniform_vec3f("campos", 0.0, 0.0, 0.0);
+    cloud_shader.uniform_float("total_time", time_passed);
+    cloud_shader.uniform_float("skybrightness", 1.0);
+    //Fog
+    let (sr, sg, sb) = DAY;
+    let range = 7.0 * CHUNK_SIZE_F32;
+    let dist = range * 0.7;
+    cloud_shader.uniform_float("fogdist", dist);
+    cloud_shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
+    cloud_shader.uniform_vec4f("fogcolor", sr, sg, sb, 1.0);
+    draw_elements(quad);
+
+    unsafe {
+        gl::Enable(gl::CULL_FACE);
+    }
+}
+
 pub fn display_clouds(gamestate: &Game, time_passed: f32) {
     unsafe {
         gl::Disable(gl::CULL_FACE);

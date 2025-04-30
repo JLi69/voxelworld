@@ -74,17 +74,19 @@ pub fn run_credits_screen(
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 ui.vertical(|ui| {
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        ui.label(menu_text("Credits", 48.0, Color32::WHITE));
-                        display_credits(ui, &credits_text);
+                    ui.label(menu_text("Credits", 48.0, Color32::WHITE));
 
-                        //Return to main menu
-                        if ui
-                            .button(menu_text("Main Menu", 24.0, Color32::WHITE))
-                            .clicked()
-                        {
-                            quit_to_menu = true;
-                        }
+                    //Return to main menu
+                    if ui
+                        .button(menu_text("Main Menu", 24.0, Color32::WHITE))
+                        .clicked()
+                    {
+                        quit_to_menu = true;
+                    }
+                    ui.add_space(24.0);
+
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        display_credits(ui, &credits_text);
                     });
                 });
             });
