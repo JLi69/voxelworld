@@ -89,6 +89,7 @@ pub fn run_main_menu(
     window.set_cursor_mode(CursorMode::Normal);
     let start = std::time::Instant::now();
     let mut selected = None;
+    let cloud_offset = fastrand::f32() * 2048.0;
     while !window.should_close() && selected.is_none() {
         gfx::set_default_gl_state();
         //Display
@@ -99,7 +100,8 @@ pub fn run_main_menu(
         gamestate.persp = persp;
         let aspect = gfx::calculate_aspect(window);
         gamestate.aspect = aspect;
-        gfx::display::display_clouds_menu(gamestate, start.elapsed().as_secs_f32() * 2.0);
+        let cloud_time = (start.elapsed().as_secs_f32() + cloud_offset) * 2.0;
+        gfx::display::display_clouds_menu(gamestate, cloud_time);
 
         gui::set_ui_gl_state();
         //Update input state

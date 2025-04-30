@@ -32,7 +32,7 @@ fn read_credits_text() -> Vec<String> {
 //Display the credits, line by line
 fn display_credits(ui: &mut egui::Ui, credits: &[String]) {
     for text in credits {
-        ui.label(menu_text(text, 20.0, Color32::WHITE));
+        ui.label(menu_text(text, 20.0, Color32::DARK_GRAY));
     }
 }
 
