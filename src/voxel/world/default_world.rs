@@ -230,7 +230,7 @@ fn get_under_block(temperature: i32, mountain_h: i32, terrain_h: i32) -> Block {
 }
 
 fn out_of_bounds(y: i32) -> bool {
-    y < -4 || y > 5
+    !(-4..=5).contains(&y)
 }
 
 fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenerator) {
