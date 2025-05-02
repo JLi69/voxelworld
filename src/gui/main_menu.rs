@@ -3,7 +3,7 @@ use super::{init_egui_input_state, set_ui_gl_state};
 use super::{menu_text, transparent_frame};
 use crate::game::{EventHandler, Game};
 use crate::{gfx, gui};
-use egui_backend::egui::{self, Color32};
+use egui_backend::egui::{self, vec2, Color32, Pos2};
 use glfw::{Context, CursorMode, Glfw, PWindow};
 
 //Selections that the user can make on the main menu
@@ -13,20 +13,6 @@ pub enum MainMenuOutput {
     SelectWorld,
     Credits,
     Quit,
-}
-
-//Displays the main title
-//TODO: probably improve how this looks
-fn display_main_title(ctx: &egui::Context) {
-    egui::TopBottomPanel::top("top_panel")
-        .frame(transparent_frame())
-        .show_separator_line(false)
-        .show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(64.0);
-                ui.label(menu_text("VOXELWORLD", 64.0, Color32::DARK_GRAY));
-            });
-        });
 }
 
 //Displays all the buttons on the main menu
@@ -113,11 +99,21 @@ pub fn run_main_menu(
         ctx.begin_pass(input_state.input.take());
 
         //Display main menu
-        display_main_title(&ctx);
-
-        egui::CentralPanel::default()
+        let (width, height) = window.get_size();
+        egui::Window::new("window")
+            .movable(false)
+            .title_bar(false)
+            .fixed_size(vec2(width as f32, height as f32 - 32.0))
+            .fixed_pos(Pos2::new(0.0, 0.0))
+            .scroll(true)
             .frame(transparent_frame())
             .show(&ctx, |ui| {
+                //Display the main title
+                ui.vertical_centered(|ui| {
+                    ui.add_space(64.0);
+                    ui.label(menu_text("VOXELWORLD", 64.0, Color32::DARK_GRAY));
+                    ui.add_space(64.0);
+                });
                 selected = display_main_menu(ui);
             });
 

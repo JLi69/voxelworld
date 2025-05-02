@@ -1,7 +1,7 @@
 use super::{init_egui_input_state, menu_text, set_ui_gl_state, transparent_frame};
 use crate::game::{EventHandler, Game};
 use crate::gfx;
-use egui_backend::egui::{self, Color32};
+use egui_backend::egui::{self, vec2, Color32, Pos2};
 use egui_gl_glfw as egui_backend;
 use glfw::{Context, Glfw, PWindow};
 use std::fs::File;
@@ -70,7 +70,12 @@ pub fn run_credits_screen(
         ctx.begin_pass(input_state.input.take());
 
         //Display credits
-        egui::CentralPanel::default()
+        let (width, height) = window.get_size();
+        egui::Window::new("window")
+            .movable(false)
+            .title_bar(false)
+            .fixed_size(vec2(width as f32 - 32.0, height as f32))
+            .fixed_pos(Pos2::new(0.0, 0.0))
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 ui.vertical(|ui| {
@@ -85,9 +90,11 @@ pub fn run_credits_screen(
                     }
                     ui.add_space(24.0);
 
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        display_credits(ui, &credits_text);
-                    });
+                    egui::ScrollArea::vertical()
+                        .max_height(height as f32 - 160.0)
+                        .show(ui, |ui| {
+                            display_credits(ui, &credits_text);
+                        });
                 });
             });
 

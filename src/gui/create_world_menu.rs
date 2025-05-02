@@ -2,7 +2,7 @@ use super::{init_egui_input_state, menu_text, set_ui_gl_state, transparent_frame
 use crate::game::{save, EventHandler, Game};
 use crate::gfx;
 use crate::voxel::world::WorldGenType;
-use egui_backend::egui::{self, Color32};
+use egui_backend::egui::{self, vec2, Color32, Pos2};
 use egui_gl_glfw as egui_backend;
 use glfw::{Context, Glfw, PWindow};
 use std::hash::{DefaultHasher, Hash, Hasher};
@@ -155,7 +155,12 @@ pub fn run_create_world_menu(
         ctx.begin_pass(input_state.input.take());
 
         //Display create world menu
-        egui::CentralPanel::default()
+        let (width, height) = window.get_size();
+        egui::Window::new("window")
+            .movable(false)
+            .title_bar(false)
+            .fixed_size(vec2(width as f32, height as f32))
+            .fixed_pos(Pos2::new(0.0, 0.0))
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 display_create_world(ui, &mut menu_state, gamestate);

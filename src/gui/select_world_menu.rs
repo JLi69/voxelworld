@@ -1,7 +1,7 @@
 use super::{init_egui_input_state, menu_text, set_ui_gl_state, transparent_frame};
 use crate::game::{save::SAVE_PATH, EventHandler, Game};
 use crate::gfx;
-use egui_backend::egui::{self, Color32};
+use egui_backend::egui::{self, vec2, Color32, Pos2};
 use egui_gl_glfw as egui_backend;
 use glfw::{Context, Glfw, PWindow};
 
@@ -185,8 +185,12 @@ pub fn run_select_world_menu(
         ctx.begin_pass(input_state.input.take());
 
         //Display create world menu
-        let (_w, h) = window.get_size();
-        egui::CentralPanel::default()
+        let (w, h) = window.get_size();
+        egui::Window::new("window")
+            .movable(false)
+            .title_bar(false)
+            .fixed_size(vec2(w as f32 - 64.0, h as f32))
+            .fixed_pos(Pos2::new(32.0, 0.0))
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 if menu_state.to_delete.is_empty() {
