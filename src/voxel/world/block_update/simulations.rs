@@ -113,6 +113,43 @@ fn simulate_sugarcane_growth(iterations: i32) -> f32 {
     total / iterations as f32
 }
 
+fn simulate_cactus_growth(iterations: i32) -> f32 {
+    eprintln!("CACTUS GROWTH SIMULATION");
+    let mut total = 0.0f32;
+    for i in 0..iterations {
+        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut total_time = 0.0;
+        for x in 0..9 {
+            for z in 0..9 {
+                world.set_block(x, 1, z, Block::new_id(11));
+                world.set_block(x, 2, z, Block::new_id(88));
+            }
+        }
+        let mut done = false;
+        while !done {
+            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
+            total_time += RANDOM_UPDATE_INTERVAL;
+            done = true;
+            for x in 0..9 {
+                for z in 0..9 {
+                    let block = world.get_block(x, 4, z);
+                    assert_eq!(world.get_block(x, 5, 0).id, EMPTY_BLOCK);
+                    if block.id != 88 {
+                        done = false;
+                    }
+                }
+            }
+        }
+        let minutes = total_time / 60.0;
+        total += minutes;
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all cacti",
+            i + 1
+        );
+    }
+    total / iterations as f32
+}
+
 fn simulate_sapling_growth(iterations: i32) -> f32 {
     eprintln!("SAPLING GROWTH SIMULATION");
     let mut total = 0.0f32;
@@ -146,6 +183,7 @@ pub fn run_test_simulations(args: &[String]) {
     let average_sugarcane_time = simulate_sugarcane_growth(100);
     let average_wheat_time = simulate_wheat_growth(100);
     let average_slow_wheat_time = simulate_slow_wheat_growth(100);
+    let average_cacti_time = simulate_cactus_growth(100);
     //Output results
     eprintln!();
     eprintln!("Simulation Results");
@@ -160,8 +198,12 @@ pub fn run_test_simulations(args: &[String]) {
         average_sugarcane_time
     );
     eprintln!(
-        "Average time to grow all sapling: {} min",
+        "Average time to grow all saplings: {} min",
         average_sapling_time
+    );
+    eprintln!(
+        "Average time to grow all cacti: {} min",
+        average_cacti_time
     );
     //Exit program once all simulations are completed
     std::process::exit(0);

@@ -140,6 +140,30 @@ fn grow_sugarcane(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateL
     }
 }
 
+//Have plant grow
+fn grow_plant(world: &World, x: i32, y: i32, z: i32, prob_perc: u32, to_update: &mut UpdateList) {
+    if fastrand::u32(0..100) >= prob_perc {
+        return;
+    }
+
+    if world.get_block(x, y + 1, z).id != EMPTY_BLOCK {
+        return;
+    }
+
+    let block = world.get_block(x, y, z);
+    let mut dy = -1;
+    while dy > -2 && world.get_block(x, y + dy, z).id == block.id {
+        dy -= 1;
+    }
+
+    //If the sugar cane is floating or too tall, then do not update it
+    let bottom_block = world.get_block(x, y + dy, z);
+    if block.id == EMPTY_BLOCK || bottom_block.id == block.id {
+        return;
+    }
+    to_update.insert((x, y + 1, z), Block::new_id(block.id));
+}
+
 //Have sapling grow
 fn sapling_replaceable(block: Block) -> bool {
     block.id == EMPTY_BLOCK
@@ -282,6 +306,8 @@ impl World {
                     50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
                     //Sugar cane
                     69 => grow_sugarcane(self, x, y, z, to_update),
+                    //Grow cactus
+                    88 => grow_plant(self, x, y, z, 20, to_update),
                     //Seeds
                     77 => grow_wheat(self, x, y, z, 50 - 1, to_update),
                     _ => {}
@@ -323,7 +349,9 @@ impl World {
             get_chunktable_updates(x, y, z, &mut update_mesh);
         }
 
-        update_mesh.extend(self.update_block_light(&light_updates));
+        if chunktables.is_some() {
+            update_mesh.extend(self.update_block_light(&light_updates));
+        }
 
         if let Some(chunktables) = chunktables {
             for (x, y, z) in update_mesh {
