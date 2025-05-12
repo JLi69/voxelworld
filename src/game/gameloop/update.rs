@@ -31,6 +31,9 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
         return;
     }
 
+    //Force load any chunks that are close enough to the player
+    gamestate.world.force_load();
+
     //Update gameobjects
     gamestate.update_player(dt);
     //Destroy and place blocks
@@ -52,6 +55,8 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     gamestate.world.clean_cache();
     gamestate
         .world
-        .generate_more(gamestate.player.position, chunktables);
+        .update_generation_queue(gamestate.player.position);
+    gamestate.world.load_from_queue(0.01);
+    gamestate.world.update_chunktables(chunktables);
     chunktables.update_tables(gamestate);
 }

@@ -11,8 +11,7 @@ use super::{
     region::{chunkpos_to_regionpos, get_region_chunks, get_region_chunks_remove, Region},
     world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32,
 };
-use crate::gfx::ChunkTables;
-use cgmath::Vector3;
+use gen_more::LoadChunkQueue;
 use noise::{Fbm, NoiseFn, Perlin, Simplex};
 use std::collections::{HashMap, HashSet};
 
@@ -131,6 +130,16 @@ pub struct World {
     to_save: HashSet<(i32, i32, i32)>,
     //Chunks that are to be removed from cache and need to be saved
     removed_from_cache: Vec<Region>,
+    //List of chunk coordinates that are too be loaded
+    to_load: LoadChunkQueue,
+    //This is a list of chunks that should be updated in the chunk vao table,
+    //this is added to whenever new chunks are generated and is emptied and 'sent'
+    //to the chunktable for updates when we are done loading all the chunks we
+    //need to load at the moment (to_load.is_empty()) This allows for the
+    //chunk vao updates to appear faster since updating chunks also updates
+    //the neighbors of the chunks and just immediately putting this data in the
+    //update queue will result in a lot of duplicate chunk updates that aren't needed.
+    chunktable_update_list: HashSet<(i32, i32, i32)>,
 }
 
 impl World {
@@ -157,6 +166,8 @@ impl World {
             days_passed: 0,
             to_save: HashSet::new(),
             removed_from_cache: vec![],
+            to_load: LoadChunkQueue::new(),
+            chunktable_update_list: HashSet::new(),
         }
     }
 
@@ -193,6 +204,8 @@ impl World {
             days_passed: 0,
             to_save: HashSet::new(),
             removed_from_cache: vec![],
+            to_load: LoadChunkQueue::new(),
+            chunktable_update_list: HashSet::new(),
         }
     }
 
@@ -362,15 +375,6 @@ impl World {
             WorldGenType::OldGen => self.gen_old(),
             WorldGenType::Flat => self.gen_flat(),
             WorldGenType::DefaultGen => self.gen_default(),
-        }
-    }
-
-    //Generate more world
-    pub fn generate_more(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
-        match self.gen_type {
-            WorldGenType::OldGen => self.gen_more_old(pos, chunktables),
-            WorldGenType::Flat => self.gen_more_flat(pos, chunktables),
-            WorldGenType::DefaultGen => self.gen_more_default(pos, chunktables),
         }
     }
 

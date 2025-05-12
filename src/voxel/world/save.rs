@@ -1,4 +1,4 @@
-use super::{World, WorldGenType, WorldGenerator};
+use super::{LoadChunkQueue, World, WorldGenType, WorldGenerator};
 use crate::{
     impfile::{self, Entry},
     voxel::region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region},
@@ -161,6 +161,8 @@ impl World {
                 .unwrap_or(0),
             to_save: HashSet::new(),
             removed_from_cache: vec![],
+            to_load: LoadChunkQueue::new(),
+            chunktable_update_list: HashSet::new(),
         }
     }
 
@@ -183,6 +185,37 @@ impl World {
                 continue;
             }
             if (chunkpos.z - self.centerz).abs() > self.range {
+                self.chunk_cache.insert(pos, chunk.clone());
+                continue;
+            }
+            self.chunks.insert(pos, chunk.clone());
+        }
+    }
+
+    //Adds the chunks in a region to the world
+    pub fn add_region_col(&mut self, region: Region, x: i32, z: i32) {
+        for chunk in region.chunks.iter().flatten() {
+            let chunkpos = chunk.get_chunk_pos();
+            let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
+
+            if self.chunks.contains_key(&pos) || self.chunk_cache.contains_key(&pos) {
+                continue;
+            }
+
+            if (chunkpos.x - self.centerx).abs() > self.range {
+                self.chunk_cache.insert(pos, chunk.clone());
+                continue;
+            }
+            if (chunkpos.y - self.centery).abs() > self.range {
+                self.chunk_cache.insert(pos, chunk.clone());
+                continue;
+            }
+            if (chunkpos.z - self.centerz).abs() > self.range {
+                self.chunk_cache.insert(pos, chunk.clone());
+                continue;
+            }
+            //Anything not in the column gets put into the cache
+            if chunkpos.x != x || chunkpos.z != z {
                 self.chunk_cache.insert(pos, chunk.clone());
                 continue;
             }

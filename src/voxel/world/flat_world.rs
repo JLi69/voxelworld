@@ -1,17 +1,8 @@
 use std::collections::HashSet;
 
-use super::{
-    gen_more::{find_in_range, get_chunks_to_generate, update_chunk_tables},
-    World,
-};
-use crate::{
-    gfx::ChunkTables,
-    voxel::{
-        region::{chunkpos_to_regionpos, Region},
-        Block, Chunk, CHUNK_SIZE_F32, CHUNK_SIZE_I32, INDESTRUCTIBLE,
-    },
-};
-use cgmath::Vector3;
+use super::World;
+use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, INDESTRUCTIBLE};
+use crossbeam::{queue::ArrayQueue, thread};
 
 fn gen_flat_chunk(chunk: &mut Chunk) {
     let chunkpos = chunk.get_chunk_pos();
@@ -51,82 +42,6 @@ impl World {
         }
     }
 
-    //Generates new flat world chunks
-    pub fn gen_more_flat(&mut self, pos: Vector3<f32>, chunktables: &mut ChunkTables) {
-        //Check if the player is in the center chunk
-        let x = (pos.x / CHUNK_SIZE_F32).floor() as i32;
-        let y = (pos.y / CHUNK_SIZE_F32).floor() as i32;
-        let z = (pos.z / CHUNK_SIZE_F32).floor() as i32;
-        if x == self.centerx && y == self.centery && z == self.centerz {
-            return;
-        }
-
-        //Find all chunks within range of the player
-        let (in_range, out_of_range) = find_in_range(&self.chunks, x, y, z, self.range);
-        //Find chunks to generate
-        let to_generate = get_chunks_to_generate(in_range, x, y, z, self.range);
-
-        //Delete old chunks
-        self.delete_out_of_range(&out_of_range);
-
-        //Set the center position
-        self.centerx = x;
-        self.centery = y;
-        self.centerz = z;
-        //Load chunks from cache
-        for (chunkx, chunky, chunkz) in &to_generate {
-            let pos = (*chunkx, *chunky, *chunkz);
-            if self.chunk_cache.contains_key(&pos) {
-                let new_chunk = self.chunk_cache.get(&pos);
-                if let Some(new_chunk) = new_chunk {
-                    self.chunks.insert(pos, new_chunk.clone());
-                    self.chunk_cache.remove(&pos);
-                }
-            }
-        }
-
-        //Load chunks from filesystem
-        let mut loaded = HashSet::new();
-        for (chunkx, chunky, chunkz) in &to_generate {
-            if self.chunks.contains_key(&(*chunkx, *chunky, *chunkz)) {
-                continue;
-            }
-
-            let (rx, ry, rz) = chunkpos_to_regionpos(*chunkx, *chunky, *chunkz);
-            if !loaded.contains(&(rx, ry, rz)) {
-                if let Some(region) = Region::load_region(&self.path, rx, ry, rz) {
-                    self.add_region(region);
-                    loaded.insert((rx, ry, rz));
-                    continue;
-                }
-            }
-        }
-
-        //Generate new chunks
-        for (chunkx, chunky, chunkz) in &to_generate {
-            let pos = (*chunkx, *chunky, *chunkz);
-            if self.chunks.contains_key(&pos) {
-                continue;
-            }
-            let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
-            gen_flat_chunk(&mut new_chunk);
-            self.chunks.insert(pos, new_chunk);
-        }
-
-        let mut update_list = to_generate.clone();
-        update_list.extend(self.init_light_new_chunks(&to_generate));
-
-        update_chunk_tables(
-            chunktables,
-            self.centerx,
-            self.centery,
-            self.centerz,
-            self.range,
-            &self.chunks,
-            &update_list,
-        );
-    }
-
     //Generates missing flat world chunks on load
     pub fn gen_flat_on_load(&mut self) {
         let mut to_generate = HashSet::new();
@@ -150,6 +65,47 @@ impl World {
             let mut new_chunk = Chunk::new(*chunkx, *chunky, *chunkz);
             gen_flat_chunk(&mut new_chunk);
             self.chunks.insert(pos, new_chunk);
+        }
+    }
+
+    pub fn generate_column_flat(&mut self, x: i32, z: i32, yvals: &HashSet<i32>) {
+        //Generate new chunks
+        let start = std::time::Instant::now();
+        let generated = ArrayQueue::new(yvals.len());
+        let mut generated_count = 0;
+        thread::scope(|s| {
+            for y in yvals {
+                if !self.in_range(x, *y, z) {
+                    continue;
+                }
+
+                if self.chunks.contains_key(&(x, *y, z)) {
+                    continue;
+                }
+
+                generated_count += 1;
+
+                s.spawn(|_| {
+                    let mut new_chunk = Chunk::new(x, *y, z);
+                    gen_flat_chunk(&mut new_chunk);
+                    //This should never fail
+                    generated
+                        .push(new_chunk)
+                        .expect("Error: Failed to push onto ArrayQueue");
+                });
+            }
+        })
+        .expect("Failed to generate new chunks!");
+
+        for chunk in generated {
+            let chunkpos = chunk.get_chunk_pos();
+            let pos = (chunkpos.x, chunkpos.y, chunkpos.z);
+            self.chunks.insert(pos, chunk);
+        }
+        let time = start.elapsed().as_millis();
+        if time > 15 {
+            //Only report time taken if it exceeds 15 ms
+            eprintln!("Took {time} ms to generate {generated_count} new chunks");
         }
     }
 }

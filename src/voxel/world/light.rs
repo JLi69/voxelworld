@@ -950,7 +950,7 @@ impl World {
         let mut counts = HashMap::<(i32, i32, i32), u32>::new();
         for pos in to_update.iter().copied() {
             if let Some(chunk) = self.chunks.get_mut(&pos) {
-                let (x, _, z) = pos;
+                let (x, _y, z) = pos;
                 if let Some(map) = self.skylightmap.get(&(x, z)) {
                     chunk.clear_sky_light();
                     let count = chunk.init_sky_light(map);
@@ -1035,7 +1035,10 @@ impl World {
         updated.extend(propagate_sky(self, &srcs));
 
         let time = start.elapsed().as_millis();
-        eprintln!("Took {time} ms to init sky light in new chunks");
+        if time > 15 {
+            //Only report time it took to generate light if it exceeds 15 ms
+            eprintln!("Took {time} ms to init sky light in new chunks");
+        }
 
         //For debug purposes
         //It seems that as of this moment, these checks seem to mostly work,
@@ -1111,7 +1114,10 @@ impl World {
         //validate_light(self, chunks);
 
         let time = start.elapsed().as_millis();
-        eprintln!("Took {time} ms to init light in new chunks");
+        if time > 15 {
+            //Only report time it took to generate light if it exceeds 15 ms
+            eprintln!("Took {time} ms to init light in new chunks");
+        }
 
         //Initialize sky light in new chunks and return any chunks that have been updated
         self.init_sky_light_new_chunks(chunks)
