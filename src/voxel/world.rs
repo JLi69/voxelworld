@@ -6,6 +6,8 @@ pub mod light;
 mod old_world;
 mod save;
 
+use crate::game::GameMode;
+
 use super::{
     light::{Light, SkyLightMap, LU},
     region::{chunkpos_to_regionpos, get_region_chunks, get_region_chunks_remove, Region},
@@ -140,6 +142,8 @@ pub struct World {
     //the neighbors of the chunks and just immediately putting this data in the
     //update queue will result in a lot of duplicate chunk updates that aren't needed.
     chunktable_update_list: HashSet<(i32, i32, i32)>,
+    //World game mode
+    pub game_mode: GameMode,
 }
 
 impl World {
@@ -168,11 +172,12 @@ impl World {
             removed_from_cache: vec![],
             to_load: LoadChunkQueue::new(),
             chunktable_update_list: HashSet::new(),
+            game_mode: GameMode::Creative, //Default to creative mode
         }
     }
 
     //Create a new chunk from a chunk render distance (range)
-    pub fn new(seed: u32, chunk_range: i32, generation: WorldGenType) -> Self {
+    pub fn new(seed: u32, chunk_range: i32, generation: WorldGenType, mode: GameMode) -> Self {
         //Create chunk list
         let mut chunklist = HashMap::new();
         for y in -chunk_range..=chunk_range {
@@ -206,6 +211,7 @@ impl World {
             removed_from_cache: vec![],
             to_load: LoadChunkQueue::new(),
             chunktable_update_list: HashSet::new(),
+            game_mode: mode,
         }
     }
 

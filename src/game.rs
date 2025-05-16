@@ -10,6 +10,7 @@ pub mod player;
 pub mod save;
 pub mod update;
 
+use crate::game::inventory::Hotbar;
 use crate::impfile;
 use crate::voxel::world::WorldGenType;
 use crate::voxel::Block;
@@ -27,6 +28,12 @@ pub use input::{release_cursor, EventHandler, KeyState};
 use physics::Hitbox;
 use player::Player;
 pub use std::collections::HashMap;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum GameMode {
+    Creative,
+    Survival,
+}
 
 #[derive(Copy, Clone)]
 pub enum BlockMenuShape {
@@ -172,8 +179,14 @@ impl Game {
     }
 
     //Generate world
-    pub fn generate_world(&mut self, seed: u32, range: i32, gen_type: WorldGenType) {
-        self.world = World::new(seed, range, gen_type);
+    pub fn generate_world(
+        &mut self,
+        seed: u32,
+        range: i32,
+        gen_type: WorldGenType,
+        game_mode: GameMode
+    ) {
+        self.world = World::new(seed, range, gen_type, game_mode);
         eprintln!("Created world with seed: {}", self.world.get_seed());
         self.world.generate_world();
 
@@ -184,6 +197,11 @@ impl Game {
                 self.player.position.y += PLAYER_HEIGHT / 2.0;
                 break;
             }
+        }
+
+        //Init player hotbar with blocks if in creative mode
+        if self.game_mode() == GameMode::Creative {
+            self.player.hotbar = Hotbar::init_hotbar();
         }
     }
 
@@ -213,6 +231,10 @@ impl Game {
 
     pub fn set_block_menu_shape(&mut self, shape: BlockMenuShape) {
         self.block_menu_shape = shape;
+    }
+
+    pub fn game_mode(&self) -> GameMode {
+        self.world.game_mode
     }
 }
 

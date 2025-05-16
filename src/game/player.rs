@@ -48,7 +48,7 @@ impl Player {
             velocity_y: 0.0,
             speed: DEFAULT_PLAYER_SPEED,
             rotation: 0.0,
-            hotbar: Hotbar::init_hotbar(),
+            hotbar: Hotbar::empty_hotbar(),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,

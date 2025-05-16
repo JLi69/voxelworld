@@ -1,5 +1,5 @@
 use super::rand_block_update::RANDOM_UPDATE_INTERVAL;
-use crate::voxel::{world::WorldGenType, Block, World, EMPTY_BLOCK};
+use crate::{voxel::{world::WorldGenType, Block, World, EMPTY_BLOCK}, game::GameMode};
 
 /*
  * Test simulations for testing purposes
@@ -11,7 +11,7 @@ fn simulate_wheat_growth(iterations: i32) -> f32 {
     eprintln!("WHEAT GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
         let mut total_time = 0.0;
         for x in 0..9 {
             for z in 0..9 {
@@ -47,7 +47,7 @@ fn simulate_slow_wheat_growth(iterations: i32) -> f32 {
     eprintln!("SLOW WHEAT GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
         let mut total_time = 0.0;
         for x in 0..9 {
             for z in 0..9 {
@@ -83,7 +83,7 @@ fn simulate_sugarcane_growth(iterations: i32) -> f32 {
     eprintln!("SUGAR CANE GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
         let mut total_time = 0.0;
         for x in 0..16 {
             world.set_block(x, 1, 0, Block::new_id(1));
@@ -117,7 +117,7 @@ fn simulate_cactus_growth(iterations: i32) -> f32 {
     eprintln!("CACTUS GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
         let mut total_time = 0.0;
         for x in 0..9 {
             for z in 0..9 {
@@ -154,7 +154,7 @@ fn simulate_sapling_growth(iterations: i32) -> f32 {
     eprintln!("SAPLING GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat);
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
         let mut total_time = 0.0;
         world.set_block(0, 2, 0, Block::new_id(47));
         world.set_block(0, 1, 0, Block::new_id(1));

@@ -1,5 +1,5 @@
 use super::{init_egui_input_state, menu_text, set_ui_gl_state, transparent_frame};
-use crate::game::{save, EventHandler, Game};
+use crate::game::{save, EventHandler, Game, GameMode};
 use crate::gfx;
 use crate::voxel::world::WorldGenType;
 use egui_backend::egui::{self, vec2, Color32, Pos2};
@@ -12,6 +12,7 @@ struct CreateWorldMenuState {
     world_name: String,
     seed: String,
     gen_type: WorldGenType,
+    game_mode: GameMode,
     create_world: bool,
     quit_to_menu: bool,
 }
@@ -23,6 +24,7 @@ impl CreateWorldMenuState {
             world_name: "New World".to_string(),
             seed: "".to_string(),
             gen_type: WorldGenType::DefaultGen,
+            game_mode: GameMode::Survival,
             create_world: false,
             quit_to_menu: false,
         }
@@ -52,7 +54,7 @@ fn create_new_world(menu_state: &mut CreateWorldMenuState, gamestate: &mut Game)
     } else {
         fastrand::u32(..)
     };
-    gamestate.generate_world(seed, 7, menu_state.gen_type);
+    gamestate.generate_world(seed, 7, menu_state.gen_type, menu_state.game_mode);
     gamestate.world.init_block_light();
     gamestate.world.init_sky_light();
 }
@@ -74,6 +76,7 @@ fn display_create_world(
         ui.label(" ");
         ui.label(menu_text("World Generation", 24.0, Color32::WHITE));
 
+        //Radio options for world generation
         let selected = menu_state.gen_type == WorldGenType::DefaultGen;
         let text = menu_text("Default", 20.0, Color32::WHITE);
         if ui.radio(selected, text).clicked() {
@@ -92,11 +95,27 @@ fn display_create_world(
             menu_state.gen_type = WorldGenType::Flat;
         }
 
+        ui.add_space(8.0);
+        ui.label(menu_text("Game Mode", 24.0, Color32::WHITE));
+        //Radio options for game mode
+        let selected = menu_state.game_mode == GameMode::Survival;
+        let text = menu_text("Survival", 20.0, Color32::WHITE);
+        if ui.radio(selected, text).clicked() {
+            menu_state.game_mode = GameMode::Survival;
+        }
+
+        let selected = menu_state.game_mode == GameMode::Creative;
+        let text = menu_text("Creative", 20.0, Color32::WHITE);
+        if ui.radio(selected, text).clicked() { 
+            menu_state.game_mode = GameMode::Creative;
+        }
+
         ui.label(" ");
         ui.label(menu_text("Seed", 24.0, Color32::WHITE));
         let world_seed_edit =
             egui::TextEdit::singleline(&mut menu_state.seed).font(egui::TextStyle::Heading);
-        ui.add(world_seed_edit);
+        ui.add(world_seed_edit); 
+
         if ui
             .button(menu_text("Create", 24.0, Color32::WHITE))
             .clicked()
@@ -119,6 +138,8 @@ fn display_create_world(
         {
             menu_state.quit_to_menu = true;
         }
+
+        ui.add_space(24.0);
     });
 }
 
@@ -162,6 +183,7 @@ pub fn run_create_world_menu(
             .fixed_size(vec2(width as f32, height as f32))
             .fixed_pos(Pos2::new(0.0, 0.0))
             .frame(transparent_frame())
+            .scroll(true)
             .show(&ctx, |ui| {
                 display_create_world(ui, &mut menu_state, gamestate);
             });

@@ -1,5 +1,5 @@
 use super::inventory::Item;
-use super::{Game, KeyState};
+use super::{Game, KeyState, GameMode};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
 use crate::voxel::{destroy_block, place_block};
@@ -200,6 +200,12 @@ impl Game {
         }
 
         //Toggle the block menu with Tab (Note: the block menu pauses the game)
+        //Only enable block menu in creative mode
+        if self.game_mode() == GameMode::Survival {
+            self.display_block_menu = false;
+            return;
+        }
+
         if self.get_key_state(Key::Tab) == KeyState::JustPressed {
             self.paused = !self.paused;
             self.display_block_menu = !self.display_block_menu;
@@ -228,6 +234,11 @@ impl Game {
     //Toggle backface
     //For debug purposes
     pub fn toggle_backface(&mut self) {
+        if self.game_mode() == GameMode::Survival {
+            self.invert_backface_culling = false;
+            return;
+        }
+
         if self.get_key_state(Key::F12) == KeyState::JustPressed {
             self.invert_backface_culling = !self.invert_backface_culling;
         }

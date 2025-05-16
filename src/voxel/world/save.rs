@@ -1,10 +1,28 @@
 use super::{LoadChunkQueue, World, WorldGenType, WorldGenerator};
 use crate::{
     impfile::{self, Entry},
-    voxel::region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region},
+    voxel::region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region}, 
+    game::GameMode,
 };
 use std::collections::{HashMap, HashSet};
 use std::{fs::File, io::Write};
+
+fn game_mode_to_string(game_mode: GameMode) -> String {
+    match game_mode {
+        GameMode::Survival => "survival".to_string(),
+        GameMode::Creative => "creative".to_string(),
+    }
+}
+
+fn string_to_game_mode(s: &str) -> GameMode {
+    if s == "survival" {
+        GameMode::Survival
+    } else if s == "creative" {
+        GameMode::Creative
+    } else {
+        GameMode::Survival
+    }
+}
 
 fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
     match world_gen_type {
@@ -44,6 +62,7 @@ impl World {
         entry.add_integer("days_passed", self.days_passed as i64);
         entry.add_float("time", self.time);
         entry.add_string("gen_type", &gen_type_to_string(self.gen_type));
+        entry.add_string("game_mode", &game_mode_to_string(self.game_mode));
 
         let world_save_path = self.path.clone() + "world.impfile";
         let world_entry_str = entry.to_impfile_string();
@@ -121,6 +140,8 @@ impl World {
             .parse::<u32>()
             .unwrap_or(rand_seed);
 
+        let mode = world_metadata_entries[0].get_var("game_mode");
+
         Self {
             chunks: HashMap::new(),
             skylightmap: HashMap::new(),
@@ -163,6 +184,7 @@ impl World {
             removed_from_cache: vec![],
             to_load: LoadChunkQueue::new(),
             chunktable_update_list: HashSet::new(),
+            game_mode: string_to_game_mode(&mode),
         }
     }
 
