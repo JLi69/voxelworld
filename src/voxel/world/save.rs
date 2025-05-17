@@ -20,7 +20,9 @@ fn string_to_game_mode(s: &str) -> GameMode {
     } else if s == "creative" {
         GameMode::Creative
     } else {
-        GameMode::Survival
+        //Default to creative
+        //This way previous worlds remain in creative mode
+        GameMode::Creative
     }
 }
 
