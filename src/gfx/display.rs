@@ -1,4 +1,5 @@
 pub mod block_menu;
+pub mod hud;
 mod hand;
 mod inventory;
 

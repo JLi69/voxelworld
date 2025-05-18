@@ -35,6 +35,9 @@ pub struct Player {
     sprinting: bool,
     crouching: bool,
     crouch_height: f32,
+    //Stats
+    pub stamina: f32,
+    stamina_regen_cooldown: f32,
 }
 
 impl Player {
@@ -55,6 +58,8 @@ impl Player {
             sprinting: false,
             crouching: true,
             crouch_height: 0.0,
+            stamina: 1.0,
+            stamina_regen_cooldown: 0.0,
         }
     }
 
@@ -363,6 +368,16 @@ impl Player {
         }
     }
 
+    //Specific things to update for survival mode
+    pub fn update_survival(&mut self, dt: f32) {
+        self.update_stamina(dt);
+    }
+
+    //Specific things to update for creative mode
+    pub fn update_creative(&mut self, _dt: f32) {
+        self.stamina = 1.0; //Infinite stamina
+    }
+
     pub fn cam_offset(&self) -> Vector3<f32> {
         Vector3::new(0.0, CAMERA_OFFSET - self.crouch_height, 0.0)
     }
@@ -437,6 +452,8 @@ impl Player {
         entry.add_bool("falling", self.falling);
         entry.add_float("velocity_y", self.velocity_y);
         entry.add_float("rotation", self.rotation);
+        entry.add_float("stamina", self.stamina);
+        entry.add_float("stamina_regen_cooldown", self.stamina_regen_cooldown);
 
         entry
     }
@@ -445,6 +462,12 @@ impl Player {
         let x = entry.get_var("x").parse::<f32>().unwrap_or(0.0);
         let y = entry.get_var("y").parse::<f32>().unwrap_or(0.0);
         let z = entry.get_var("z").parse::<f32>().unwrap_or(0.0);
+
+        //Stats
+        let player_stamina = entry.get_var("stamina").parse::<f32>().unwrap_or(1.0);
+        let player_stamina_regen_cooldown = entry.get_var("stamina_regen_cooldown")
+            .parse::<f32>()
+            .unwrap_or(0.0);
 
         Self {
             position: Vector3::new(x, y, z),
@@ -461,6 +484,8 @@ impl Player {
             sprinting: false,
             crouching: false,
             crouch_height: 0.0,
+            stamina: player_stamina,
+            stamina_regen_cooldown: player_stamina_regen_cooldown,
         }
     }
 }

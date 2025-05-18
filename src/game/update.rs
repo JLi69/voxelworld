@@ -107,6 +107,11 @@ impl Game {
         if self.get_key_state(Key::Q) == KeyState::JustPressed {
             self.player.hotbar.set_selected(Item::EmptyItem);
         }
+
+        match self.game_mode() {
+            GameMode::Survival => self.player.update_survival(dt),
+            GameMode::Creative => self.player.update_creative(dt),
+        }
     }
 
     pub fn update_build_cooldown(&mut self, dt: f32) {

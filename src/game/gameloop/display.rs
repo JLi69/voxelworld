@@ -26,6 +26,8 @@ pub fn display_hud(gamestate: &Game, w: i32, h: i32) {
         gfx::display::display_hand_item(gamestate);
         //Display hotbar
         gfx::display::display_hotbar(gamestate, w, h);
+        //Display stats
+        gfx::display::hud::display_stats(gamestate, w, h);
     }
 }
 
