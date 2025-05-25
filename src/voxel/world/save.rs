@@ -1,8 +1,8 @@
 use super::{LoadChunkQueue, World, WorldGenType, WorldGenerator};
 use crate::{
-    impfile::{self, Entry},
-    voxel::region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region}, 
     game::GameMode,
+    impfile::{self, Entry},
+    voxel::region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region},
 };
 use std::collections::{HashMap, HashSet};
 use std::{fs::File, io::Write};

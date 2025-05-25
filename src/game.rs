@@ -184,7 +184,7 @@ impl Game {
         seed: u32,
         range: i32,
         gen_type: WorldGenType,
-        game_mode: GameMode
+        game_mode: GameMode,
     ) {
         self.world = World::new(seed, range, gen_type, game_mode);
         eprintln!("Created world with seed: {}", self.world.get_seed());

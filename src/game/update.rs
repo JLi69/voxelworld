@@ -1,5 +1,5 @@
 use super::inventory::Item;
-use super::{Game, KeyState, GameMode};
+use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
 use crate::voxel::{destroy_block, place_block};

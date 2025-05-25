@@ -1,5 +1,6 @@
 mod intersection;
 mod movement;
+mod survival_mode;
 
 use self::movement::JUMP_FORCE;
 
@@ -10,6 +11,7 @@ use crate::impfile;
 use crate::voxel::World;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
+pub const DEFAULT_MAX_HEALTH: i32 = 20;
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
 pub const PLAYER_SIZE: f32 = 0.6;
@@ -38,6 +40,10 @@ pub struct Player {
     //Stats
     pub stamina: f32,
     stamina_regen_cooldown: f32,
+    pub health: i32,
+    dist_fallen: f32,
+    //Ticks down with time but gets reset every time the player is damaged
+    damage_timer: f32,
 }
 
 impl Player {
@@ -60,6 +66,9 @@ impl Player {
             crouch_height: 0.0,
             stamina: 1.0,
             stamina_regen_cooldown: 0.0,
+            health: DEFAULT_MAX_HEALTH,
+            dist_fallen: 0.0,
+            damage_timer: 0.0,
         }
     }
 
@@ -113,15 +122,18 @@ impl Player {
         Vector3::new(vel_transformed.x, vel_transformed.y, vel_transformed.z)
     }
 
-    fn check_y_collision(&mut self, world: &World) {
+    //Returns true if collision found, false otherwise
+    fn check_y_collision(&mut self, world: &World) -> bool {
         //We lower the player's y position to check if we intersect with any blocks
         self.position.y -= 0.02;
         if let Some(block_hitbox) = self.check_collision(world) {
             self.uncollide_y(&block_hitbox);
+            true
         } else {
             self.falling = true;
             //If we don't intersect with anything, reset the y position
             self.position.y += 0.02;
+            false
         }
     }
 
@@ -226,9 +238,11 @@ impl Player {
         if self.is_swimming(world, 13, 1.0) {
             //Slow down in lava
             dy *= 0.4;
+            self.dist_fallen = 0.0; //No fall damage in lava
         } else if self.is_swimming(world, 12, 1.0) {
             //Slow down in water
             dy *= 0.5;
+            self.dist_fallen = 0.0; //No fall damage in water
         }
 
         let mut dz = if !self.can_move_in_z(world) {
@@ -246,7 +260,14 @@ impl Player {
 
             //Move in the y direction
             self.position.y += vy;
-            self.check_y_collision(world);
+            if !self.check_y_collision(world) {
+                if vy < 0.0 {
+                    self.dist_fallen -= vy;
+                } else if vy > 0.0 {
+                    //Reset distance fallen if we move up
+                    self.dist_fallen = 0.0;
+                }
+            }
             while let Some(hitbox) = self.check_collision(world) {
                 self.uncollide_y(&hitbox);
             }
@@ -371,11 +392,14 @@ impl Player {
     //Specific things to update for survival mode
     pub fn update_survival(&mut self, dt: f32) {
         self.update_stamina(dt);
+        self.damage_timer -= dt;
+        self.apply_fall_damage();
     }
 
     //Specific things to update for creative mode
     pub fn update_creative(&mut self, _dt: f32) {
         self.stamina = 1.0; //Infinite stamina
+        self.damage_timer = 0.0;
     }
 
     pub fn cam_offset(&self) -> Vector3<f32> {
@@ -454,6 +478,7 @@ impl Player {
         entry.add_float("rotation", self.rotation);
         entry.add_float("stamina", self.stamina);
         entry.add_float("stamina_regen_cooldown", self.stamina_regen_cooldown);
+        entry.add_integer("health", self.health as i64);
 
         entry
     }
@@ -465,9 +490,13 @@ impl Player {
 
         //Stats
         let player_stamina = entry.get_var("stamina").parse::<f32>().unwrap_or(1.0);
-        let player_stamina_regen_cooldown = entry.get_var("stamina_regen_cooldown")
+        let player_stamina_regen_cooldown = entry
+            .get_var("stamina_regen_cooldown")
             .parse::<f32>()
             .unwrap_or(0.0);
+        let player_health = entry.get_var("health")
+            .parse::<i32>()
+            .unwrap_or(DEFAULT_MAX_HEALTH);
 
         Self {
             position: Vector3::new(x, y, z),
@@ -486,6 +515,9 @@ impl Player {
             crouch_height: 0.0,
             stamina: player_stamina,
             stamina_regen_cooldown: player_stamina_regen_cooldown,
+            health: player_health,
+            dist_fallen: 0.0,
+            damage_timer: 0.0,
         }
     }
 }

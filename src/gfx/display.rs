@@ -1,6 +1,6 @@
 pub mod block_menu;
-pub mod hud;
 mod hand;
+pub mod hud;
 mod inventory;
 
 use super::chunktable::set_fog;

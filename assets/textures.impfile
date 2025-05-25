@@ -46,10 +46,6 @@
 	"path" = "assets/textures/star.png";
 }
 
-"stamina_bg" {
-	"path" = "assets/textures/stamina_bg.png";
-}
-
-"stamina_icon" {
-	"path" = "assets/textures/stamina_icon.png";
+"hud_icons" {
+	"path" = "assets/textures/hud_icons.png";
 }

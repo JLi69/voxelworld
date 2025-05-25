@@ -1,5 +1,8 @@
 use super::rand_block_update::RANDOM_UPDATE_INTERVAL;
-use crate::{voxel::{world::WorldGenType, Block, World, EMPTY_BLOCK}, game::GameMode};
+use crate::{
+    game::GameMode,
+    voxel::{world::WorldGenType, Block, World, EMPTY_BLOCK},
+};
 
 /*
  * Test simulations for testing purposes

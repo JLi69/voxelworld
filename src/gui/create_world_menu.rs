@@ -106,7 +106,7 @@ fn display_create_world(
 
         let selected = menu_state.game_mode == GameMode::Creative;
         let text = menu_text("Creative", 20.0, Color32::WHITE);
-        if ui.radio(selected, text).clicked() { 
+        if ui.radio(selected, text).clicked() {
             menu_state.game_mode = GameMode::Creative;
         }
 
@@ -114,7 +114,7 @@ fn display_create_world(
         ui.label(menu_text("Seed", 24.0, Color32::WHITE));
         let world_seed_edit =
             egui::TextEdit::singleline(&mut menu_state.seed).font(egui::TextStyle::Heading);
-        ui.add(world_seed_edit); 
+        ui.add(world_seed_edit);
 
         if ui
             .button(menu_text("Create", 24.0, Color32::WHITE))

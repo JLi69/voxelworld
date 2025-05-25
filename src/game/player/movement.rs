@@ -22,7 +22,7 @@ impl Player {
         if self.sprinting && xz_speed_2 > 0.0 {
             self.stamina_regen_cooldown = STAMINA_REGEN_COOLDOWN;
         }
- 
+
         if self.sprinting && xz_speed_2 > 0.0 {
             //Drain stamina
             let multiplier = if self.velocity_y > 0.0 {
