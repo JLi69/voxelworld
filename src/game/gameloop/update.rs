@@ -1,13 +1,23 @@
 use crate::{game::Game, gfx::ChunkTables};
 use glfw::{CursorMode, PWindow};
 
+fn handle_hotbar_scroll(gamestate: &mut Game) {
+    if gamestate.player.is_dead() {
+        return;
+    }
+
+    if gamestate.paused && !gamestate.display_block_menu {
+        return;
+    }
+
+    gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
+}
+
 pub fn handle_input_actions(gamestate: &mut Game) {
     gamestate.toggle_backface();
     gamestate.toggle_hud();
     gamestate.pause();
-    if !gamestate.paused || gamestate.display_block_menu {
-        gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
-    }
+    handle_hotbar_scroll(gamestate);
 }
 
 pub fn rotate_player(gamestate: &mut Game, sensitivity: f32, window: &PWindow) {

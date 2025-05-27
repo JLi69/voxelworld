@@ -58,6 +58,10 @@ impl Game {
     }
 
     pub fn rotate_player(&mut self, sensitivity: f32) {
+        if self.player.is_dead() {
+            return;
+        }
+
         let (dmousex, dmousey) = self.get_mouse_diff();
         //Rotate camera
         self.cam.rotate(dmousex, dmousey, sensitivity);
@@ -65,6 +69,10 @@ impl Game {
 
     //Update player and camera
     pub fn update_player(&mut self, dt: f32) {
+        if self.player.is_dead() {
+            return;
+        }
+
         //Set rotation of player
         self.player.rotation = self.cam.yaw;
         //Update player
@@ -127,6 +135,10 @@ impl Game {
 
     //Place and destroy blocks
     pub fn build(&mut self, chunktables: &mut ChunkTables) {
+        if self.player.is_dead() {
+            return;
+        }
+
         //Destroy blocks
         let pos = self.cam.position;
         let dir = self.cam.forward();
@@ -251,6 +263,10 @@ impl Game {
 
     //Update hand animation
     pub fn update_hand_animation(&mut self, dt: f32) {
+        if self.player.is_dead() {
+            return;
+        }
+
         if self.get_mouse_state(MouseButtonLeft).is_held() {
             self.hand_animation += dt * 3.0;
             self.hand_animation = self.hand_animation.fract();

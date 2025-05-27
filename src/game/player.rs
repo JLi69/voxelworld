@@ -48,6 +48,7 @@ pub struct Player {
     //Ticks down with time but gets reset every time the player is damaged
     damage_timer: f32,
     damage_cooldown: f32,
+    pub death_msg: String,
 }
 
 impl Player {
@@ -75,6 +76,7 @@ impl Player {
             dist_fallen: 0.0,
             damage_timer: 0.0,
             damage_cooldown: DAMAGE_COOLDOWN,
+            death_msg: "".to_string(),
         }
     }
 
@@ -334,6 +336,10 @@ impl Player {
 
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
+        if self.is_dead() {
+            return;
+        }
+
         if self.stuck(world) {
             return;
         }
@@ -480,6 +486,7 @@ impl Player {
         entry.add_float("dist_fallen", self.dist_fallen);
         entry.add_integer("health", self.health as i64);
         entry.add_float("drowning_timer", self.drowning_timer);
+        entry.add_string("death_msg", &self.death_msg);
 
         entry
     }
@@ -504,6 +511,7 @@ impl Player {
             .get_var("drowning_timer")
             .parse::<f32>()
             .unwrap_or(DROWN_TIME);
+        let player_death_msg = entry.get_var("death_msg");
 
         Self {
             position: Vector3::new(x, y, z),
@@ -527,6 +535,7 @@ impl Player {
             dist_fallen: player_dist_fallen,
             damage_timer: 0.0,
             damage_cooldown: DAMAGE_COOLDOWN,
+            death_msg: player_death_msg,
         }
     }
 }
