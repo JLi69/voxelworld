@@ -28,11 +28,14 @@ impl Player {
         self.dist_fallen = 0.0;
         let dmg_amt = (dist - 2.9).max(0.0).floor() as i32;
         self.damage(dmg_amt, "You broke every bone in your body.");
-    } 
+    }
 
     //dmg_fn() returns true -> apply damage
     //returns false -> do not apply damage
-    fn apply_damage<T>(&mut self, amt: i32, msg: &str, dmg_fn: T) where T: Fn(&mut Self) -> bool {
+    fn apply_damage<T>(&mut self, amt: i32, msg: &str, dmg_fn: T)
+    where
+        T: Fn(&mut Self) -> bool,
+    {
         if self.damage_cooldown > 0.0 {
             return;
         }
@@ -75,7 +78,7 @@ impl Player {
         self.apply_damage(1, "You are now sleeping with the fishies.", |player| {
             player.drowning_timer <= 0.01
         });
-       
+
         //Lava damage
         self.apply_damage(3, "You were burnt to a crisp.", |player| {
             player.is_intersecting(world, 13)
