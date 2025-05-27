@@ -63,6 +63,23 @@ impl Player {
         self.damage_cooldown = DAMAGE_COOLDOWN;
     }
 
+    pub fn apply_suffocation_damage(&mut self, world: &World) {
+        if self.damage_cooldown > 0.0 {
+            return;
+        }
+
+        if self.health <= 0 {
+            return;
+        }
+
+        if !self.suffocating(world) {
+            return;
+        }
+
+        self.damage(1);
+        self.damage_cooldown = DAMAGE_COOLDOWN;
+    }
+
     pub fn damage_timer_perc(&self) -> f32 {
         (self.damage_timer / DAMAGE_TIME).clamp(0.0, 1.0)
     }
@@ -84,5 +101,7 @@ impl Player {
         self.apply_drowning_damage();
 
         self.apply_lava_damage(world);
+
+        self.apply_suffocation_damage(world);
     }
 }
