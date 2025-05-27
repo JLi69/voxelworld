@@ -46,6 +46,23 @@ impl Player {
         self.damage_cooldown = DAMAGE_COOLDOWN;
     }
 
+    pub fn apply_lava_damage(&mut self, world: &World) {
+        if self.damage_cooldown > 0.0 {
+            return;
+        }
+
+        if self.health <= 0 {
+            return;
+        }
+
+        if !self.is_intersecting(world, 13) {
+            return;
+        }
+
+        self.damage(3);
+        self.damage_cooldown = DAMAGE_COOLDOWN;
+    }
+
     pub fn damage_timer_perc(&self) -> f32 {
         (self.damage_timer / DAMAGE_TIME).clamp(0.0, 1.0)
     }
@@ -65,5 +82,7 @@ impl Player {
         }
         self.drowning_timer = self.drowning_timer.clamp(0.0, DROWN_TIME);
         self.apply_drowning_damage();
+
+        self.apply_lava_damage(world);
     }
 }
