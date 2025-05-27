@@ -1,4 +1,8 @@
-use crate::game::{assets::models::draw_elements, Game, GameMode, player::DEFAULT_MAX_HEALTH};
+use crate::game::{
+    assets::models::draw_elements,
+    player::{DEFAULT_MAX_HEALTH, DROWN_TIME},
+    Game, GameMode,
+};
 use cgmath::{Matrix4, SquareMatrix, Vector3};
 
 fn display_stamina(gamestate: &Game, w: i32, h: i32) {
@@ -8,7 +12,7 @@ fn display_stamina(gamestate: &Game, w: i32, h: i32) {
 
     //Set screen matrix
     let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
-    shader2d.uniform_matrix4f("screen", &screen_mat); 
+    shader2d.uniform_matrix4f("screen", &screen_mat);
     shader2d.uniform_float("texscale", 1.0 / 4.0);
 
     let width = 9.0 * 32.0 / 2.0 - 16.0;
@@ -46,7 +50,7 @@ fn display_stamina(gamestate: &Game, w: i32, h: i32) {
     draw_elements(quad.clone());
 }
 
-fn display_health(gamestate: &Game, w: i32, h: i32) { 
+fn display_health(gamestate: &Game, w: i32, h: i32) {
     gamestate.shaders.use_program("icon2d");
     let shader2d = gamestate.shaders.get("icon2d");
     let quad = gamestate.models.bind("quad2d");
@@ -68,8 +72,15 @@ fn display_health(gamestate: &Game, w: i32, h: i32) {
             shader2d.uniform_vec2f("texoffset", 0.25, 0.0);
         }
 
-        let x = i as f32 * 30.0 - 32.0 * 9.0; 
-        let y = -h as f32 / 2.0 + 64.0 + 20.0;
+        let time = gamestate.world.time * 10000.0 * std::f32::consts::PI;
+        let time_offset = (i * i) as f32 * 3.0 + i as f32;
+        let y_offset = if gamestate.player.health <= 4 {
+            (time + time_offset).sin() * 2.0
+        } else {
+            0.0
+        };
+        let x = i as f32 * 30.0 - 32.0 * 9.0;
+        let y = -h as f32 / 2.0 + 64.0 + 20.0 + y_offset;
         let mut transform = Matrix4::identity();
         transform = Matrix4::from_scale(15.0) * transform;
         transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
@@ -82,8 +93,40 @@ fn display_health(gamestate: &Game, w: i32, h: i32) {
     }
 }
 
+fn display_oxygen_bar(gamestate: &Game, w: i32, h: i32) {
+    if gamestate.player.drowning_timer >= DROWN_TIME - 0.01 {
+        return;
+    }
+
+    gamestate.shaders.use_program("icon2d");
+    let shader2d = gamestate.shaders.get("icon2d");
+    let quad = gamestate.models.bind("quad2d");
+    gamestate.textures.bind("hud_icons");
+    //Set screen matrix
+    let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_float("alpha", 1.0);
+    shader2d.uniform_float("texscale", 1.0 / 4.0);
+    shader2d.uniform_vec2f("texoffset", 0.75, 0.0);
+    let timer = gamestate.player.drowning_timer / (DROWN_TIME / 10.0);
+    for i in 0..(timer.ceil() as i32) {
+        let diff = timer - i as f32;
+        if diff < 0.1 {
+            shader2d.uniform_vec2f("texoffset", 0.0, 0.25);
+        }
+
+        let x = i as f32 * 30.0 - 32.0 * 9.0;
+        let y = -h as f32 / 2.0 + 64.0 + 50.0;
+        let mut transform = Matrix4::identity();
+        transform = Matrix4::from_scale(15.0) * transform;
+        transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
+        shader2d.uniform_matrix4f("transform", &transform);
+        draw_elements(quad.clone());
+    }
+}
+
 //When the player takes damage, the screen flashes red
-fn display_damage_flash(gamestate: &Game, w: i32, h: i32) { 
+fn display_damage_flash(gamestate: &Game, w: i32, h: i32) {
     gamestate.shaders.use_program("icon2d");
     let shader2d = gamestate.shaders.get("icon2d");
     let quad = gamestate.models.bind("quad2d");
@@ -112,6 +155,8 @@ pub fn display_stats(gamestate: &Game, w: i32, h: i32) {
 
     //display stamina bar
     display_stamina(gamestate, w, h);
+    //Display oxygen bar
+    display_oxygen_bar(gamestate, w, h);
     //display health bar
     display_health(gamestate, w, h);
     //display damage flash

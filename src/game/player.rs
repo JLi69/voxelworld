@@ -12,6 +12,8 @@ use crate::voxel::World;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
 pub const DEFAULT_MAX_HEALTH: i32 = 20;
+pub const DAMAGE_COOLDOWN: f32 = 1.0; //In seconds
+pub const DROWN_TIME: f32 = 20.0; //In seconds
 pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
 pub const PLAYER_SIZE: f32 = 0.6;
@@ -42,8 +44,10 @@ pub struct Player {
     stamina_regen_cooldown: f32,
     pub health: i32,
     dist_fallen: f32,
+    pub drowning_timer: f32,
     //Ticks down with time but gets reset every time the player is damaged
     damage_timer: f32,
+    damage_cooldown: f32,
 }
 
 impl Player {
@@ -67,8 +71,10 @@ impl Player {
             stamina: 1.0,
             stamina_regen_cooldown: 0.0,
             health: DEFAULT_MAX_HEALTH,
+            drowning_timer: DROWN_TIME,
             dist_fallen: 0.0,
             damage_timer: 0.0,
+            damage_cooldown: DAMAGE_COOLDOWN,
         }
     }
 
@@ -389,13 +395,6 @@ impl Player {
         }
     }
 
-    //Specific things to update for survival mode
-    pub fn update_survival(&mut self, dt: f32) {
-        self.update_stamina(dt);
-        self.damage_timer -= dt;
-        self.apply_fall_damage();
-    }
-
     //Specific things to update for creative mode
     pub fn update_creative(&mut self, _dt: f32) {
         self.stamina = 1.0; //Infinite stamina
@@ -478,7 +477,9 @@ impl Player {
         entry.add_float("rotation", self.rotation);
         entry.add_float("stamina", self.stamina);
         entry.add_float("stamina_regen_cooldown", self.stamina_regen_cooldown);
+        entry.add_float("dist_fallen", self.dist_fallen);
         entry.add_integer("health", self.health as i64);
+        entry.add_float("drowning_timer", self.drowning_timer);
 
         entry
     }
@@ -494,9 +495,15 @@ impl Player {
             .get_var("stamina_regen_cooldown")
             .parse::<f32>()
             .unwrap_or(0.0);
-        let player_health = entry.get_var("health")
+        let player_health = entry
+            .get_var("health")
             .parse::<i32>()
             .unwrap_or(DEFAULT_MAX_HEALTH);
+        let player_dist_fallen = entry.get_var("dist_fallen").parse::<f32>().unwrap_or(0.0);
+        let player_drowning_timer = entry
+            .get_var("drowning_timer")
+            .parse::<f32>()
+            .unwrap_or(DROWN_TIME);
 
         Self {
             position: Vector3::new(x, y, z),
@@ -516,8 +523,10 @@ impl Player {
             stamina: player_stamina,
             stamina_regen_cooldown: player_stamina_regen_cooldown,
             health: player_health,
-            dist_fallen: 0.0,
+            drowning_timer: player_drowning_timer,
+            dist_fallen: player_dist_fallen,
             damage_timer: 0.0,
+            damage_cooldown: DAMAGE_COOLDOWN,
         }
     }
 }

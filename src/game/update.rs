@@ -109,7 +109,7 @@ impl Game {
         }
 
         match self.game_mode() {
-            GameMode::Survival => self.player.update_survival(dt),
+            GameMode::Survival => self.player.update_survival(dt, &self.world),
             GameMode::Creative => self.player.update_creative(dt),
         }
     }
