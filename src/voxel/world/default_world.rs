@@ -494,7 +494,7 @@ impl World {
         gen_info_table.add_trees(chunkx, chunkz, &self.world_generator);
         gen_info_table.add_plants(chunkx, chunkz, &self.world_generator);
         gen_info_table.add_sugarcane(chunkx, chunkz);
-        if let Some(gen_info) = gen_info_table.get(chunkx, chunkz) { 
+        if let Some(gen_info) = gen_info_table.get(chunkx, chunkz) {
             gen_chunk(&mut chunk, gen_info, &self.world_generator);
         }
         self.chunks.insert((chunkx, chunky, chunkz), chunk);

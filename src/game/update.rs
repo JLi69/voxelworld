@@ -312,7 +312,7 @@ impl Game {
         } else {
             //Look downwards for a spawn position
             for ref y in (-64..=128).rev() {
-                self.player.position.y = *y as f32 + PLAYER_HEIGHT / 2.0; 
+                self.player.position.y = *y as f32 + PLAYER_HEIGHT / 2.0;
                 let pos = self.player.position;
                 temp_world.load_for_respawn(pos.x, pos.y, pos.z);
                 if self.player.check_collision(&temp_world).is_some() {

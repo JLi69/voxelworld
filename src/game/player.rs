@@ -79,7 +79,7 @@ impl Player {
             death_msg: "".to_string(),
         }
     }
-    
+
     //Pass in the spawn point, returns the reset player
     pub fn respawn(&self, spawnx: f32, spawnz: f32) -> Self {
         Self {
