@@ -196,6 +196,9 @@ fn propagate_channel_updates(
                 if visited.contains(&(x + dx, y + dy, z + dz)) {
                     continue;
                 }
+                if world.out_of_bounds(x + dx, y + dy, z + dz) {
+                    continue;
+                }
                 let adj_block = world.get_block(x + dx, y + dy, z + dz);
                 if !light_can_pass(adj_block) {
                     visited.insert((x + dx, y + dy, z + dz));
@@ -242,6 +245,9 @@ pub fn propagate_sky_updates(world: &mut World, blocks: &[(i32, i32, i32)]) -> C
 
             for (dx, dy, dz) in ADJ {
                 if visited.contains(&(x + dx, y + dy, z + dz)) {
+                    continue;
+                }
+                if world.out_of_bounds(x + dx, y + dy, z + dz) {
                     continue;
                 }
                 let adj_block = world.get_block(x + dx, y + dy, z + dz);

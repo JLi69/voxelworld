@@ -33,7 +33,9 @@ fn display_death_screen(ui: &mut egui::Ui, msg: &str) -> Option<PauseMenuAction>
         if ui
             .button(menu_text("Respawn", 32.0, Color32::WHITE))
             .clicked()
-        {}
+        {
+            action = Some(PauseMenuAction::Respawn);
+        }
 
         ui.add_space(64.0);
         if ui

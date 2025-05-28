@@ -5,6 +5,7 @@ use egui_gl_glfw as egui_backend;
 pub enum PauseMenuAction {
     Unpause,
     QuitToMainMenu,
+    Respawn,
 }
 
 //Creates an egui frame that is grayed out

@@ -137,6 +137,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         }
 
         //Handle pause menu action
+        let mut respawned = false;
         if let Some(pause_action) = pause_action {
             match pause_action {
                 //Unpause the game
@@ -149,12 +150,22 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
                     quit = true;
                     window.set_cursor_mode(glfw::CursorMode::Normal);
                 }
+                //Respawn
+                PauseMenuAction::Respawn => {
+                    window.set_cursor_mode(glfw::CursorMode::Disabled);
+                    gamestate.respawn();
+                    chunktables.clear();
+                    chunktables.init_tables(&gamestate.world);
+                    respawned = true;
+                }
             }
         }
 
         update::handle_input_actions(gamestate);
-        update::rotate_player(gamestate, 0.06, window);
-        update::update_game(gamestate, &mut chunktables, dt);
+        if !respawned {
+            update::rotate_player(gamestate, 0.06, window);
+            update::update_game(gamestate, &mut chunktables, dt);
+        }
 
         //Handle save
         save_timer -= dt;

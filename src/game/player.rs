@@ -79,6 +79,35 @@ impl Player {
             death_msg: "".to_string(),
         }
     }
+    
+    //Pass in the spawn point, returns the reset player
+    pub fn respawn(&self, spawnx: f32, spawnz: f32) -> Self {
+        Self {
+            position: Vector3::new(spawnx, self.position.y, spawnz),
+            dimensions: Vector3::new(PLAYER_SIZE, PLAYER_HEIGHT, PLAYER_SIZE),
+            direction: Vector3::new(0.0, 0.0, 0.0),
+            falling: true,
+            velocity_y: 0.0,
+            speed: DEFAULT_PLAYER_SPEED,
+            rotation: 0.0,
+            //TODO: make player lose all items upon death
+            hotbar: self.hotbar.clone(),
+            jump_cooldown: 0.0,
+            prev_swimming: false,
+            swim_cooldown: 0.0,
+            sprinting: false,
+            crouching: true,
+            crouch_height: 0.0,
+            stamina: 1.0,
+            stamina_regen_cooldown: 0.0,
+            health: DEFAULT_MAX_HEALTH,
+            drowning_timer: DROWN_TIME,
+            dist_fallen: 0.0,
+            damage_timer: 0.0,
+            damage_cooldown: DAMAGE_COOLDOWN,
+            death_msg: "".to_string(),
+        }
+    }
 
     pub fn select_hotbar_item(&mut self, keystate: KeyState, index: usize) {
         if keystate.is_held() {

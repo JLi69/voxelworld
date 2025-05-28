@@ -43,6 +43,7 @@ fn string_to_item(s: &str) -> Item {
 
 const HOTBAR_SIZE: usize = 9;
 
+#[derive(Clone)]
 pub struct Hotbar {
     pub items: [Item; HOTBAR_SIZE],
     pub selected: usize,

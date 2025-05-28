@@ -93,10 +93,10 @@ impl Player {
         self.apply_damage(1, "You somehow lost a fight with a cactus.", |player| {
             let vel = player.calculate_velocity() * 0.01;
             player.position += vel;
-            player.position.y -= 0.01;
+            player.position.y -= 0.05;
             let hit_cactus = player.is_intersecting(world, 88);
             player.position -= vel;
-            player.position.y += 0.01;
+            player.position.y += 0.05;
             hit_cactus
         })
     }

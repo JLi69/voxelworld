@@ -2,7 +2,7 @@ use super::{LoadChunkQueue, World, WorldGenType, WorldGenerator};
 use crate::{
     game::GameMode,
     impfile::{self, Entry},
-    voxel::region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region},
+    voxel::{region::{chunkpos_to_regionpos, get_region_chunks, save::serialize_region, Region}, world_to_chunk_position, coordinates::f32coord_to_int},
 };
 use std::collections::{HashMap, HashSet};
 use std::{fs::File, io::Write};
@@ -274,5 +274,46 @@ impl World {
             WorldGenType::OldGen => self.gen_old_on_load(),
             WorldGenType::DefaultGen => self.gen_default_on_load(),
         }
+    }
+
+    //I don't really have a good name for this function,
+    //basically the idea behind it is that this function is supposed to load
+    //some chunks around the player and then see if there is a collision
+    //This is only supposed to be used on a 'temporary' world that is allocated
+    //for collision checking and then is destroyed afterward
+    pub fn load_for_respawn(&mut self, x: f32, y: f32, z: f32) { 
+        let (ix, iy, iz) = f32coord_to_int(x, y, z);
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(ix, iy, iz);
+        if self.centerx == chunkx 
+            && self.centery == chunky 
+            && self.centerz == chunkz 
+            && !self.chunks.is_empty() {
+            return;
+        }
+        self.centerx = chunkx;
+        self.centery = chunky;
+        self.centerz = chunkz;
+        //Clear chunks
+        self.chunks.clear();
+        self.chunk_cache.clear();
+        for dy in -1..=1 {
+            let pos = (chunkx, chunky + dy, chunkz);
+            if self.chunks.contains_key(&pos) {
+                continue;
+            }
+            let (rx, ry, rz) = chunkpos_to_regionpos(chunkx, chunky + dy, chunkz);
+            if let Some(region) = Region::load_region(&self.path, rx, ry, rz) {
+                self.add_region(region);
+            }
+
+            if !self.chunks.contains_key(&pos) {
+                //Generate new chunk
+                match self.gen_type {
+                    WorldGenType::Flat => self.add_flat_chunk(chunkx, chunky, chunkz),
+                    WorldGenType::OldGen => self.add_old_chunk(chunkx, chunky, chunkz), 
+                    WorldGenType::DefaultGen => self.add_default_chunk(chunkx, chunky, chunkz), 
+                }
+            }
+        } 
     }
 }

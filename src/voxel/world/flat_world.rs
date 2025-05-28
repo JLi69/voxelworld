@@ -108,4 +108,10 @@ impl World {
             eprintln!("Took {time} ms to generate {generated_count} new chunks");
         }
     }
+
+    pub fn add_flat_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32) {
+        let mut chunk = Chunk::new(chunkx, chunky, chunkz);
+        gen_flat_chunk(&mut chunk);
+        self.chunks.insert((chunkx, chunky, chunkz), chunk);
+    }
 }

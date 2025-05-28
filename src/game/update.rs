@@ -1,8 +1,9 @@
 use super::inventory::Item;
+use super::player::PLAYER_HEIGHT;
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
-use crate::voxel::{destroy_block, place_block};
+use crate::voxel::{destroy_block, place_block, World};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
@@ -279,5 +280,60 @@ impl Game {
                 self.hand_animation = 0.0;
             }
         }
+    }
+
+    //Respawn player if they are dead
+    pub fn respawn(&mut self) {
+        if !self.player.is_dead() {
+            return;
+        }
+
+        //Respawn player
+        self.player = self.player.respawn(7.5, 7.5);
+        self.player.position.y = 128.0;
+        self.world.update_generation_queue(self.player.position);
+
+        //Save world
+        self.save_entire_world();
+
+        let path = self.world.path.clone();
+        let mut temp_world = World::load_world_metadata(&path);
+        let pos = self.player.position;
+        temp_world.load_for_respawn(pos.x, pos.y, pos.z);
+        //Attempt to set up player y position
+        if self.player.check_collision(&temp_world).is_some() {
+            //Look upwards for a spawn position
+            self.player.position.y = 127.0 + PLAYER_HEIGHT / 2.0;
+            while self.player.check_collision(&temp_world).is_some() {
+                self.player.position.y += 1.0;
+                let pos = self.player.position;
+                temp_world.load_for_respawn(pos.x, pos.y, pos.z);
+            }
+        } else {
+            //Look downwards for a spawn position
+            for ref y in (-64..=128).rev() {
+                self.player.position.y = *y as f32 + PLAYER_HEIGHT / 2.0; 
+                let pos = self.player.position;
+                temp_world.load_for_respawn(pos.x, pos.y, pos.z);
+                if self.player.check_collision(&temp_world).is_some() {
+                    self.player.position.y += 1.0;
+                    break;
+                }
+            }
+        }
+
+        self.world = World::load_world_metadata(&path);
+        self.world.update_generation_queue(self.player.position);
+        self.world.load_chunks();
+        self.world.init_block_light();
+        self.world.init_sky_light();
+
+        //Set up camera
+        self.cam.position = self.player.position;
+        self.cam.pitch = 0.0;
+        self.cam.yaw = self.player.rotation;
+        self.save_entire_world();
+
+        eprintln!("player respawned.");
     }
 }
