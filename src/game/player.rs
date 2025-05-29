@@ -49,6 +49,9 @@ pub struct Player {
     damage_timer: f32,
     damage_cooldown: f32,
     pub death_msg: String,
+    //Breaking blocks
+    pub break_timer: f32,
+    pub target_block: Option<(i32, i32, i32)>,
 }
 
 impl Player {
@@ -77,6 +80,8 @@ impl Player {
             damage_timer: 0.0,
             damage_cooldown: DAMAGE_COOLDOWN,
             death_msg: "".to_string(),
+            break_timer: 0.0,
+            target_block: None,
         }
     }
 
@@ -106,6 +111,8 @@ impl Player {
             damage_timer: 0.0,
             damage_cooldown: DAMAGE_COOLDOWN,
             death_msg: "".to_string(),
+            break_timer: 0.0,
+            target_block: None,
         }
     }
 
@@ -565,6 +572,8 @@ impl Player {
             damage_timer: 0.0,
             damage_cooldown: DAMAGE_COOLDOWN,
             death_msg: player_death_msg,
+            break_timer: 0.0,
+            target_block: None,
         }
     }
 }

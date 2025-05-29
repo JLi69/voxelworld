@@ -12,6 +12,7 @@ pub mod update;
 
 use crate::game::inventory::Hotbar;
 use crate::impfile;
+use crate::voxel::block_info::{load_block_info, BlockInfo, BlockInfoTable};
 use crate::voxel::world::WorldGenType;
 use crate::voxel::Block;
 use crate::{assets::texture::load_image_pixels, game::player::PLAYER_HEIGHT, World};
@@ -126,6 +127,8 @@ pub struct Game {
     display_block_menu: bool,
     block_menu_shape: BlockMenuShape,
     pub display_hud: bool,
+    //Block info table
+    block_info: BlockInfoTable,
 }
 
 impl Game {
@@ -158,6 +161,7 @@ impl Game {
             block_menu_shape: BlockMenuShape::Normal,
             display_block_menu: false,
             display_hud: true,
+            block_info: BlockInfoTable::new(),
         }
     }
 
@@ -235,6 +239,17 @@ impl Game {
 
     pub fn game_mode(&self) -> GameMode {
         self.world.game_mode
+    }
+
+    pub fn load_block_info(&mut self, path: &str) {
+        self.block_info = load_block_info(path);
+    }
+
+    pub fn get_block_info(&self, id: u8) -> BlockInfo {
+        self.block_info
+            .get(&id)
+            .cloned()
+            .unwrap_or(BlockInfo::default())
     }
 }
 

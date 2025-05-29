@@ -47,7 +47,7 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     //Update gameobjects
     gamestate.update_player(dt);
     //Destroy and place blocks
-    gamestate.build(chunktables);
+    gamestate.build(chunktables, dt);
     gamestate.update_build_cooldown(dt);
     //Update hand animation
     gamestate.update_hand_animation(dt);

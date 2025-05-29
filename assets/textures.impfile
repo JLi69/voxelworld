@@ -49,3 +49,7 @@
 "hud_icons" {
 	"path" = "assets/textures/hud_icons.png";
 }
+
+"breaking" {
+	"path" = "assets/textures/breaking.png";
+}

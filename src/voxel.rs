@@ -1,3 +1,4 @@
+pub mod block_info;
 pub mod build;
 pub mod chunk;
 pub mod coordinates;

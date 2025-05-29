@@ -17,6 +17,7 @@ pub use hand::display_hand_item;
 pub use inventory::display_hotbar;
 
 pub fn display_selected_outline(gamestate: &Game) {
+    gamestate.textures.bind("breaking");
     let outlineshader = gamestate.shaders.use_program("outline");
     outlineshader.uniform_vec4f("incolor", 0.1, 0.1, 0.1, 1.0);
     outlineshader.uniform_matrix4f("persp", &gamestate.persp);
@@ -29,6 +30,16 @@ pub fn display_selected_outline(gamestate: &Game) {
     let (ix, iy, iz) = voxel::build::get_selected(pos, dir, &gamestate.world);
     let block = gamestate.world.get_block(ix, iy, iz);
     let bbox = Hitbox::from_block_bbox(ix, iy, iz, block);
+
+    let block = gamestate.world.get_block(ix, iy, iz);
+    let info = gamestate.get_block_info(block.id);
+    let perc = if info.break_time != 0.0 {
+        gamestate.player.break_timer / info.break_time
+    } else {
+        0.0
+    };
+    let frame = (perc * 5.0).floor() as u32;
+    outlineshader.uniform_uint("frame", frame);
 
     let mut transform: Matrix4<f32> = cgmath::Matrix4::identity();
     transform = transform * Matrix4::from_translation(bbox.position);

@@ -85,6 +85,14 @@ impl Entry {
 
         res
     }
+
+    //Returns a vector of variables: (name, value)
+    pub fn get_all_vars(&self) -> Vec<(String, String)> {
+        self.variables
+            .iter()
+            .map(|(name, val)| (name.to_string(), val.to_string()))
+            .collect()
+    }
 }
 
 //Returns Ok if quotes are valid, returns an Err if quotes are invalid

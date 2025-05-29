@@ -31,6 +31,7 @@ fn main() {
     let mut gamestate = Game::new();
     gamestate.init();
     gamestate.load_config("cfg.impfile");
+    gamestate.load_block_info("assets/block_info.impfile");
     gamestate.load_assets();
     gamestate.init_mouse_pos(&window);
 

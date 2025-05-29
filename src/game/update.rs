@@ -3,7 +3,7 @@ use super::player::PLAYER_HEIGHT;
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::build::destroy_block_suffocating;
-use crate::voxel::{destroy_block, place_block, World};
+use crate::voxel::{self, destroy_block, place_block, World};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
@@ -134,18 +134,9 @@ impl Game {
         }
     }
 
-    //Place and destroy blocks
-    pub fn build(&mut self, chunktables: &mut ChunkTables) {
-        if self.player.is_dead() {
-            return;
-        }
-
-        //Destroy blocks
+    fn destroy_block(&mut self, chunktables: &mut ChunkTables) {
         let pos = self.cam.position;
         let dir = self.cam.forward();
-        if !self.get_mouse_state(MouseButtonLeft).is_held() {
-            self.destroy_cooldown = 0.0;
-        }
 
         let stuck = self.player.get_head_stuck_block(&self.world);
         if self.get_mouse_state(MouseButtonLeft).is_held()
@@ -178,12 +169,68 @@ impl Game {
                 self.destroy_cooldown = 0.0;
             }
         }
+    }
+
+    fn destroy_blocks_survival(&mut self, chunktables: &mut ChunkTables, dt: f32) {
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
+        let new_target = voxel::build::get_selected(pos, dir, &self.world);
+
+        let submerged = 
+            self.player.head_intersection(&self.world, 13) ||
+            self.player.head_intersection(&self.world, 12);
+
+        //Slow down mining if submerged or suffocating
+        let multiplier = if submerged || self.player.suffocating(&self.world) {
+            0.33
+        } else {
+            1.0
+        };
+
+        if self.player.target_block == Some(new_target)
+            && self.get_mouse_state(MouseButtonLeft).is_held()
+        {
+            self.player.break_timer += dt * multiplier;
+        } else {
+            self.player.break_timer = 0.0;
+        }
+
+        self.player.target_block = Some(new_target);
+
+        let (x, y, z) = new_target;
+        let block = self.world.get_block(x, y, z);
+        let info = self.get_block_info(block.id);
+
+        if self.player.break_timer >= info.break_time {
+            self.destroy_block(chunktables);
+            self.player.break_timer = 0.0;
+        }
+    }
+
+    //Place and destroy blocks
+    pub fn build(&mut self, chunktables: &mut ChunkTables, dt: f32) {
+        if self.player.is_dead() {
+            return;
+        }
+
+        //Destroy blocks
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
+        if !self.get_mouse_state(MouseButtonLeft).is_held() {
+            self.destroy_cooldown = 0.0;
+        }
+
+        match self.game_mode() {
+            GameMode::Creative => self.destroy_block(chunktables),
+            GameMode::Survival => self.destroy_blocks_survival(chunktables, dt),
+        }
 
         //Place blocks
         if !self.get_mouse_state(MouseButtonRight).is_held() {
             self.build_cooldown = 0.0;
         }
 
+        let stuck = self.player.get_head_stuck_block(&self.world);
         if self.get_mouse_state(MouseButtonRight).is_held()
             && self.build_cooldown <= 0.0
             && stuck.is_none()
