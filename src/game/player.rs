@@ -570,7 +570,8 @@ impl Player {
             drowning_timer: player_drowning_timer,
             dist_fallen: player_dist_fallen,
             damage_timer: 0.0,
-            damage_cooldown: DAMAGE_COOLDOWN,
+            //3 seconds of damage immunity
+            damage_cooldown: 3.0,
             death_msg: player_death_msg,
             break_timer: 0.0,
             target_block: None,

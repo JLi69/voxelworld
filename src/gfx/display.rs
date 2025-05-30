@@ -38,7 +38,11 @@ pub fn display_selected_outline(gamestate: &Game) {
     } else {
         0.0
     };
-    let frame = (perc * 5.0).floor() as u32;
+    let frame = if perc > 0.0 {
+        (perc * 4.0).floor() as u32 + 1
+    } else {
+        0
+    };
     outlineshader.uniform_uint("frame", frame);
 
     let mut transform: Matrix4<f32> = cgmath::Matrix4::identity();
