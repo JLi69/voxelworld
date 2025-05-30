@@ -176,9 +176,8 @@ impl Game {
         let dir = self.cam.forward();
         let new_target = voxel::build::get_selected(pos, dir, &self.world);
 
-        let submerged = 
-            self.player.head_intersection(&self.world, 13) ||
-            self.player.head_intersection(&self.world, 12);
+        let submerged = self.player.head_intersection(&self.world, 13)
+            || self.player.head_intersection(&self.world, 12);
 
         //Slow down mining if submerged or suffocating
         let multiplier = if submerged || self.player.suffocating(&self.world) {
