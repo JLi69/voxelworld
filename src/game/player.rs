@@ -4,7 +4,7 @@ mod survival_mode;
 
 use self::movement::JUMP_FORCE;
 
-use super::inventory::Hotbar;
+use super::inventory::{Hotbar, Inventory};
 use super::Hitbox;
 use super::KeyState;
 use crate::impfile;
@@ -33,6 +33,8 @@ pub struct Player {
     pub speed: f32,
     pub rotation: f32,
     pub hotbar: Hotbar,
+    pub inventory: Inventory,
+    pub crafting_grid: Inventory,
     jump_cooldown: f32,
     prev_swimming: bool,
     swim_cooldown: f32,
@@ -66,6 +68,8 @@ impl Player {
             speed: DEFAULT_PLAYER_SPEED,
             rotation: 0.0,
             hotbar: Hotbar::empty_hotbar(),
+            inventory: Inventory::empty_inventory(),
+            crafting_grid: Inventory::empty_with_sz(3, 3),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -97,6 +101,8 @@ impl Player {
             rotation: 0.0,
             //TODO: make player lose all items upon death
             hotbar: self.hotbar.clone(),
+            inventory: self.inventory.clone(),
+            crafting_grid: self.crafting_grid.clone(),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -558,6 +564,8 @@ impl Player {
             speed: DEFAULT_PLAYER_SPEED,
             rotation: entry.get_var("rotation").parse::<f32>().unwrap_or(0.0),
             hotbar: Hotbar::empty_hotbar(),
+            inventory: Inventory::empty_inventory(),
+            crafting_grid: Inventory::empty_with_sz(3, 3),
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,

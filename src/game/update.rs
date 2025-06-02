@@ -259,8 +259,21 @@ impl Game {
                 return;
             }
 
+            //Escape out of inventory
+            if self.display_inventory {
+                self.display_inventory = false;
+                self.paused = false;
+                return;
+            }
+
             //Pause the game
             self.paused = !self.paused;
+        }
+
+        if self.get_key_state(Key::E) == KeyState::JustPressed {
+            self.display_inventory = !self.display_inventory;
+            self.display_block_menu = false;
+            self.paused = self.display_inventory;
         }
 
         //Toggle the block menu with Tab (Note: the block menu pauses the game)
@@ -271,8 +284,9 @@ impl Game {
         }
 
         if self.get_key_state(Key::Tab) == KeyState::JustPressed {
-            self.paused = !self.paused;
+            self.display_inventory = false;
             self.display_block_menu = !self.display_block_menu;
+            self.paused = self.display_block_menu;
         }
     }
 

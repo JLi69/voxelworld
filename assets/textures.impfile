@@ -53,3 +53,7 @@
 "breaking" {
 	"path" = "assets/textures/breaking.png";
 }
+
+"digits" {
+	"path" = "assets/textures/digits.png";
+}

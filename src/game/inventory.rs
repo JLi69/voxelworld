@@ -121,3 +121,107 @@ impl Hotbar {
         }
     }
 }
+
+pub const INVENTORY_WIDTH: usize = 9;
+pub const INVENTORY_HEIGHT: usize = 3;
+
+#[derive(Clone)]
+pub struct Inventory {
+    width: usize,
+    height: usize,
+    items: Vec<Item>,
+}
+
+impl Inventory {
+    pub fn empty_inventory() -> Self {
+        Self {
+            height: INVENTORY_HEIGHT,
+            width: INVENTORY_WIDTH,
+            items: vec![Item::EmptyItem; INVENTORY_WIDTH * INVENTORY_HEIGHT],
+        }
+    }
+
+    pub fn empty_with_sz(w: usize, h: usize) -> Self {
+        Self {
+            height: w,
+            width: h,
+            items: vec![Item::EmptyItem; w * h],
+        }
+    }
+
+    pub fn from_hotbar(hotbar: &Hotbar) -> Self {
+        Self {
+            width: HOTBAR_SIZE,
+            height: 1,
+            items: hotbar.items.clone().to_vec(),
+        }
+    }
+
+    pub fn to_entry(&self) -> impfile::Entry {
+        let mut entry = impfile::Entry::new("inventory");
+
+        entry.add_integer("width", self.width as i64);
+        entry.add_integer("height", self.height as i64);
+
+        let items_str = self
+            .items
+            .iter()
+            .map(|i| item_to_string(*i))
+            .collect::<Vec<String>>()
+            .join("|");
+        entry.add_string("items", &items_str);
+
+        entry
+    }
+
+    pub fn from_entry(entry: &impfile::Entry) -> Self {
+        let w = entry
+            .get_var("width")
+            .parse::<usize>()
+            .unwrap_or(INVENTORY_WIDTH);
+        let h = entry
+            .get_var("height")
+            .parse::<usize>()
+            .unwrap_or(INVENTORY_HEIGHT);
+
+        let inventory_items = entry
+            .get_var("items")
+            .split("|")
+            .map(|s| string_to_item(s))
+            .chain(std::iter::repeat(Item::EmptyItem))
+            .take(w * h)
+            .collect();
+
+        Self {
+            width: w,
+            height: h,
+            items: inventory_items,
+        }
+    }
+
+    pub fn w(&self) -> usize {
+        self.width
+    }
+
+    pub fn h(&self) -> usize {
+        self.height
+    }
+
+    pub fn get_item(&self, x: usize, y: usize) -> Item {
+        if x >= self.width || y >= self.height {
+            return Item::EmptyItem;
+        }
+
+        let index = y * self.width + x;
+        self.items[index]
+    }
+
+    pub fn set_item(&mut self, x: usize, y: usize, item: Item) {
+        if x >= self.width || y >= self.height {
+            return;
+        }
+
+        let index = y * self.width + x;
+        self.items[index] = item;
+    }
+}

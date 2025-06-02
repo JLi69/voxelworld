@@ -13,7 +13,7 @@ fn display_stamina(gamestate: &Game, w: i32, h: i32) {
     //Set screen matrix
     let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
     shader2d.uniform_matrix4f("screen", &screen_mat);
-    shader2d.uniform_float("texscale", 1.0 / 4.0);
+    shader2d.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
 
     let width = 9.0 * 32.0 / 2.0 - 16.0;
     let x = width + 48.0;
@@ -59,7 +59,7 @@ fn display_health(gamestate: &Game, w: i32, h: i32) {
     let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
     shader2d.uniform_matrix4f("screen", &screen_mat);
     shader2d.uniform_float("alpha", 1.0);
-    shader2d.uniform_float("texscale", 1.0 / 4.0);
+    shader2d.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
     if gamestate.player.health == 0 {
         //Display all empty hearts if health is 0
         shader2d.uniform_vec2f("texoffset", 0.0, 0.0);
@@ -106,7 +106,7 @@ fn display_oxygen_bar(gamestate: &Game, w: i32, h: i32) {
     let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
     shader2d.uniform_matrix4f("screen", &screen_mat);
     shader2d.uniform_float("alpha", 1.0);
-    shader2d.uniform_float("texscale", 1.0 / 4.0);
+    shader2d.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
     shader2d.uniform_vec2f("texoffset", 0.75, 0.0);
     let timer = gamestate.player.drowning_timer / (DROWN_TIME / 10.0);
     for i in 0..(timer.ceil() as i32) {
@@ -135,7 +135,7 @@ fn display_damage_flash(gamestate: &Game, w: i32, h: i32) {
     let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
     shader2d.uniform_matrix4f("screen", &screen_mat);
     shader2d.uniform_float("alpha", gamestate.player.damage_timer_perc() * 0.4);
-    shader2d.uniform_float("texscale", 1.0 / 4.0);
+    shader2d.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
     shader2d.uniform_vec2f("texoffset", 0.0, 0.5);
     let transform = Matrix4::from_nonuniform_scale(w as f32, h as f32, 1.0);
     shader2d.uniform_matrix4f("transform", &transform);

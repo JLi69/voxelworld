@@ -5,7 +5,7 @@ out vec4 color;
 uniform sampler2D tex;
 in vec2 tc;
 uniform float alpha;
-uniform float texscale;
+uniform vec2 texscale;
 uniform vec2 texoffset;
 
 void main() {

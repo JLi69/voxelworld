@@ -110,6 +110,8 @@ pub struct Game {
     build_cooldown: f32,
     destroy_cooldown: f32,
     hand_animation: f32,
+    //Display inventory
+    pub display_inventory: bool,
     //Perspective matrix and aspect
     pub persp: Matrix4<f32>,
     pub aspect: f32,
@@ -148,6 +150,7 @@ impl Game {
             build_cooldown: 0.0,
             destroy_cooldown: 0.0,
             hand_animation: 0.0,
+            display_inventory: false,
             world: World::empty(),
             persp: Matrix4::identity(),
             aspect: 1.0,

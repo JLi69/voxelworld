@@ -116,6 +116,10 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             if gamestate.get_display_block_menu() {
                 gfx::display::display_block_menu(gamestate, w, h, mousex, mousey);
             }
+        } else if gamestate.display_inventory {
+            //Display inventory and have the player interact with the inventory
+            let mousepos = convert_mouse_pos(mousex, mousey, w, h);
+            gfx::display::display_inventory_screen(gamestate, w, h, mousepos);
         } else if gamestate.display_block_menu {
             gfx::display::display_block_menu(gamestate, w, h, mousex, mousey);
             let menu =
