@@ -1,7 +1,7 @@
 pub mod block_menu;
 mod hand;
 pub mod hud;
-mod inventory;
+pub mod inventory;
 
 use super::chunktable::set_fog;
 use super::ChunkTables;
@@ -14,7 +14,7 @@ use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 pub use hand::display_hand_item;
-pub use inventory::{display_hotbar, display_inventory_screen};
+pub use inventory::{display_hotbar, display_inventory_screen, display_mouse_item};
 
 pub fn display_selected_outline(gamestate: &Game) {
     gamestate.textures.bind("breaking");

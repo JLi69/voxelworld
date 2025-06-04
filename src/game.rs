@@ -4,6 +4,7 @@ pub mod camera;
 pub mod gameloop;
 pub mod input;
 pub mod inventory;
+pub mod inventory_screen;
 pub mod load;
 pub mod physics;
 pub mod player;
@@ -112,6 +113,7 @@ pub struct Game {
     hand_animation: f32,
     //Display inventory
     pub display_inventory: bool,
+    pub prev_selected_slot: String,
     //Perspective matrix and aspect
     pub persp: Matrix4<f32>,
     pub aspect: f32,
@@ -151,6 +153,7 @@ impl Game {
             destroy_cooldown: 0.0,
             hand_animation: 0.0,
             display_inventory: false,
+            prev_selected_slot: String::new(),
             world: World::empty(),
             persp: Matrix4::identity(),
             aspect: 1.0,

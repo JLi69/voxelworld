@@ -113,8 +113,13 @@ impl Game {
         //Rotate current item in the hotbar (if it is rotatable
         self.rotate_item();
         //Drop item
-        if self.get_key_state(Key::Q) == KeyState::JustPressed {
+        //TODO: implement dropped items
+        let q = self.get_key_state(Key::Q);
+        if q == KeyState::JustPressed && lshift.is_held() {
+            //Drop everything in selected slot
             self.player.hotbar.set_selected(Item::EmptyItem);
+        } else if q == KeyState::JustPressed {
+            self.player.hotbar.drop_selected();
         }
 
         match self.game_mode() {
@@ -249,8 +254,8 @@ impl Game {
         }
     }
 
-    //Handle pausing
-    pub fn pause(&mut self) {
+    //Toggle pause screens
+    pub fn toggle_pause_screens(&mut self) {
         if self.get_key_state(Key::Escape) == KeyState::JustPressed {
             //Escape out of the block menu
             if self.display_block_menu {
@@ -287,6 +292,16 @@ impl Game {
             self.display_inventory = false;
             self.display_block_menu = !self.display_block_menu;
             self.paused = self.display_block_menu;
+        }
+    }
+
+    //Handle pausing
+    pub fn pause(&mut self) {
+        let inventory_previously_open = self.display_inventory;
+        self.toggle_pause_screens();
+        if inventory_previously_open && !self.display_inventory {
+            //Close inventory
+            self.close_inventory();
         }
     }
 
@@ -395,5 +410,32 @@ impl Game {
         self.save_entire_world();
 
         eprintln!("player respawned.");
+    }
+
+    pub fn close_inventory(&mut self) {
+        //Items to drop
+        let mut items = vec![];
+        //Attempt to add the mouse item to the inventory
+        items.push(self.player.mouse_item);
+        self.player.mouse_item = Item::EmptyItem;
+        //Attempt to add items in the crafting grid to the inventory
+        for iy in 0..self.player.crafting_grid.h() {
+            for ix in 0..self.player.crafting_grid.w() {
+                let item = self.player.crafting_grid.get_item(ix, iy);
+                items.push(item);
+            }
+        }
+        self.player.crafting_grid.clear();
+
+        let mut to_drop = vec![];
+        for item in items {
+            let leftover = self.player.add_item(item);
+            if !leftover.is_empty() {
+                to_drop.push(leftover);
+            }
+        }
+
+        //If that is not possible, drop it on the ground
+        //TODO: implement dropped items
     }
 }

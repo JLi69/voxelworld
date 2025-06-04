@@ -1,9 +1,17 @@
 use crate::{impfile, voxel::Block};
 
+pub const MAX_STACK_SIZE: u8 = 64;
+
 #[derive(Clone, Copy)]
 pub enum Item {
     BlockItem(Block, u8),
     EmptyItem,
+}
+
+impl Item {
+    pub fn is_empty(&self) -> bool {
+        matches!(self, Item::EmptyItem)
+    }
 }
 
 fn item_to_string(item: Item) -> String {
@@ -25,9 +33,9 @@ fn string_to_item(s: &str) -> Item {
     let tokens: Vec<String> = s.split(",").map(|s| s.to_string()).collect();
 
     if tokens.len() == 4 && tokens[0] == "block" {
-        let id = tokens[1].parse::<u8>().unwrap_or(0);
+        let id = tokens[1].parse::<u8>().unwrap_or(1);
         let geometry = tokens[2].parse::<u8>().unwrap_or(0);
-        let amt = tokens[3].parse::<u8>().unwrap_or(0);
+        let amt = tokens[3].parse::<u8>().unwrap_or(1);
 
         if amt == 0 || id == 0 {
             return Item::EmptyItem;
@@ -38,6 +46,53 @@ fn string_to_item(s: &str) -> Item {
         Item::BlockItem(block, amt)
     } else {
         Item::EmptyItem
+    }
+}
+
+//Returns (merged, leftover)
+fn merge_blocks(block1: Block, amt1: u8, block2: Block, amt2: u8) -> (Item, Item, bool) {
+    if block1 == block2 {
+        if MAX_STACK_SIZE - amt1 < amt2 {
+            let leftover = Item::BlockItem(block1, amt1 + amt2 - MAX_STACK_SIZE);
+            (Item::BlockItem(block1, MAX_STACK_SIZE), leftover, true)
+        } else {
+            (Item::BlockItem(block1, amt1 + amt2), Item::EmptyItem, true)
+        }
+    } else {
+        (
+            Item::BlockItem(block1, amt1),
+            Item::BlockItem(block2, amt2),
+            false,
+        )
+    }
+}
+
+//Returns the leftover items
+pub fn remove_amt_item(item: Item, remove_amt: u8) -> Item {
+    match item {
+        Item::BlockItem(block, amt) => {
+            if amt <= remove_amt {
+                Item::EmptyItem
+            } else {
+                Item::BlockItem(block, amt - remove_amt)
+            }
+        }
+        Item::EmptyItem => Item::EmptyItem,
+    }
+}
+
+//Attempts combines two stacks of items
+//Returns (merged, leftover, was able to merge)
+pub fn merge_stacks(item1: Item, item2: Item) -> (Item, Item, bool) {
+    match item1 {
+        Item::EmptyItem => (item2, Item::EmptyItem, true),
+        Item::BlockItem(block1, amt1) => {
+            if let Item::BlockItem(block2, amt2) = item2 {
+                merge_blocks(block1, amt1, block2, amt2)
+            } else {
+                (item1, item2, false)
+            }
+        }
     }
 }
 
@@ -120,6 +175,48 @@ impl Hotbar {
             items: hotbar_items,
         }
     }
+
+    pub fn merge_item(&mut self, item: Item) -> Item {
+        let mut current_item = item;
+
+        for slot in &mut self.items {
+            if slot.is_empty() {
+                continue;
+            }
+            let (merged, leftover, _) = merge_stacks(*slot, current_item);
+            *slot = merged;
+            current_item = leftover;
+        }
+
+        current_item
+    }
+
+    pub fn add_item(&mut self, item: Item) -> Item {
+        let mut current_item = item;
+
+        //Prioritize merging with slots with items first
+        for slot in &mut self.items {
+            if slot.is_empty() {
+                continue;
+            }
+            let (merged, leftover, _) = merge_stacks(*slot, current_item);
+            *slot = merged;
+            current_item = leftover;
+        }
+
+        for slot in &mut self.items {
+            let (merged, leftover, _) = merge_stacks(*slot, current_item);
+            *slot = merged;
+            current_item = leftover;
+        }
+        current_item
+    }
+
+    //Drops one item
+    pub fn drop_selected(&mut self) {
+        let leftover = remove_amt_item(self.items[self.selected], 1);
+        self.items[self.selected] = leftover;
+    }
 }
 
 pub const INVENTORY_WIDTH: usize = 9;
@@ -187,7 +284,7 @@ impl Inventory {
         let inventory_items = entry
             .get_var("items")
             .split("|")
-            .map(|s| string_to_item(s))
+            .map(string_to_item)
             .chain(std::iter::repeat(Item::EmptyItem))
             .take(w * h)
             .collect();
@@ -223,5 +320,48 @@ impl Inventory {
 
         let index = y * self.width + x;
         self.items[index] = item;
+    }
+
+    pub fn clear(&mut self) {
+        for item in &mut self.items {
+            *item = Item::EmptyItem;
+        }
+    }
+
+    pub fn merge_item(&mut self, item: Item) -> Item {
+        let mut current_item = item;
+
+        for slot in &mut self.items {
+            if slot.is_empty() {
+                continue;
+            }
+            let (merged, leftover, _) = merge_stacks(*slot, current_item);
+            *slot = merged;
+            current_item = leftover;
+        }
+
+        current_item
+    }
+
+    //Adds an item to the first available slot in the inventory, returns leftover
+    pub fn add_item(&mut self, item: Item) -> Item {
+        let mut current_item = item;
+
+        //Prioritize merging with slots with items first
+        for slot in &mut self.items {
+            if slot.is_empty() {
+                continue;
+            }
+            let (merged, leftover, _) = merge_stacks(*slot, current_item);
+            *slot = merged;
+            current_item = leftover;
+        }
+
+        for slot in &mut self.items {
+            let (merged, leftover, _) = merge_stacks(*slot, current_item);
+            *slot = merged;
+            current_item = leftover;
+        }
+        current_item
     }
 }

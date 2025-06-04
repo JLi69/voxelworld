@@ -2,6 +2,7 @@ use crate::{
     game::{
         assets::models::draw_elements,
         inventory::{Inventory, Item},
+        inventory_screen::mouse_selecting_slot,
         Game,
     },
     gfx::{
@@ -190,10 +191,6 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
     }
 }
 
-fn mouse_selecting_slot(x: f32, y: f32, sz: f32, mousex: f32, mousey: f32) -> bool {
-    (mousex - x).abs() < sz && (mousey - y).abs() < sz
-}
-
 fn get_slot_transform(x: f32, y: f32, sz: f32, mousex: f32, mousey: f32) -> Matrix4<f32> {
     let mut transform = Matrix4::identity();
     let slot_sz = if mouse_selecting_slot(x, y, sz, mousex, mousey) {
@@ -327,6 +324,12 @@ fn display_inventory_items(
     display_inventory_numbers(gamestate, inventory, topleft, sz, (w, h));
 }
 
+const BOTTOM_Y: f32 = -230.0;
+pub const MAIN_INVENTORY_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 3.0);
+pub const HOTBAR_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y);
+pub const CRAFTING_GRID_POS: (f32, f32) = (-2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 6.0 + 30.0);
+pub const OUTPUT_POS: (f32, f32) = (2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0);
+
 pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32, f32)) {
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
@@ -353,11 +356,6 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
     //Display item slots
     shader2d.uniform_vec2f("texoffset", 0.25, 0.5);
 
-    const BOTTOM_Y: f32 = -230.0;
-    const MAIN_INVENTORY_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 3.0);
-    const HOTBAR_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y);
-    const CRAFTING_GRID_POS: (f32, f32) = (-2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 6.0 + 30.0);
-    const OUTPUT_POS: (f32, f32) = (2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0);
     //Display main inventory
     display_inventory_slots(
         gamestate,
@@ -421,6 +419,27 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
         w,
         h,
     );
+
+    unsafe {
+        gl::Enable(gl::CULL_FACE);
+        gl::Enable(gl::DEPTH_TEST);
+    }
+}
+
+pub fn display_mouse_item(gamestate: &Game, mousepos: (f32, f32), w: i32, h: i32) {
+    unsafe {
+        gl::Clear(gl::DEPTH_BUFFER_BIT);
+    }
+
+    match gamestate.player.mouse_item {
+        //Early return with empty item
+        Item::EmptyItem => return,
+        _ => {}
+    }
+
+    let mut mouse_item = Inventory::empty_with_sz(1, 1);
+    mouse_item.set_item(0, 0, gamestate.player.mouse_item);
+    display_inventory_items(gamestate, &mouse_item, mousepos, 30.0, w, h);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);

@@ -4,7 +4,7 @@ mod survival_mode;
 
 use self::movement::JUMP_FORCE;
 
-use super::inventory::{Hotbar, Inventory};
+use super::inventory::{Hotbar, Inventory, Item};
 use super::Hitbox;
 use super::KeyState;
 use crate::impfile;
@@ -35,6 +35,8 @@ pub struct Player {
     pub hotbar: Hotbar,
     pub inventory: Inventory,
     pub crafting_grid: Inventory,
+    //Item currently held by the mouse cursor
+    pub mouse_item: Item,
     jump_cooldown: f32,
     prev_swimming: bool,
     swim_cooldown: f32,
@@ -70,6 +72,7 @@ impl Player {
             hotbar: Hotbar::empty_hotbar(),
             inventory: Inventory::empty_inventory(),
             crafting_grid: Inventory::empty_with_sz(3, 3),
+            mouse_item: Item::EmptyItem,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -103,6 +106,7 @@ impl Player {
             hotbar: self.hotbar.clone(),
             inventory: self.inventory.clone(),
             crafting_grid: self.crafting_grid.clone(),
+            mouse_item: Item::EmptyItem,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -566,6 +570,7 @@ impl Player {
             hotbar: Hotbar::empty_hotbar(),
             inventory: Inventory::empty_inventory(),
             crafting_grid: Inventory::empty_with_sz(3, 3),
+            mouse_item: Item::EmptyItem,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -584,5 +589,13 @@ impl Player {
             break_timer: 0.0,
             target_block: None,
         }
+    }
+
+    //Returns leftover items
+    pub fn add_item(&mut self, item: Item) -> Item {
+        let hotbar_leftover = self.hotbar.merge_item(item);
+        let inventory_leftover = self.inventory.merge_item(hotbar_leftover);
+        let hotbar_leftover = self.hotbar.add_item(inventory_leftover);
+        self.inventory.add_item(hotbar_leftover)
     }
 }

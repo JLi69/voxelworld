@@ -120,6 +120,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             //Display inventory and have the player interact with the inventory
             let mousepos = convert_mouse_pos(mousex, mousey, w, h);
             gfx::display::display_inventory_screen(gamestate, w, h, mousepos);
+            gfx::display::display_mouse_item(gamestate, mousepos, w, h);
+            game::inventory_screen::update_player_inventory(gamestate, mousepos);
         } else if gamestate.display_block_menu {
             gfx::display::display_block_menu(gamestate, w, h, mousex, mousey);
             let menu =
@@ -216,6 +218,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         gl::DeleteFramebuffers(1, &water_framebuffer);
         gl::DeleteRenderbuffers(1, &depth_rbo);
     }
+    gamestate.close_inventory();
     gamestate.save_entire_world();
     gamestate.reset();
     chunktables.clear();
