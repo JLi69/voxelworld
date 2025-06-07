@@ -468,6 +468,94 @@ fn place(
 
 //Returns the (x, y, z) coordinate of the block placed as an option
 //Returns none if no block is placed
+pub fn interact_with_block(
+    pos: Vector3<f32>,
+    dir: Vector3<f32>,
+    world: &mut World,
+    player: &Player,
+) -> Option<(i32, i32, i32)> {
+    let (ix, iy, iz) = get_selected(pos, dir, world);
+
+    let mut block;
+    if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
+        block = blockdata;
+        if block.is_fluid() {
+            block.geometry = 7;
+        }
+
+        //To prevent leaf decay, we will set the orientation of leaves to be
+        //1 if they are a full block and are placed by the player
+        //This should not have any visual effect other than a way for the game
+        //to differentiate between naturally generated leaves and 'artificial'
+        //leaves. This is kind of a hack but I don't want to come up with
+        //a better solution.
+        if (block.id == 7 || block.id == 91) && block.geometry == 0 {
+            block.set_orientation(1);
+        }
+    } else {
+        block = Block::new();
+    }
+
+    let raycast_block = world.get_block(ix, iy, iz);
+
+    if raycast_block.can_use() && !player.is_crouching() {
+        block = match raycast_block.id {
+            //Open gates/door
+            78 | 79 | 81 => {
+                let mut b = raycast_block;
+                let is_open = b.reflection();
+                if is_open == 1 {
+                    b.set_reflection(0);
+                } else {
+                    b.set_reflection(1);
+                };
+                b
+            }
+            _ => block,
+        };
+
+        match block.id {
+            //Open door
+            79 => {
+                let prev_block = world.get_block(ix, iy, iz);
+                let ret = if place(world, player, ix, iy, iz, block).is_some() {
+                    let mut top = block;
+                    top.id = 81;
+                    place(world, player, ix, iy + 1, iz, top)
+                } else {
+                    None
+                };
+
+                if ret.is_none() {
+                    world.set_block(ix, iy, iz, prev_block);
+                }
+
+                return ret;
+            }
+            81 => {
+                let prev_block = world.get_block(ix, iy, iz);
+                let ret = if place(world, player, ix, iy, iz, block).is_some() {
+                    let mut bot = block;
+                    bot.id = 79;
+                    place(world, player, ix, iy - 1, iz, bot)
+                } else {
+                    None
+                };
+
+                if ret.is_none() {
+                    world.set_block(ix, iy, iz, prev_block);
+                }
+
+                return ret;
+            }
+            _ => return place(world, player, ix, iy, iz, block),
+        }
+    }
+    None
+}
+
+//Returns the (x, y, z) coordinate of the block placed as an option
+//Returns none if no block is placed
 pub fn place_block(
     pos: Vector3<f32>,
     dir: Vector3<f32>,
@@ -528,60 +616,6 @@ pub fn place_block(
 
     if block.orientation() % 3 == 0 && block.rotate_y_only() {
         return None;
-    }
-
-    if raycast_block.can_use() && !player.is_crouching() {
-        block = match raycast_block.id {
-            //Open gates/door
-            78 | 79 | 81 => {
-                let mut b = raycast_block;
-                let is_open = b.reflection();
-                if is_open == 1 {
-                    b.set_reflection(0);
-                } else {
-                    b.set_reflection(1);
-                };
-                b
-            }
-            _ => block,
-        };
-
-        match block.id {
-            //Open door
-            79 => {
-                let prev_block = world.get_block(ix, iy, iz);
-                let ret = if place(world, player, ix, iy, iz, block).is_some() {
-                    let mut top = block;
-                    top.id = 81;
-                    place(world, player, ix, iy + 1, iz, top)
-                } else {
-                    None
-                };
-
-                if ret.is_none() {
-                    world.set_block(ix, iy, iz, prev_block);
-                }
-
-                return ret;
-            }
-            81 => {
-                let prev_block = world.get_block(ix, iy, iz);
-                let ret = if place(world, player, ix, iy, iz, block).is_some() {
-                    let mut bot = block;
-                    bot.id = 79;
-                    place(world, player, ix, iy - 1, iz, bot)
-                } else {
-                    None
-                };
-
-                if ret.is_none() {
-                    world.set_block(ix, iy, iz, prev_block);
-                }
-
-                return ret;
-            }
-            _ => return place(world, player, ix, iy, iz, block),
-        }
     }
 
     let replace = world.get_block(ix, iy, iz); //Block that is being replaced

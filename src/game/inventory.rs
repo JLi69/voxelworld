@@ -28,8 +28,7 @@ fn item_to_string(item: Item) -> String {
     }
 }
 
-//Returns empty item if failed to parse
-fn string_to_item(s: &str) -> Item {
+fn string_to_item_err(s: &str) -> Result<Item, ()> {
     let tokens: Vec<String> = s.split(",").map(|s| s.to_string()).collect();
 
     if tokens.len() == 4 && tokens[0] == "block" {
@@ -38,15 +37,22 @@ fn string_to_item(s: &str) -> Item {
         let amt = tokens[3].parse::<u8>().unwrap_or(1);
 
         if amt == 0 || id == 0 {
-            return Item::EmptyItem;
+            return Ok(Item::EmptyItem);
         }
 
         let mut block = Block::new_id(id);
         block.geometry = geometry;
-        Item::BlockItem(block, amt)
+        Ok(Item::BlockItem(block, amt))
+    } else if tokens.len() == 1 && tokens[0] == "empty" {
+        Ok(Item::EmptyItem)
     } else {
-        Item::EmptyItem
+        Err(())
     }
+}
+
+//Returns empty item if failed to parse
+fn string_to_item(s: &str) -> Item {
+    string_to_item_err(s).unwrap_or(Item::EmptyItem)
 }
 
 //Returns (merged, leftover)
@@ -216,6 +222,11 @@ impl Hotbar {
     pub fn drop_selected(&mut self) {
         let leftover = remove_amt_item(self.items[self.selected], 1);
         self.items[self.selected] = leftover;
+    }
+
+    //Update selected item
+    pub fn update_selected(&mut self, item: Item) {
+        self.items[self.selected] = item;
     }
 }
 

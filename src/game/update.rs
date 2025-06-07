@@ -1,8 +1,8 @@
-use super::inventory::Item;
+use super::inventory::{remove_amt_item, Item};
 use super::player::PLAYER_HEIGHT;
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
-use crate::voxel::build::destroy_block_suffocating;
+use crate::voxel::build::{destroy_block_suffocating, interact_with_block};
 use crate::voxel::{self, destroy_block, place_block, World};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
@@ -211,34 +211,35 @@ impl Game {
         }
     }
 
-    //Place and destroy blocks
-    pub fn build(&mut self, chunktables: &mut ChunkTables, dt: f32) {
-        if self.player.is_dead() {
-            return;
-        }
-
-        //Destroy blocks
-        let pos = self.cam.position;
-        let dir = self.cam.forward();
-        if !self.get_mouse_state(MouseButtonLeft).is_held() {
-            self.destroy_cooldown = 0.0;
-        }
-
-        match self.game_mode() {
-            GameMode::Creative => self.destroy_block(chunktables),
-            GameMode::Survival => self.destroy_blocks_survival(chunktables, dt),
-        }
-
+    //Returns true if a block was placed, false otherwise
+    fn place_block(&mut self, chunktables: &mut ChunkTables) -> bool {
         //Place blocks
         if !self.get_mouse_state(MouseButtonRight).is_held() {
             self.build_cooldown = 0.0;
         }
+
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
 
         let stuck = self.player.get_head_stuck_block(&self.world);
         if self.get_mouse_state(MouseButtonRight).is_held()
             && self.build_cooldown <= 0.0
             && stuck.is_none()
         {
+            //Attempt to interact with a block
+            let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
+            if interacted.is_some() {
+                let update_mesh = self.world.update_single_block_light(interacted);
+                gfx::update_chunk_vaos(chunktables, interacted, &self.world);
+                for (x, y, z) in update_mesh {
+                    chunktables.update_table(&self.world, x, y, z);
+                }
+                self.hand_animation = 0.1;
+                self.build_cooldown = BUILD_COOLDOWN;
+                //No block placed
+                return false;
+            }
+
             let placed = place_block(pos, dir, &mut self.world, &self.player);
             let update_mesh = self.world.update_single_block_light(placed);
             gfx::update_chunk_vaos(chunktables, placed, &self.world);
@@ -248,10 +249,49 @@ impl Game {
             if placed.is_some() {
                 self.hand_animation = 0.1;
                 self.build_cooldown = BUILD_COOLDOWN;
+                return true;
             } else {
                 self.build_cooldown = 0.0;
+                return false;
             }
         }
+        false
+    }
+
+    fn use_hand_item(&mut self, chunktables: &mut ChunkTables) {
+        let selected = self.player.hotbar.get_selected();
+        match selected {
+            Item::BlockItem(_block, _amt) => {
+                let placed = self.place_block(chunktables);
+                //Use item in survival mode
+                if placed && self.game_mode() == GameMode::Survival {
+                    let item = remove_amt_item(selected, 1);
+                    self.player.hotbar.update_selected(item);
+                }
+            }
+            Item::EmptyItem => {
+                self.place_block(chunktables);
+            }
+        }
+    }
+
+    //Place and destroy blocks
+    pub fn build(&mut self, chunktables: &mut ChunkTables, dt: f32) {
+        if self.player.is_dead() {
+            return;
+        }
+
+        //Destroy blocks
+        if !self.get_mouse_state(MouseButtonLeft).is_held() {
+            self.destroy_cooldown = 0.0;
+        }
+
+        match self.game_mode() {
+            GameMode::Creative => self.destroy_block(chunktables),
+            GameMode::Survival => self.destroy_blocks_survival(chunktables, dt),
+        }
+
+        self.use_hand_item(chunktables);
     }
 
     //Toggle pause screens
