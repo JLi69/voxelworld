@@ -8,13 +8,43 @@ pub enum Item {
     EmptyItem,
 }
 
+//Converts item stack's amount to be 1
+pub fn reduce_amt(item: Item) -> Item {
+    match item {
+        Item::BlockItem(block, _) => Item::BlockItem(block, 1), 
+        Item::EmptyItem => Item::EmptyItem,
+    }
+}
+
+pub fn multiply_items(item: Item, factor: u8) -> Item {
+    match item {
+        Item::BlockItem(block, amt) => Item::BlockItem(block, amt * factor),
+        Item::EmptyItem => Item::EmptyItem,
+    }
+}
+
+pub fn items_match(item1: Item, item2: Item) -> bool {
+    match item1 {
+        Item::BlockItem(block1, _) => {
+            if let Item::BlockItem(block2, _) = item2 {
+                block1 == block2
+            } else {
+                false
+            }
+        }
+        Item::EmptyItem => {
+            matches!(item2, Item::EmptyItem)
+        }
+    }
+}
+
 impl Item {
     pub fn is_empty(&self) -> bool {
         matches!(self, Item::EmptyItem)
     }
 }
 
-fn item_to_string(item: Item) -> String {
+pub fn item_to_string(item: Item) -> String {
     match item {
         Item::BlockItem(block, amt) => {
             "block,".to_string()
@@ -28,7 +58,7 @@ fn item_to_string(item: Item) -> String {
     }
 }
 
-fn string_to_item_err(s: &str) -> Result<Item, ()> {
+pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
     let tokens: Vec<String> = s.split(",").map(|s| s.to_string()).collect();
 
     if tokens.len() == 4 && tokens[0] == "block" {
@@ -265,18 +295,22 @@ impl Inventory {
         }
     }
 
+    pub fn items_to_string(&self) -> String {
+        self
+            .items
+            .iter()
+            .map(|i| item_to_string(*i))
+            .collect::<Vec<String>>()
+            .join("|")
+    }
+
     pub fn to_entry(&self) -> impfile::Entry {
         let mut entry = impfile::Entry::new("inventory");
 
         entry.add_integer("width", self.width as i64);
         entry.add_integer("height", self.height as i64);
 
-        let items_str = self
-            .items
-            .iter()
-            .map(|i| item_to_string(*i))
-            .collect::<Vec<String>>()
-            .join("|");
+        let items_str = self.items_to_string();
         entry.add_string("items", &items_str);
 
         entry

@@ -1,0 +1,25 @@
+# A list of crafting recipes
+
+"plank" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "log";
+	"output" = "plank";
+	"amt" = "4";
+}
+
+"chest" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "plank|plank|plank|plank|empty|plank|plank|plank|plank";
+	"output" = "chest";
+	"amt" = "1";
+}
+
+"furnace" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "cobblestone|cobblestone|cobblestone|cobblestone|empty|cobblestone|cobblestone|cobblestone|cobblestone";
+	"output" = "furnace";
+	"amt" = "1";
+}

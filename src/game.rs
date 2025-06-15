@@ -1,6 +1,7 @@
 pub mod assets;
 pub mod block_menu;
 pub mod camera;
+pub mod crafting;
 pub mod gameloop;
 pub mod input;
 pub mod inventory;
@@ -30,6 +31,8 @@ pub use input::{release_cursor, EventHandler, KeyState};
 use physics::Hitbox;
 use player::Player;
 pub use std::collections::HashMap;
+
+use self::crafting::RecipeTable;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameMode {
@@ -133,6 +136,8 @@ pub struct Game {
     pub display_hud: bool,
     //Block info table
     block_info: BlockInfoTable,
+    //Crafting recipes
+    pub recipe_table: RecipeTable,
 }
 
 impl Game {
@@ -168,6 +173,7 @@ impl Game {
             display_block_menu: false,
             display_hud: true,
             block_info: BlockInfoTable::new(),
+            recipe_table: RecipeTable::new(),
         }
     }
 

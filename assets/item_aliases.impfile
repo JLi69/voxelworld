@@ -1,0 +1,26 @@
+# A list of item aliases:
+# "name" = "item"
+
+"aliases" {
+	# Block aliases	
+	"grass" = "block,1,0,1";
+	"stone" = "block,2,0,1";
+	"bedrock" = "block,3,0,1";
+	"dirt" = "block,4,0,1";
+	"bricks" = "block,5,0,1";
+	"plank" = "block,6,0,1";
+	"leaves" = "block,7,0,1";
+	"log" = "block,8,0,1";
+	"glass" = "block,9,0,1";
+	"stone_bricks" = "block,10,0,1";
+	"sand" = "block,11,0,1";
+	"water" = "block,12,0,1";
+	"lava" = "block,13,0,1";
+	"obsidian" = "block,14,0,1";
+	"magma_stone" = "block,15,0,1";
+	"cobblestone" = "block,16,0,1";
+	"moss" = "block,17,0,1";
+	# TODO: add remaining blocks
+	"chest" = "block,37,0,1";
+	"furnace" = "block,40,0,1";
+}

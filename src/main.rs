@@ -32,6 +32,7 @@ fn main() {
     gamestate.init();
     gamestate.load_config("cfg.impfile");
     gamestate.load_block_info("assets/block_info.impfile");
+    gamestate.recipe_table.load_recipes("assets/item_aliases.impfile", "assets/recipes.impfile");
     gamestate.load_assets();
     gamestate.init_mouse_pos(&window);
 
