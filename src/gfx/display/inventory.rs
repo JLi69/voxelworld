@@ -382,7 +382,10 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
 
     //Display output slot
     let mut output_slot = Inventory::empty_with_sz(1, 1);
-    let output = gamestate.recipe_table.get_output(&gamestate.player.crafting_grid).unwrap_or(Item::EmptyItem);
+    let output = gamestate
+        .recipe_table
+        .get_output(&gamestate.player.crafting_grid)
+        .unwrap_or(Item::EmptyItem);
     output_slot.set_item(0, 0, output);
     display_inventory_slots(
         gamestate,

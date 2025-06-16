@@ -11,7 +11,7 @@ pub enum Item {
 //Converts item stack's amount to be 1
 pub fn reduce_amt(item: Item) -> Item {
     match item {
-        Item::BlockItem(block, _) => Item::BlockItem(block, 1), 
+        Item::BlockItem(block, _) => Item::BlockItem(block, 1),
         Item::EmptyItem => Item::EmptyItem,
     }
 }
@@ -281,8 +281,8 @@ impl Inventory {
 
     pub fn empty_with_sz(w: usize, h: usize) -> Self {
         Self {
-            height: w,
-            width: h,
+            width: w,
+            height: h,
             items: vec![Item::EmptyItem; w * h],
         }
     }
@@ -296,8 +296,7 @@ impl Inventory {
     }
 
     pub fn items_to_string(&self) -> String {
-        self
-            .items
+        self.items
             .iter()
             .map(|i| item_to_string(*i))
             .collect::<Vec<String>>()

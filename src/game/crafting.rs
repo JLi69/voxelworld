@@ -1,8 +1,40 @@
+use super::inventory::{
+    items_match, multiply_items, reduce_amt, string_to_item_err, Inventory, Item,
+};
+use crate::{
+    impfile,
+    voxel::{Block, FULL_BLOCK, SLAB, STAIR},
+};
 use std::collections::HashMap;
-use crate::impfile;
-use super::inventory::{Item, Inventory, reduce_amt, string_to_item_err, items_match, multiply_items};
 
 pub type ItemAliases = HashMap<String, Item>;
+
+//Adds slab and stair items
+fn add_block_variants(aliases: &mut ItemAliases, name: &str, item: Item) {
+    if let Item::BlockItem(block, _) = item {
+        if block.shape() != FULL_BLOCK {
+            return;
+        }
+        if block.is_fluid() {
+            return;
+        }
+        if block.is_flat_item() {
+            return;
+        }
+        if block.non_voxel_geometry() {
+            return;
+        }
+        let mut slab = block;
+        slab.set_shape(SLAB);
+        let slab_name = format!("{name}_slab");
+        aliases.insert(slab_name, Item::BlockItem(slab, 1));
+
+        let mut stair = block;
+        stair.set_shape(STAIR);
+        let stair_name = format!("{name}_stair");
+        aliases.insert(stair_name, Item::BlockItem(stair, 1));
+    }
+}
 
 //Loads item aliases from impfile
 pub fn load_item_aliases(path: &str) -> ItemAliases {
@@ -14,7 +46,8 @@ pub fn load_item_aliases(path: &str) -> ItemAliases {
         for (name, val) in vars {
             if let Ok(item) = string_to_item_err(&val) {
                 let reduced = reduce_amt(item);
-                aliases.insert(name, reduced);
+                aliases.insert(name.clone(), reduced);
+                add_block_variants(&mut aliases, &name, item);
             }
         }
     }
@@ -25,18 +58,13 @@ pub fn load_item_aliases(path: &str) -> ItemAliases {
 pub struct Recipe {
     ingredients: Inventory,
     output: Item,
+    reflect: bool,
 }
 
 impl Recipe {
     pub fn from_entry(entry: &impfile::Entry, item_aliases: &ItemAliases) -> Result<Self, ()> {
-        let w = entry
-            .get_var("width")
-            .parse::<usize>()
-            .unwrap_or(1);
-        let h = entry
-            .get_var("height")
-            .parse::<usize>()
-            .unwrap_or(1);
+        let w = entry.get_var("width").parse::<usize>().unwrap_or(1);
+        let h = entry.get_var("height").parse::<usize>().unwrap_or(1);
         let parsed_ingredients: Vec<Item> = entry
             .get_var("items")
             .split("|")
@@ -67,8 +95,9 @@ impl Recipe {
             grid.set_item(ix, iy, *item);
         }
 
-        Ok(Self { 
-            ingredients: grid, 
+        Ok(Self {
+            ingredients: grid,
+            reflect: entry.get_var("reflect").parse::<bool>().unwrap_or(false),
             output: multiplied_output,
         })
     }
@@ -86,7 +115,29 @@ impl Recipe {
                 } else {
                     crafting.get_item(ix, iy).is_empty()
                 };
-                
+
+                if !matching {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    fn check_match_pos_reflected(&self, crafting: &Inventory, x: usize, y: usize) -> bool {
+        let w = self.ingredients.w();
+        let h = self.ingredients.h();
+        let xrange = x..(x + w);
+        let yrange = y..(y + h);
+        for ix in 0..crafting.w() {
+            for iy in 0..crafting.h() {
+                let matching = if xrange.contains(&ix) && yrange.contains(&iy) {
+                    let ingredient = self.ingredients.get_item(w - 1 - (ix - x), iy - y);
+                    items_match(ingredient, crafting.get_item(ix, iy))
+                } else {
+                    crafting.get_item(ix, iy).is_empty()
+                };
+
                 if !matching {
                     return false;
                 }
@@ -103,6 +154,9 @@ impl Recipe {
                 if self.check_match_pos(crafting, x, y) {
                     return true;
                 }
+                if self.reflect && self.check_match_pos_reflected(crafting, x, y) {
+                    return true;
+                }
             }
         }
         false
@@ -114,27 +168,81 @@ pub struct RecipeTable {
     recipes: Vec<Recipe>,
 }
 
+fn generate_slab_recipe(block: Block) -> Recipe {
+    let mut slab = block;
+    slab.set_shape(SLAB);
+    let mut grid = Inventory::empty_with_sz(3, 1);
+    grid.set_item(0, 0, Item::BlockItem(block, 1));
+    grid.set_item(1, 0, Item::BlockItem(block, 1));
+    grid.set_item(2, 0, Item::BlockItem(block, 1));
+    Recipe {
+        ingredients: grid,
+        output: Item::BlockItem(slab, 6),
+        reflect: false,
+    }
+}
+
+//Generates stair recipe
+fn generate_stair_recipe(block: Block) -> Recipe {
+    let mut stair = block;
+    stair.set_shape(STAIR);
+    stair.set_orientation(2);
+    let mut grid = Inventory::empty_with_sz(3, 3);
+    grid.set_item(0, 0, Item::BlockItem(block, 1));
+    grid.set_item(0, 1, Item::BlockItem(block, 1));
+    grid.set_item(1, 1, Item::BlockItem(block, 1));
+    grid.set_item(0, 2, Item::BlockItem(block, 1));
+    grid.set_item(1, 2, Item::BlockItem(block, 1));
+    grid.set_item(2, 2, Item::BlockItem(block, 1));
+    Recipe {
+        ingredients: grid,
+        output: Item::BlockItem(stair, 8),
+        reflect: true,
+    }
+}
+
 impl RecipeTable {
     pub fn new() -> Self {
-        Self {
-            recipes: vec![],
-        }
+        Self { recipes: vec![] }
     }
 
     pub fn load_recipes(&mut self, item_alias_path: &str, recipe_path: &str) {
         let item_aliases = load_item_aliases(item_alias_path);
-        let recipes: Vec<Recipe> = impfile::parse_file(recipe_path)
+        self.recipes = impfile::parse_file(recipe_path)
             .iter()
             .filter_map(|e| Recipe::from_entry(e, &item_aliases).ok())
             .collect();
-        self.recipes = recipes;
+        let mut auto_generated_recipes = vec![];
+        for item in item_aliases.values().copied() {
+            if let Item::BlockItem(block, _) = item {
+                if block.shape() != FULL_BLOCK {
+                    continue;
+                }
+                if block.is_fluid() {
+                    continue;
+                }
+                if block.is_flat_item() {
+                    continue;
+                }
+                if block.non_voxel_geometry() {
+                    continue;
+                }
+                //Generate slab recipes
+                let slab_recipe = generate_slab_recipe(block);
+                auto_generated_recipes.push(slab_recipe);
+                //Generate stair recipes
+                let stair_recipe = generate_stair_recipe(block);
+                auto_generated_recipes.push(stair_recipe);
+            }
+        }
+        self.recipes.extend(auto_generated_recipes);
     }
 
     //Returns option for an output
     pub fn get_output(&self, crafting: &Inventory) -> Option<Item> {
         for recipe in &self.recipes {
             if recipe.check_match(crafting) {
-                return Some(recipe.output)
+                return Some(recipe.output);
             }
         }
 

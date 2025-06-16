@@ -220,7 +220,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
             } else if let Some((ix, iy)) = selected_hotbar {
                 right_click_empty(&mut hotbar, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
-                left_click_empty(&mut gamestate.player.crafting_grid, ix, iy)
+                right_click_empty(&mut gamestate.player.crafting_grid, ix, iy)
             } else {
                 gamestate.player.mouse_item
             }

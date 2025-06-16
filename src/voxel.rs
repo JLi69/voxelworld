@@ -27,6 +27,11 @@ pub const CHUNK_LEN_U32: u32 = CHUNK_LEN as u32;
 pub const EMPTY_BLOCK: u8 = 0;
 pub const INDESTRUCTIBLE: u8 = 3;
 
+//Block shapes
+pub const FULL_BLOCK: u8 = 0;
+pub const SLAB: u8 = 1;
+pub const STAIR: u8 = 2;
+
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Axis {
     X,
@@ -109,8 +114,8 @@ impl Block {
     //Block shape
     //0 = full block
     //1 = slab
-    //2 = stair (5/8)
-    //3 = stair (6/8)
+    //2 = stair (6/8)
+    //3 = stair (5/8)
     //4 = stair (7/8)
     pub fn set_shape(&mut self, block_shape: u8) {
         self.geometry &= 0xff >> 5;
