@@ -1,4 +1,4 @@
-use super::inventory::MAX_STACK_SIZE;
+use super::inventory::{items_match, MAX_STACK_SIZE};
 use super::{
     inventory::{merge_stacks, remove_amt_item, Inventory, Item},
     Game, KeyState,
@@ -65,6 +65,44 @@ fn remove_inventory_items(inventory: &mut Inventory) {
     }
 }
 
+fn shift_craft(gamestate: &mut Game) {
+    let recipe_table = &gamestate.recipe_table;
+    let player = &mut gamestate.player;
+    let output = recipe_table
+        .get_output(&player.crafting_grid)
+        .unwrap_or(Item::EmptyItem);
+
+    if output.is_empty() {
+        return;
+    }
+
+    loop {
+        let current_item = recipe_table
+            .get_output(&player.crafting_grid)
+            .unwrap_or(Item::EmptyItem);
+
+        //We are crafting nothing, stop
+        if current_item.is_empty() {
+            return;
+        }
+
+        //We are crafting something new, stop and let the player decide
+        //whether they want to continue crafting
+        if !items_match(current_item, output) {
+            return;
+        }
+
+        //Craft and automatically add it to the inventory
+        remove_inventory_items(&mut player.crafting_grid);
+        let leftover = player.add_item(output);
+        //Inventory is full
+        if !leftover.is_empty() {
+            //TODO: drop items on the ground
+            return; //Stop
+        }
+    }
+}
+
 fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     let selected_inventory = get_selected_slot(
         &gamestate.player.inventory,
@@ -100,6 +138,10 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
             let item = hotbar.get_item(ix, iy);
             let leftover = gamestate.player.inventory.add_item(item);
             hotbar.set_item(ix, iy, leftover);
+        } else if selected_output.is_some() {
+            //Shift craft output
+            shift_craft(gamestate);
+            return;
         }
 
         //Update hotbar
