@@ -4,7 +4,7 @@ use super::{
     Game, KeyState,
 };
 use crate::{
-    gfx::display::inventory::{CRAFTING_GRID_POS, HOTBAR_POS, MAIN_INVENTORY_POS},
+    gfx::display::inventory::{CRAFTING_GRID_POS, HOTBAR_POS, MAIN_INVENTORY_POS, OUTPUT_POS},
     voxel::Block,
 };
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
@@ -56,6 +56,15 @@ fn left_click_item(inventory: &mut Inventory, item: Item, ix: usize, iy: usize) 
     }
 }
 
+fn remove_inventory_items(inventory: &mut Inventory) {
+    for ix in 0..inventory.w() {
+        for iy in 0..inventory.h() {
+            let new_item = remove_amt_item(inventory.get_item(ix, iy), 1);
+            inventory.set_item(ix, iy, new_item);
+        }
+    }
+}
+
 fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     let selected_inventory = get_selected_slot(
         &gamestate.player.inventory,
@@ -71,6 +80,13 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         30.0,
         mousepos,
     );
+    let mut output_slot = Inventory::empty_with_sz(1, 1);
+    let output_item = gamestate
+        .recipe_table
+        .get_output(&gamestate.player.crafting_grid)
+        .unwrap_or(Item::EmptyItem);
+    output_slot.set_item(0, 0, output_item);
+    let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, 30.0, mousepos);
 
     //Handle shift clicking (transfer items from hotbar to inventory and vice versa)
     if gamestate.get_key_state(Key::LeftShift).is_held()
@@ -102,6 +118,9 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 left_click_empty(&mut hotbar, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
                 left_click_empty(&mut gamestate.player.crafting_grid, ix, iy)
+            } else if let Some((ix, iy)) = selected_output {
+                remove_inventory_items(&mut gamestate.player.crafting_grid);
+                left_click_empty(&mut output_slot, ix, iy)
             } else {
                 gamestate.player.mouse_item
             }
@@ -113,6 +132,14 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 left_click_item(&mut hotbar, mouse_item, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
                 left_click_item(&mut gamestate.player.crafting_grid, mouse_item, ix, iy)
+            } else if selected_output.is_some() {
+                let (merged, leftover, _) = merge_stacks(mouse_item, output_item);
+                if leftover.is_empty() {
+                    remove_inventory_items(&mut gamestate.player.crafting_grid);
+                    merged
+                } else {
+                    mouse_item
+                }
             } else {
                 gamestate.player.mouse_item
             }
