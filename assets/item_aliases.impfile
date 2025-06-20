@@ -20,7 +20,73 @@
 	"magma_stone" = "block,15,0,1";
 	"cobblestone" = "block,16,0,1";
 	"moss" = "block,17,0,1";
-	# TODO: add remaining blocks
+
+	# Raw ore blocks
+	"coal_ore" = "block,18,0,1";
+	"iron_ore" = "block,19,0,1";
+	"gold_ore" = "block,20,0,1";
+	"diamond_ore" = "block,21,0,1";
+	"rainbow_ore" = "block,22,0,1";
+	"red_ore" = "block,23,0,1";
+
+	"bark" = "block,25,0,1";
+	
+	# Mineral blocks
+	"coal_block" = "block,26,0,1";
+	"iron_block" = "block,27,0,1";
+	"gold_block" = "block,28,0,1";
+	"diamond_block" = "block,29,0,1";
+	"rainbow_block" = "block,30,0,1";
+	"red_block" = "block,31,0,1";
+
+	"sand_bricks" = "block,32,0,1";
+	"magma_bricks" = "block,33,0,1";
+	"smooth_stone" = "block,34,0,1";
+	"smooth_magma" = "block,35,0,1";
+	"smooth_sand" = "block,36,0,1";	
+	
 	"chest" = "block,37,0,1";
 	"furnace" = "block,40,0,1";
+	"wet_farmland" = "block,43,0,1";
+	"dry_farmland" = "block,45,0,1";
+	"sapling" = "block,47,0,1";
+	"mushroom" = "block,48,0,1";
+	"tall_grass" = "block,49,0,1";
+	"red_flower" = "block,54,0,1";
+	"yellow_flower" = "block,55,0,1";
+	"blue_flower" = "block,56,0,1";
+
+	# Wool blocks
+	"white_wool" = "block,57,0,1";
+	"gray_wool" = "block,58,0,1";
+	"dark_gray_wool" = "block,59,0,1";
+	"block_wool" = "block,60,0,1";
+	"brown_wool" = "block,61,0,1";
+	"red_wool" = "block,62,0,1";
+	"orange_wool" = "block,63,0,1";
+	"yellow_wool" = "block,64,0,1";
+	"green_wool" = "block,65,0,1";
+	"blue_wool" = "block,66,0,1";
+	"purple_wool" = "block,67,0,1";
+	"pink_wool" = "block,68,0,1";
+
+	"sugarcane" = "block,69,0,1";
+	"torch" = "block,71,0,1";
+	"red_torch" = "block,72,0,1";
+	"green_torch" = "block,73,0,1";
+	"blue_torch" = "block,74,0,1";
+	"ladder" = "block,75,0,1";
+	"fence" = "block,76,0,1";
+	"seeds" = "block,77,0,1";
+	"gate" = "block,78,0,1";
+	"door" = "block,79,0,1";
+	"hay" = "block,82,0,1";
+	"ice" = "block,85,0,1";
+	"snow" = "block,86,0,1";
+	"snowy_grass" = "block,87,0,1";
+	"cactus" = "block,88,0,1";
+	"dead_bush" = "block,90,0,1";
+	"snowy_leaves" = "block,91,0,1";
+
+	"companion_cube" = "block,255,0,1";
 }

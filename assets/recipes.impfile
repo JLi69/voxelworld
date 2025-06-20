@@ -23,3 +23,59 @@
 	"output" = "furnace";
 	"amt" = "1";
 }
+
+"smooth_stone" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "stone|stone|stone|stone";
+	"output" = "smooth_stone";
+	"amt" = "4";
+}
+
+"stone_bricks" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "smooth_stone|smooth_stone|smooth_stone|smooth_stone";
+	"output" = "stone_bricks";
+	"amt" = "4";
+}
+
+"smooth_sand" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "sand|sand|sand|sand";
+	"output" = "smooth_sand";
+	"amt" = "4";
+}
+
+"sand_bricks" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "smooth_sand|smooth_sand|smooth_sand|smooth_sand";
+	"output" = "sand_bricks";
+	"amt" = "4";
+}
+
+"smooth_magma" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "magma_stone|magma_stone|magma_stone|magma_stone";
+	"output" = "smooth_magma";
+	"amt" = "4";
+}
+
+"magma_bricks" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "smooth_magma|smooth_magma|smooth_magma|smooth_magma";
+	"output" = "magma_bricks";
+	"amt" = "4";
+}
+
+"door" {
+	"width" = "2";
+	"height" = "3";
+	"items" = "plank|plank|plank|plank|plank|plank";
+	"output" = "door";
+	"amt" = "3";
+}
