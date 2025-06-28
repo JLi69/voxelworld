@@ -1,13 +1,5 @@
 # a list of block info
 
-# hardness - how 'hard' a block is to break
-# 0 = break with hand
-# 1 = need a wooden tool to break
-"hardness" {
-	"0" = "47,48,49,50,51,52,53,54,55,56,69,71,72,73,74,77,90,1,4,6,7,8,9,11,17,25,37,43,45,57,58,59,60,61,62,63,64,65,66,67,68,75,76,78,79,82,85,86,87,88,91";
-	"1" = "";
-}
-
 # How long it takes to break a block, in seconds
 "break_time" {
 	# Instant break (plants mostly)

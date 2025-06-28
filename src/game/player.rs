@@ -593,6 +593,9 @@ impl Player {
 
     //Returns leftover items
     pub fn add_item(&mut self, item: Item) -> Item {
+        if item.is_empty() {
+            return Item::EmptyItem;
+        }
         let hotbar_leftover = self.hotbar.merge_item(item);
         let inventory_leftover = self.inventory.merge_item(hotbar_leftover);
         let hotbar_leftover = self.hotbar.add_item(inventory_leftover);

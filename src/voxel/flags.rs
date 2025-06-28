@@ -29,7 +29,6 @@ unsafe fn set_door_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= CAN_USE;
 }
 
-//TODO: Have a better way of configuring block flags other than hardcoding
 //This function should be called at the start of the game
 pub fn init_voxel_flags() {
     unsafe {

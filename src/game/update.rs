@@ -2,8 +2,9 @@ use super::inventory::{remove_amt_item, Item};
 use super::player::PLAYER_HEIGHT;
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
+use crate::voxel::block_info::get_drop;
 use crate::voxel::build::{destroy_block_suffocating, interact_with_block};
-use crate::voxel::{self, destroy_block, place_block, World};
+use crate::voxel::{self, destroy_block, place_block, World, EMPTY_BLOCK};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
@@ -205,7 +206,13 @@ impl Game {
         let block = self.world.get_block(x, y, z);
         let info = self.get_block_info(block.id);
 
-        if self.player.break_timer >= info.break_time {
+        if self.player.break_timer > info.break_time && block.id != EMPTY_BLOCK {
+            let held = self.player.hotbar.get_selected();
+            let drop = get_drop(&self.block_info, held, block);
+            //TODO: implement dropped items
+            //If the player does not have enough space in their inventory,
+            //just drop the items on the ground
+            self.player.add_item(drop);
             self.destroy_block(chunktables);
             self.player.break_timer = 0.0;
         }
