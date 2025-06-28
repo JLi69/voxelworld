@@ -1,6 +1,9 @@
-use crate::{impfile::{self, Entry}, game::inventory::{Item, reduce_amt, item_to_string}};
-use std::collections::HashMap;
 use super::{Block, FULL_BLOCK};
+use crate::{
+    game::inventory::{item_to_string, reduce_amt, Item},
+    impfile::{self, Entry},
+};
+use std::collections::HashMap;
 
 pub type BlockInfoTable = HashMap<u8, BlockInfo>;
 
@@ -62,7 +65,7 @@ fn block_to_item(block: Block) -> Item {
         //Stairs
         2 => block_copy.set_orientation(2),
         3 | 4 => block_copy.set_orientation(4),
-        _ => block_copy.set_orientation(0), 
+        _ => block_copy.set_orientation(0),
     }
 
     Item::BlockItem(block_copy, 1)
@@ -162,11 +165,11 @@ pub fn get_drop(table: &BlockInfoTable, held_item: Item, block: Block) -> Item {
     //If it's a nonsolid block, then simply have it drop itself,
     //regardless of tool used
     if block.shape() != FULL_BLOCK {
-        return block_to_item(block); 
+        return block_to_item(block);
     }
 
     match table.get(&block.id) {
         Some(info) => info.get_drop_item(held_item, block),
-        _ => block_to_item(block), 
+        _ => block_to_item(block),
     }
 }

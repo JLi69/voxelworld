@@ -634,6 +634,12 @@ pub fn place_block(
         return None;
     }
 
+    //Do not place the block if the block we are replacing is the same as the
+    //block we are replacing
+    if replace.replaceable() && replace == block {
+        return None;
+    }
+
     //Do not place a block if we are not placing against a block
     if blockid == EMPTY_BLOCK {
         return None;

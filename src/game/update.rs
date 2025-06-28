@@ -140,7 +140,8 @@ impl Game {
         }
     }
 
-    fn destroy_block(&mut self, chunktables: &mut ChunkTables) {
+    //Returns true if a block has been destroyed
+    fn destroy_block(&mut self, chunktables: &mut ChunkTables) -> bool {
         let pos = self.cam.position;
         let dir = self.cam.forward();
 
@@ -157,8 +158,10 @@ impl Game {
             }
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
+                return true;
             } else {
                 self.destroy_cooldown = 0.0;
+                return false;
             }
         } else if self.get_mouse_state(MouseButtonLeft).is_held() && self.destroy_cooldown <= 0.0 {
             //If the player is trapped in a block, then they can only break
@@ -171,10 +174,13 @@ impl Game {
             }
             if destroyed.is_some() {
                 self.destroy_cooldown = BUILD_COOLDOWN;
+                return true;
             } else {
                 self.destroy_cooldown = 0.0;
+                return false;
             }
         }
+        false
     }
 
     fn destroy_blocks_survival(&mut self, chunktables: &mut ChunkTables, dt: f32) {
@@ -207,13 +213,14 @@ impl Game {
         let info = self.get_block_info(block.id);
 
         if self.player.break_timer > info.break_time && block.id != EMPTY_BLOCK {
-            let held = self.player.hotbar.get_selected();
-            let drop = get_drop(&self.block_info, held, block);
-            //TODO: implement dropped items
-            //If the player does not have enough space in their inventory,
-            //just drop the items on the ground
-            self.player.add_item(drop);
-            self.destroy_block(chunktables);
+            if self.destroy_block(chunktables) {
+                let held = self.player.hotbar.get_selected();
+                let drop = get_drop(&self.block_info, held, block);
+                //TODO: implement dropped items
+                //If the player does not have enough space in their inventory,
+                //just drop the items on the ground
+                self.player.add_item(drop);
+            }
             self.player.break_timer = 0.0;
         }
     }
@@ -294,7 +301,9 @@ impl Game {
         }
 
         match self.game_mode() {
-            GameMode::Creative => self.destroy_block(chunktables),
+            GameMode::Creative => {
+                self.destroy_block(chunktables);
+            }
             GameMode::Survival => self.destroy_blocks_survival(chunktables, dt),
         }
 
