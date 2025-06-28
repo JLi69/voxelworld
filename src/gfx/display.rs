@@ -38,8 +38,8 @@ pub fn display_selected_outline(gamestate: &Game) {
     } else {
         0.0
     };
-    let frame = if perc > 0.0 {
-        (perc * 4.0).floor() as u32 + 1
+    let frame = if perc > 0.05 {
+        (perc * 7.0).floor() as u32 + 1
     } else {
         0
     };

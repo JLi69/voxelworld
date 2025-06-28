@@ -6,7 +6,7 @@
 
 uniform sampler2D breakingtexture;
 uniform uint frame;
-const uint FRAMES = 5u;
+const uint FRAMES = 8u;
 const float TEX_FRACT = 1.0 / float(FRAMES);
 
 in vec3 fragpos;
@@ -43,6 +43,6 @@ void main() {
 	vec2 tc = getTc() * vec2(TEX_FRACT, 1.0) + vec2(TEX_FRACT * float(frame), 0.0);
 	color += texture(breakingtexture, tc);
 
-	if(color.a < 0.5)
+	if(color.a < 0.1)
 		discard;
 }
