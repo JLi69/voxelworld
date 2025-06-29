@@ -1,6 +1,6 @@
 use super::coordinates::f32coord_to_int;
 use super::is_valid::get_check_valid_fn;
-use super::{Axis, INDESTRUCTIBLE};
+use super::{Axis, FULL_BLOCK, INDESTRUCTIBLE};
 use super::{Block, World, EMPTY_BLOCK};
 use crate::game::inventory::Item;
 use crate::game::physics::{composite_to_hitbox, ray_intersects_box, CompositeHitbox, Hitbox};
@@ -614,7 +614,7 @@ pub fn place_block(
     set_non_voxel_orientation(dir, axis, &mut block);
     set_stair_rotation(dir, &mut block);
 
-    if block.orientation() % 3 == 0 && block.rotate_y_only() {
+    if block.orientation() % 3 == 0 && block.rotate_y_only() && block.shape() == FULL_BLOCK {
         return None;
     }
 

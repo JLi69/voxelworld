@@ -172,7 +172,14 @@ fn sapling_replaceable(block: Block) -> bool {
         || block.id == 91
 }
 
-fn sapling_place_leaves(world: &World, to_update: &mut UpdateList, x: i32, y: i32, z: i32, leaf_id: u8) {
+fn sapling_place_leaves(
+    world: &World,
+    to_update: &mut UpdateList,
+    x: i32,
+    y: i32,
+    z: i32,
+    leaf_id: u8,
+) {
     if world.get_block(x, y, z).id != EMPTY_BLOCK {
         return;
     }
