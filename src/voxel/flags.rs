@@ -115,6 +115,8 @@ pub fn init_voxel_flags() {
         set_plant_flags(90);
         //Snowy leaves
         VOXEL_FLAGS[91] |= TRANSPARENT_FLAG;
+        //Snowy sapling
+        set_plant_flags(92);
     }
 }
 

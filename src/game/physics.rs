@@ -198,7 +198,7 @@ impl Hitbox {
                 bbox
             }
             //Fully grown wheat, sapling, grass, dead bush
-            47 | 49 | 53 | 90 => {
+            47 | 49 | 53 | 90 | 92 => {
                 let sz = 15.0 / 16.0;
                 let mut bbox = Self::from_block_orientation(x, y, z, 1.0 - sz, block);
                 bbox.dimensions.x *= 0.8;

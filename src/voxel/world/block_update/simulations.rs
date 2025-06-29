@@ -177,6 +177,30 @@ fn simulate_sapling_growth(iterations: i32) -> f32 {
     total / iterations as f32
 }
 
+fn simulate_snow_sapling_growth(iterations: i32) -> f32 {
+    eprintln!("SNOW SAPLING GROWTH SIMULATION");
+    let mut total = 0.0f32;
+    for i in 0..iterations {
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
+        let mut total_time = 0.0;
+        world.set_block(0, 2, 0, Block::new_id(92));
+        world.set_block(0, 1, 0, Block::new_id(1));
+        let mut done = false;
+        while !done {
+            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
+            total_time += RANDOM_UPDATE_INTERVAL;
+            done = world.get_block(0, 2, 0).id == 8;
+        }
+        let minutes = total_time / 60.0;
+        total += minutes;
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow sapling",
+            i + 1
+        );
+    }
+    total / iterations as f32
+}
+
 pub fn run_test_simulations(args: &[String]) {
     if !args.contains(&"--run-test-sims".to_string()) {
         return;
@@ -187,6 +211,7 @@ pub fn run_test_simulations(args: &[String]) {
     let average_wheat_time = simulate_wheat_growth(100);
     let average_slow_wheat_time = simulate_slow_wheat_growth(100);
     let average_cacti_time = simulate_cactus_growth(100);
+    let average_snow_sapling_time = simulate_snow_sapling_growth(100);
     //Output results
     eprintln!();
     eprintln!("Simulation Results");
@@ -205,6 +230,7 @@ pub fn run_test_simulations(args: &[String]) {
         average_sapling_time
     );
     eprintln!("Average time to grow all cacti: {} min", average_cacti_time);
+    eprintln!("Average time to grow all snow saplings: {} min", average_snow_sapling_time);
     //Exit program once all simulations are completed
     std::process::exit(0);
 }

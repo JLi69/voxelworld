@@ -169,46 +169,47 @@ fn sapling_replaceable(block: Block) -> bool {
     block.id == EMPTY_BLOCK
         || (block.transparent() && !block.is_fluid() && block.id != 9)
         || block.id == 8
+        || block.id == 91
 }
 
-fn sapling_place_leaves(world: &World, to_update: &mut UpdateList, x: i32, y: i32, z: i32) {
+fn sapling_place_leaves(world: &World, to_update: &mut UpdateList, x: i32, y: i32, z: i32, leaf_id: u8) {
     if world.get_block(x, y, z).id != EMPTY_BLOCK {
         return;
     }
-    to_update.insert((x, y, z), Block::new_id(7));
+    to_update.insert((x, y, z), Block::new_id(leaf_id));
 }
 
 fn grow_leaves(
     world: &World,
     to_update: &mut UpdateList,
     starty: i32,
-    x: i32,
-    y: i32,
-    z: i32,
+    xyz: (i32, i32, i32),
     height: i32,
+    leaf_id: u8,
 ) {
+    let (x, y, z) = xyz;
     if y == starty + height {
-        sapling_place_leaves(world, to_update, x, y, z);
-        sapling_place_leaves(world, to_update, x - 1, y, z);
-        sapling_place_leaves(world, to_update, x + 1, y, z);
-        sapling_place_leaves(world, to_update, x, y, z - 1);
-        sapling_place_leaves(world, to_update, x, y, z + 1);
+        sapling_place_leaves(world, to_update, x, y, z, leaf_id);
+        sapling_place_leaves(world, to_update, x - 1, y, z, leaf_id);
+        sapling_place_leaves(world, to_update, x + 1, y, z, leaf_id);
+        sapling_place_leaves(world, to_update, x, y, z - 1, leaf_id);
+        sapling_place_leaves(world, to_update, x, y, z + 1, leaf_id);
     } else if y == starty + height - 1 {
         for ix in (x - 1)..=(x + 1) {
             for iz in (z - 1)..=(z + 1) {
-                sapling_place_leaves(world, to_update, ix, y, iz);
+                sapling_place_leaves(world, to_update, ix, y, iz, leaf_id);
             }
         }
     } else if y >= starty + height - 3 {
         for ix in (x - 2)..=(x + 2) {
             for iz in (z - 2)..=(z + 2) {
-                sapling_place_leaves(world, to_update, ix, y, iz);
+                sapling_place_leaves(world, to_update, ix, y, iz, leaf_id);
             }
         }
     }
 }
 
-fn grow_sapling(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
+fn grow_sapling(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList, leaf_id: u8) {
     if fastrand::i32(0..12) != 0 {
         return;
     }
@@ -230,7 +231,7 @@ fn grow_sapling(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
 
     let height = fastrand::i32(4..=6);
     for vy in y..(y + height + 1) {
-        grow_leaves(world, to_update, y, x, vy, z, height);
+        grow_leaves(world, to_update, y, (x, vy, z), height, leaf_id);
     }
     for vy in y..(y + height) {
         to_update.insert((x, vy, z), Block::new_id(8));
@@ -301,7 +302,7 @@ impl World {
                     //Dry farmland
                     45 => update_dry_farmland(self, x, y, z, to_update),
                     //Sapling
-                    47 => grow_sapling(self, x, y, z, to_update),
+                    47 => grow_sapling(self, x, y, z, to_update, 7),
                     //Growing wheat
                     50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
                     //Sugar cane
@@ -310,6 +311,8 @@ impl World {
                     88 => grow_plant(self, x, y, z, 20, to_update),
                     //Seeds
                     77 => grow_wheat(self, x, y, z, 50 - 1, to_update),
+                    //Snow sapling
+                    92 => grow_sapling(self, x, y, z, to_update, 91),
                     _ => {}
                 }
             });

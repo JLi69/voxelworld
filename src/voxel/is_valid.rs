@@ -32,11 +32,13 @@ fn check_door_valid(world: &World, x: i32, y: i32, z: i32) -> bool {
 type ValidBlockFn = fn(&World, i32, i32, i32) -> bool;
 
 //Returns a function that checks if a block in a position (x, y, z) is valid
-//If None is returned, then we assume that this block
+//If None is returned, then we assume that this block can be placed anywhere
 pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
     match block {
         //Sapling, Grass, and Flowers
         47 | 49 | 54..=56 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17])),
+        //Snowy sapling can be placed on snowy grass and snow
+        92 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17, 86, 87])),
         //Mushroom
         48 => Some(|world, x, y, z| {
             let below = world.get_block(x, y - 1, z);
