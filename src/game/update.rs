@@ -4,7 +4,8 @@ use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
 use crate::voxel::build::{destroy_block_suffocating, interact_with_block};
-use crate::voxel::{self, destroy_block, place_block, World, EMPTY_BLOCK};
+use crate::voxel::world::block_update::break_ice;
+use crate::voxel::{self, destroy_block, place_block, World, EMPTY_BLOCK, FULL_BLOCK, Block};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
@@ -140,10 +141,34 @@ impl Game {
         }
     }
 
+    //Only run in survival mode
+    fn handle_block_destruction(
+        &mut self,
+        destroyed: Option<(i32, i32, i32)>,
+        block: Block,
+    ) {
+        if self.game_mode() != GameMode::Survival {
+            return;
+        }
+
+        if let Some((x, y, z)) = destroyed {
+            let held_item = self.player.hotbar.get_selected();
+            let block_drop = get_drop(&self.block_info, held_item, block);
+            //If it's ice, then set it to be water if there is a non-empty
+            //block beneath it, this only applies if nothing is dropped from the ice
+            if block.id == 85 && block.shape() == FULL_BLOCK && block_drop.is_empty() {
+                break_ice(&mut self.world, x, y, z);
+            }
+        }
+    }
+
     //Returns true if a block has been destroyed
     fn destroy_block(&mut self, chunktables: &mut ChunkTables) -> bool {
         let pos = self.cam.position;
         let dir = self.cam.forward();
+
+        let (x, y, z) = voxel::build::get_selected(pos, dir, &self.world);
+        let block = self.world.get_block(x, y, z);
 
         let stuck = self.player.get_head_stuck_block(&self.world);
         if self.get_mouse_state(MouseButtonLeft).is_held()
@@ -151,6 +176,7 @@ impl Game {
             && stuck.is_none()
         {
             let destroyed = destroy_block(pos, dir, &mut self.world);
+            self.handle_block_destruction(destroyed, block);
             let update_mesh = self.world.update_single_block_light(destroyed);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
             for (x, y, z) in update_mesh {
@@ -213,7 +239,7 @@ impl Game {
         let info = self.get_block_info(block.id);
 
         if self.player.break_timer > info.break_time && block.id != EMPTY_BLOCK {
-            if self.destroy_block(chunktables) {
+            if self.destroy_block(chunktables) { 
                 let held = self.player.hotbar.get_selected();
                 let drop = get_drop(&self.block_info, held, block);
                 //TODO: implement dropped items

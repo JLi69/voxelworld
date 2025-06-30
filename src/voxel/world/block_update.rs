@@ -291,6 +291,19 @@ fn update_fence(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     to_update.insert((x, y, z), block);
 }
 
+//Meant to be called when player breaks ice
+//Checks if the block below is non-empty, if that's the case, then spawn water
+//where the ice was broken
+pub fn break_ice(world: &mut World, x: i32, y: i32, z: i32) {
+    let below = world.get_block(x, y - 1, z);
+    //Ignore if below is an empty block
+    if below.id == EMPTY_BLOCK {
+        return;
+    }
+    let water = Block::new_fluid(12);
+    world.set_block(x, y, z, water);
+}
+
 impl World {
     //Returns true if at least one block updated, otherwise false
     fn update_chunk(&mut self, chunkx: i32, chunky: i32, chunkz: i32, to_update: &mut UpdateList) {
