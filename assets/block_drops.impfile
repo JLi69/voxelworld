@@ -1,0 +1,167 @@
+# This file contains a list of drops are blocks
+# Syntax:
+#	"block_id" {
+# 	   "held_item" = "item/weight|item/weight|..."
+# 	   ...
+# 	}
+# For example, if you wanted to change grass to drop dirt when broken, do
+# the following:
+#	# You can also just simply put the block id of `1`, which is grass
+#	# Some blocks have an item alias that will be translated to the appropriate block
+#	"grass" {
+#		"empty" = "dirt/1.0";
+# 	}
+# If a held item does not do anything special for collecting a block, the drops
+# will be defaulted to if the player was just holding nothing
+# Another example for having random drops:
+#	"leaves" {
+#		"empty" = "sapling/1.0|empty/9.0";
+#	}
+# The weights do not need to add to 1.0, in this case, leaves should drop
+# saplings about 1/10 of the time.
+
+"grass" {
+	"empty" = "dirt/1.0";
+}
+
+"stone" {
+	"empty" = "empty/1.0";
+}
+
+"bricks" {
+	"empty" = "empty/1.0";
+}
+
+"leaves" {
+	"empty" = "sapling/1.0|empty/9.0";
+}
+
+"glass" {
+	"empty" = "empty/1.0";
+}
+
+"stone_bricks" {
+	"empty" = "empty/1.0";
+}
+
+"obsidian" {
+	"empty" = "empty/1.0";
+}
+
+"magma_stone" {
+	"empty" = "empty/1.0";
+}
+
+"cobblestone" {
+	"empty" = "empty/1.0";
+}
+
+"coal_ore" {
+	"empty" = "empty/1.0";
+}
+
+"iron_ore" {
+	"empty" = "empty/1.0";
+}
+
+"gold_ore" {
+	"empty" = "empty/1.0";
+}
+
+"diamond_ore" {
+	"empty" = "empty/1.0";
+}
+
+"rainbow_ore" {
+	"empty" = "empty/1.0";
+}
+
+"red_ore" {
+	"empty" = "empty/1.0";
+}
+
+"coal_block" {
+	"empty" = "empty/1.0";
+}
+
+"iron_block" {
+	"empty" = "empty/1.0";
+}
+
+"gold_block" {
+	"empty" = "empty/1.0";
+}
+
+"diamond_block" {
+	"empty" = "empty/1.0";
+}
+
+"rainbow_block" {
+	"empty" = "empty/1.0";
+}
+
+"red_block" {
+	"empty" = "empty/1.0";
+}
+
+"sand_bricks" {
+	"empty" = "empty/1.0";
+}
+
+"magma_bricks" {
+	"empty" = "empty/1.0";
+}
+
+"smooth_stone" {
+	"empty" = "empty/1.0";
+}
+
+"smooth_magma" {
+	"empty" = "empty/1.0";
+}
+
+"smooth_sand" {
+	"empty" = "empty/1.0";
+}
+
+"wet_farmland" {
+	"empty" = "dirt/1.0";
+}
+
+"dry_farmland" {
+	"empty" = "dirt/1.0";
+}
+
+"tall_grass" {
+	"empty" = "seeds/1.0|empty/7.0";
+}
+
+# Wheat that is not fully grown
+"50" {
+	"empty" = "seeds/1.0";
+}
+
+"51" {
+	"empty" = "seeds/1.0";
+}
+
+"52" {
+	"empty" = "seeds/1.0";
+}
+
+# Top part of a door
+"81" {
+	"empty" = "door/1.0";
+}
+
+"ice" {
+	"empty" = "empty/1.0";
+}
+
+"snowy_grass" {
+	"empty" = "dirt/1.0";
+}
+
+"snowy_leaves" {
+	"empty" = "snowy_sapling/1.0|empty/9.0";
+}

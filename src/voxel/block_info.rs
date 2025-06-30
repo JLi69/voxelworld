@@ -1,6 +1,9 @@
-use super::{Block, FULL_BLOCK};
+use super::{Block, EMPTY_BLOCK, FULL_BLOCK};
 use crate::{
-    game::inventory::{item_to_string, reduce_amt, Item},
+    game::{
+        crafting::{load_item_aliases, ItemAliases},
+        inventory::{item_to_string, reduce_amt, string_to_item_err, Item},
+    },
     impfile::{self, Entry},
 };
 use std::collections::HashMap;
@@ -145,6 +148,98 @@ fn update_break_time(entry: &Entry, table: &mut BlockInfoTable) {
     }
 }
 
+fn parse_item_str_aliased(s: &str, item_aliases: &ItemAliases) -> Result<Item, ()> {
+    //Prioritize item alias
+    if let Some(item) = item_aliases.get(s) {
+        return Ok(*item);
+    }
+    string_to_item_err(s)
+}
+
+fn parse_block_id(s: &str, item_aliases: &ItemAliases) -> Result<u8, ()> {
+    if let Ok(item) = parse_item_str_aliased(s, item_aliases) {
+        return match item {
+            Item::BlockItem(block, _) => Ok(block.id),
+            _ => Err(()),
+        };
+    }
+    s.parse::<u8>().map_err(|_| ())
+}
+
+fn parse_weight(s: &str, item_aliases: &ItemAliases) -> Result<(Item, f32), ()> {
+    let data: Vec<String> = s.split("/").map(|s| s.to_string()).collect();
+    //data must only have 2 components (item and weight)
+    if data.len() != 2 {
+        return Err(());
+    }
+    let block_drop = parse_item_str_aliased(&data[0], item_aliases)?;
+    let weight = data[1].parse::<f32>().map_err(|_| ())?;
+    Ok((block_drop, weight))
+}
+
+fn parse_drops(
+    held_str: &str,
+    drop_list: &str,
+    item_aliases: &ItemAliases,
+) -> Result<(Vec<String>, WeightTable), ()> {
+    let held: Vec<String> = held_str
+        .split("|")
+        .map(|s| parse_item_str_aliased(s, item_aliases))
+        .filter_map(|parsed| parsed.ok())
+        .map(item_to_string)
+        .collect();
+    let weight_table: WeightTable = drop_list
+        .split("|")
+        .map(|s| parse_weight(s, item_aliases))
+        .filter_map(|weight| weight.ok())
+        .map(|(i, w)| BlockDrop { item: i, weight: w })
+        .collect();
+    Ok((held, weight_table))
+}
+
+fn update_block_drops(entry: &Entry, table: &mut BlockInfoTable) {
+    let path = entry.get_var("path");
+    if path.is_empty() {
+        return;
+    }
+    let block_drops = impfile::parse_file(&path);
+    let alias_path = entry.get_var("alias_path");
+    if alias_path.is_empty() {
+        return;
+    }
+    let item_aliases = load_item_aliases(&alias_path);
+    for e in block_drops {
+        let block_id = parse_block_id(&e.get_name(), &item_aliases).unwrap_or(EMPTY_BLOCK);
+        //If it wasn't parsed, ignore it
+        //This should be the case if it is an empty block
+        if block_id == EMPTY_BLOCK {
+            continue;
+        }
+        //Parse the drops based on the item the player is holding
+        let drops: Vec<(Vec<String>, WeightTable)> = e
+            .get_all_vars()
+            .iter()
+            .map(|(name, val)| parse_drops(name, val, &item_aliases))
+            .filter_map(|drops| drops.ok())
+            .collect();
+        for (held_items, weights) in drops {
+            update_info_list(table, &[block_id], |info| {
+                if let Some(block_drops) = &mut info.block_drops {
+                    for held in &held_items {
+                        block_drops.insert(held.clone(), weights.clone());
+                    }
+                } else {
+                    let mut block_drops = HashMap::new();
+                    for held in &held_items {
+                        block_drops.insert(held.clone(), weights.clone());
+                    }
+                    info.block_drops = Some(block_drops);
+                }
+            });
+        }
+    }
+}
+
 //id -> block info
 pub fn load_block_info(path: &str) -> BlockInfoTable {
     let mut table = BlockInfoTable::new();
@@ -154,6 +249,7 @@ pub fn load_block_info(path: &str) -> BlockInfoTable {
     for e in entries {
         match e.get_name().as_str() {
             "break_time" => update_break_time(&e, &mut table),
+            "drops" => update_block_drops(&e, &mut table),
             _ => {}
         }
     }

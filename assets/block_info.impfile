@@ -21,3 +21,8 @@
 	# Obsidian
 	"60.0" = "14";
 }
+
+"drops" {
+	"path" = "assets/block_drops.impfile";
+	"alias_path" = "assets/item_aliases.impfile";
+}
