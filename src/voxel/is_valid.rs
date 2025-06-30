@@ -36,7 +36,7 @@ type ValidBlockFn = fn(&World, i32, i32, i32) -> bool;
 pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
     match block {
         //Sapling, Grass, and Flowers
-        47 | 49 | 54..=56 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17])), 
+        47 | 49 | 54..=56 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17])),
         //Mushroom
         48 => Some(|world, x, y, z| {
             let below = world.get_block(x, y - 1, z);

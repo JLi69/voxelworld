@@ -5,7 +5,7 @@ use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
 use crate::voxel::build::{destroy_block_suffocating, interact_with_block};
 use crate::voxel::world::block_update::break_ice;
-use crate::voxel::{self, destroy_block, place_block, World, EMPTY_BLOCK, FULL_BLOCK, Block};
+use crate::voxel::{self, destroy_block, place_block, Block, World, EMPTY_BLOCK, FULL_BLOCK};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
@@ -142,11 +142,7 @@ impl Game {
     }
 
     //Only run in survival mode
-    fn handle_block_destruction(
-        &mut self,
-        destroyed: Option<(i32, i32, i32)>,
-        block: Block,
-    ) {
+    fn handle_block_destruction(&mut self, destroyed: Option<(i32, i32, i32)>, block: Block) {
         if self.game_mode() != GameMode::Survival {
             return;
         }
@@ -239,7 +235,7 @@ impl Game {
         let info = self.get_block_info(block.id);
 
         if self.player.break_timer > info.break_time && block.id != EMPTY_BLOCK {
-            if self.destroy_block(chunktables) { 
+            if self.destroy_block(chunktables) {
                 let held = self.player.hotbar.get_selected();
                 let drop = get_drop(&self.block_info, held, block);
                 //TODO: implement dropped items
