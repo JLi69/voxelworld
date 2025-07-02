@@ -200,7 +200,7 @@ impl Game {
 //Capture the mouse cursor if the game is paused,
 //Release it if the game is unpaused
 pub fn release_cursor(gamestate: &Game, window: &mut PWindow) {
-    if gamestate.paused || gamestate.player.is_dead() {
+    if gamestate.display_inventory || gamestate.paused || gamestate.player.is_dead() {
         window.set_cursor_mode(CursorMode::Normal);
     } else {
         window.set_cursor_mode(CursorMode::Disabled);

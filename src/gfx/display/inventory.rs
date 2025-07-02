@@ -436,15 +436,11 @@ pub fn display_mouse_item(gamestate: &Game, mousepos: (f32, f32), w: i32, h: i32
         gl::Clear(gl::DEPTH_BUFFER_BIT);
     }
 
-    match gamestate.player.mouse_item {
-        //Early return with empty item
-        Item::EmptyItem => return,
-        _ => {}
+    if !gamestate.player.mouse_item.is_empty() {
+        let mut mouse_item = Inventory::empty_with_sz(1, 1);
+        mouse_item.set_item(0, 0, gamestate.player.mouse_item);
+        display_inventory_items(gamestate, &mouse_item, mousepos, 30.0, w, h);
     }
-
-    let mut mouse_item = Inventory::empty_with_sz(1, 1);
-    mouse_item.set_item(0, 0, gamestate.player.mouse_item);
-    display_inventory_items(gamestate, &mouse_item, mousepos, 30.0, w, h);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);

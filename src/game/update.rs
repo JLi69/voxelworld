@@ -61,7 +61,7 @@ impl Game {
     }
 
     pub fn rotate_player(&mut self, sensitivity: f32) {
-        if self.player.is_dead() {
+        if self.player.is_dead() || self.display_inventory {
             return;
         }
 
@@ -80,8 +80,18 @@ impl Game {
         self.player.rotation = self.cam.yaw;
         //Update player
         self.player.update(dt, &self.world);
+        match self.game_mode() {
+            GameMode::Survival => self.player.update_survival(dt, &self.world),
+            GameMode::Creative => self.player.update_creative(dt),
+        }
         //Set position of camera
         self.cam.position = self.player.position + self.player.cam_offset();
+
+        if self.display_inventory {
+            self.player.speed = 0.0;
+            return;
+        }
+
         //Move player
         let lshift = self.get_key_state(Key::LeftShift);
         let rshift = self.get_key_state(Key::RightShift);
@@ -122,11 +132,6 @@ impl Game {
             self.player.hotbar.set_selected(Item::EmptyItem);
         } else if q == KeyState::JustPressed {
             self.player.hotbar.drop_selected();
-        }
-
-        match self.game_mode() {
-            GameMode::Survival => self.player.update_survival(dt, &self.world),
-            GameMode::Creative => self.player.update_creative(dt),
         }
     }
 
@@ -313,7 +318,7 @@ impl Game {
 
     //Place and destroy blocks
     pub fn build(&mut self, chunktables: &mut ChunkTables, dt: f32) {
-        if self.player.is_dead() {
+        if self.player.is_dead() || self.display_inventory {
             return;
         }
 
@@ -356,7 +361,7 @@ impl Game {
         if self.get_key_state(Key::E) == KeyState::JustPressed {
             self.display_inventory = !self.display_inventory;
             self.display_block_menu = false;
-            self.paused = self.display_inventory;
+            self.paused = false;
         }
 
         //Toggle the block menu with Tab (Note: the block menu pauses the game)
@@ -417,7 +422,7 @@ impl Game {
 
     //Update hand animation
     pub fn update_hand_animation(&mut self, dt: f32) {
-        if self.player.is_dead() {
+        if self.player.is_dead() || self.display_inventory {
             return;
         }
 

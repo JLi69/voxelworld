@@ -154,7 +154,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
                 //Quit to the main menu
                 PauseMenuAction::QuitToMainMenu => {
                     quit = true;
-                    window.set_cursor_mode(glfw::CursorMode::Normal);
                 }
                 //Respawn
                 PauseMenuAction::Respawn => {
