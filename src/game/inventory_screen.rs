@@ -138,6 +138,14 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
             let item = hotbar.get_item(ix, iy);
             let leftover = gamestate.player.inventory.add_item(item);
             hotbar.set_item(ix, iy, leftover);
+        } else if let Some((ix, iy)) = selected_crafting {
+            let item = gamestate.player.crafting_grid.get_item(ix, iy);
+            let leftover = gamestate.player.add_item(item);
+            gamestate.player.crafting_grid.set_item(ix, iy, leftover);
+            //Update hotbar
+            for i in 0..9 {
+                hotbar.set_item(i, 0, gamestate.player.hotbar.items[i]);
+            }
         } else if selected_output.is_some() {
             //Shift craft output
             shift_craft(gamestate);
@@ -216,6 +224,13 @@ fn right_click_empty(inventory: &mut Inventory, ix: usize, iy: usize) -> Item {
             inventory.set_item(ix, iy, item);
             Item::BlockItem(block, split)
         }
+        Item::SpriteItem(id, amt) => {
+            //Halve the stack
+            let split = split_stack(amt);
+            let item = remove_amt_item(inventory.get_item(ix, iy), split);
+            inventory.set_item(ix, iy, item);
+            Item::SpriteItem(id, split)
+        }
     }
 }
 
@@ -242,9 +257,55 @@ fn right_click_block(
                     Item::BlockItem(block, amt)
                 }
             } else {
+                //Swap items
+                let current = inventory.get_item(ix, iy);
+                let new = Item::BlockItem(block, amt);
+                inventory.set_item(ix, iy, new);
                 //Do nothing if it's a different block
-                Item::BlockItem(block, amt)
+                current
             }
+        }
+        _ => {
+            //Swap items
+            let current = inventory.get_item(ix, iy);
+            let new = Item::BlockItem(block, amt);
+            inventory.set_item(ix, iy, new);
+            current
+        }
+    }
+}
+
+fn right_click_sprite(inventory: &mut Inventory, id: u16, amt: u8, ix: usize, iy: usize) -> Item {
+    match inventory.get_item(ix, iy) {
+        Item::EmptyItem => {
+            //Drop one item
+            inventory.set_item(ix, iy, Item::SpriteItem(id, 1));
+            remove_amt_item(Item::SpriteItem(id, amt), 1)
+        }
+        Item::SpriteItem(slot_id, slot_amt) => {
+            if slot_id == id {
+                //Drop one item on top
+                if slot_amt < MAX_STACK_SIZE {
+                    inventory.set_item(ix, iy, Item::SpriteItem(id, slot_amt + 1));
+                    remove_amt_item(Item::SpriteItem(id, amt), 1)
+                } else {
+                    Item::SpriteItem(id, amt)
+                }
+            } else {
+                //Swap items
+                let current = inventory.get_item(ix, iy);
+                let new = Item::SpriteItem(id, amt);
+                inventory.set_item(ix, iy, new);
+                //Do nothing if it's a different block
+                current
+            }
+        }
+        _ => {
+            //Swap items
+            let current = inventory.get_item(ix, iy);
+            let new = Item::SpriteItem(id, amt);
+            inventory.set_item(ix, iy, new);
+            current
         }
     }
 }
@@ -301,6 +362,17 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 right_click_block(&mut hotbar, block, amt, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
                 right_click_block(&mut gamestate.player.crafting_grid, block, amt, ix, iy)
+            } else {
+                gamestate.player.mouse_item
+            }
+        }
+        Item::SpriteItem(id, amt) => {
+            if let Some((ix, iy)) = selected_inventory {
+                right_click_sprite(&mut gamestate.player.inventory, id, amt, ix, iy)
+            } else if let Some((ix, iy)) = selected_hotbar {
+                right_click_sprite(&mut hotbar, id, amt, ix, iy)
+            } else if let Some((ix, iy)) = selected_crafting {
+                right_click_sprite(&mut gamestate.player.crafting_grid, id, amt, ix, iy)
             } else {
                 gamestate.player.mouse_item
             }

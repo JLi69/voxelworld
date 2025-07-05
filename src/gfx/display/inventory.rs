@@ -83,6 +83,79 @@ pub fn display_u8(gamestate: &Game, x: f32, y: f32, w: f32, h: f32, num: u8) {
     }
 }
 
+const HOTBAR_SIZE: f32 = 32.0; //In pixels
+
+fn display_hotbar_blocks(gamestate: &Game, w: i32, h: i32) {
+    let hotbar_sz = gamestate.player.hotbar.items.len();
+    gamestate.textures.bind("blocks");
+    gamestate.shaders.use_program("orthographic");
+    let orthographic_shader = gamestate.shaders.get("orthographic");
+    let half_w = w as f32 / 2.0;
+    let half_h = h as f32 / 2.0;
+    let orthographic = cgmath::ortho(-half_w, half_w, -half_h, half_h, 0.01, 100.0);
+    orthographic_shader.uniform_matrix4f("screen", &orthographic);
+    orthographic_shader.uniform_vec3f("offset", -1.5, -1.5, -1.5);
+    let mut chunk = Chunk::new(0, 0, 0);
+    for (i, item) in gamestate.player.hotbar.items.iter().enumerate() {
+        let position = Vector3::new(
+            i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE,
+            -h as f32 / 2.0 + HOTBAR_SIZE,
+            0.0,
+        );
+
+        let size = if i == gamestate.player.hotbar.selected {
+            HOTBAR_SIZE * 18.0 / 16.0 * 14.0 / 16.0
+        } else {
+            HOTBAR_SIZE * 14.0 / 16.0
+        };
+
+        if let Item::BlockItem(block, _amt) = item {
+            let transform = get_block_item_transform(size, position, *block);
+            orthographic_shader.uniform_matrix4f("transform", &transform);
+            display_block_item(&mut chunk, *block);
+        }
+    }
+}
+
+fn display_hotbar_sprite_items(gamestate: &Game, w: i32, h: i32) {
+    let hotbar_sz = gamestate.player.hotbar.items.len();
+    let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
+    gamestate.textures.bind("items");
+    gamestate.shaders.use_program("icon2d");
+    let icon2d = gamestate.shaders.get("icon2d");
+    icon2d.uniform_matrix4f("screen", &screen_mat);
+    icon2d.uniform_float("alpha", 1.0);
+    icon2d.uniform_vec2f("texscale", ITEM_TEX_SCALE, ITEM_TEX_SCALE);
+    let quad = gamestate.models.bind("quad2d");
+    for (i, item) in gamestate.player.hotbar.items.iter().enumerate() {
+        let position = Vector3::new(
+            i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE,
+            -h as f32 / 2.0 + HOTBAR_SIZE,
+            0.0,
+        );
+
+        let size = if i == gamestate.player.hotbar.selected {
+            HOTBAR_SIZE * 18.0 / 16.0 * 14.0 / 16.0
+        } else {
+            HOTBAR_SIZE * 14.0 / 16.0
+        };
+
+        if let Item::SpriteItem(id, _amt) = item {
+            let ix = id % ITEM_TEX_SIZE;
+            let iy = id / ITEM_TEX_SIZE;
+            let tx = ix as f32 * ITEM_TEX_SCALE;
+            let ty = iy as f32 * ITEM_TEX_SCALE;
+
+            icon2d.uniform_vec2f("texoffset", tx, ty);
+            let mut transform = Matrix4::identity();
+            transform = Matrix4::from_scale(size * 14.0 / 16.0) * transform;
+            transform = Matrix4::from_translation(position) * transform;
+            icon2d.uniform_matrix4f("transform", &transform);
+            draw_elements(quad.clone());
+        }
+    }
+}
+
 pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
@@ -96,7 +169,6 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
 
     let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
     shader2d.uniform_matrix4f("screen", &screen_mat);
-    const HOTBAR_SIZE: f32 = 32.0; //In pixels
     let hotbar_sz = gamestate.player.hotbar.items.len();
     for i in 0..hotbar_sz {
         let position = Vector3::new(
@@ -125,42 +197,16 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
         gl::Enable(gl::DEPTH_TEST);
     }
 
-    gamestate.textures.bind("blocks");
-    gamestate.shaders.use_program("orthographic");
-    let orthographic_shader = gamestate.shaders.get("orthographic");
-    let half_w = w as f32 / 2.0;
-    let half_h = h as f32 / 2.0;
-    let orthographic = cgmath::ortho(-half_w, half_w, -half_h, half_h, 0.01, 100.0);
-    orthographic_shader.uniform_matrix4f("screen", &orthographic);
-    orthographic_shader.uniform_vec3f("offset", -1.5, -1.5, -1.5);
-    let mut chunk = Chunk::new(0, 0, 0);
-    for (i, item) in gamestate.player.hotbar.items.iter().enumerate() {
-        let position = Vector3::new(
-            i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE,
-            -h as f32 / 2.0 + HOTBAR_SIZE,
-            0.0,
-        );
-
-        let size = if i == gamestate.player.hotbar.selected {
-            HOTBAR_SIZE * 18.0 / 16.0 * 14.0 / 16.0
-        } else {
-            HOTBAR_SIZE * 14.0 / 16.0
-        };
-
-        match item {
-            Item::BlockItem(block, _amt) => {
-                let transform = get_block_item_transform(size, position, *block);
-                orthographic_shader.uniform_matrix4f("transform", &transform);
-                display_block_item(&mut chunk, *block);
-            }
-            Item::EmptyItem => {}
-        }
-    }
+    //Display blocks
+    display_hotbar_blocks(gamestate, w, h);
 
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
         gl::Disable(gl::CULL_FACE);
     }
+
+    //Display items
+    display_hotbar_sprite_items(gamestate, w, h);
 
     //Display number of items
     gamestate.shaders.use_program("icon2d");
@@ -176,6 +222,12 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
 
         match item {
             Item::BlockItem(_block, amt) => {
+                if amt <= 1 {
+                    continue;
+                }
+                display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
+            }
+            Item::SpriteItem(_id, amt) => {
                 if amt <= 1 {
                     continue;
                 }
@@ -233,11 +285,10 @@ fn display_inventory_blocks(
     topleft: (f32, f32),
     sz: f32,
     win_dimensions: (i32, i32),
-    shaderid: &str,
 ) {
     gamestate.textures.bind("blocks");
-    gamestate.shaders.use_program(shaderid);
-    let orthographic_shader = gamestate.shaders.get(shaderid);
+    gamestate.shaders.use_program("orthographic");
+    let orthographic_shader = gamestate.shaders.get("orthographic");
     let (w, h) = win_dimensions;
     let half_w = w as f32 / 2.0;
     let half_h = h as f32 / 2.0;
@@ -293,7 +344,57 @@ fn display_inventory_numbers(
                     }
                     display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
                 }
+                Item::SpriteItem(_id, amt) => {
+                    if amt <= 1 {
+                        continue;
+                    }
+                    display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
+                }
                 Item::EmptyItem => {}
+            }
+        }
+    }
+}
+
+const ITEM_TEX_SIZE: u16 = 16;
+const ITEM_TEX_SCALE: f32 = 1.0 / (ITEM_TEX_SIZE as f32);
+
+fn display_inventory_sprite_items(
+    gamestate: &Game,
+    inventory: &Inventory,
+    topleft: (f32, f32),
+    sz: f32,
+    win_dimensions: (i32, i32),
+) {
+    let (w, h) = win_dimensions;
+    gamestate.textures.bind("items");
+    gamestate.shaders.use_program("icon2d");
+    let shader2d = gamestate.shaders.get("icon2d");
+    let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_vec2f("texscale", ITEM_TEX_SCALE, ITEM_TEX_SCALE);
+    shader2d.uniform_float("alpha", 1.0);
+
+    let (leftx, topy) = topleft;
+    let step = (sz / 2.0 + 2.0) * 4.0;
+    for iy in 0..inventory.h() {
+        for ix in 0..inventory.w() {
+            let x = leftx + ix as f32 * step + step / 4.0 - sz / 2.0;
+            let y = topy - step * iy as f32 - step / 4.0 + sz / 2.0;
+
+            if let Item::SpriteItem(id, _amt) = inventory.get_item(ix, iy) {
+                let ix = id % ITEM_TEX_SIZE;
+                let iy = id / ITEM_TEX_SIZE;
+                let tx = ix as f32 * ITEM_TEX_SCALE;
+                let ty = iy as f32 * ITEM_TEX_SCALE;
+
+                shader2d.uniform_vec2f("texoffset", tx, ty);
+                let mut transform = Matrix4::identity();
+                transform = Matrix4::from_scale(sz * 14.0 / 16.0) * transform;
+                transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
+                shader2d.uniform_matrix4f("transform", &transform);
+                let quad = gamestate.models.bind("quad2d");
+                draw_elements(quad);
             }
         }
     }
@@ -313,12 +414,15 @@ fn display_inventory_items(
     }
 
     //Display block items
-    display_inventory_blocks(gamestate, inventory, topleft, sz, (w, h), "orthographic");
+    display_inventory_blocks(gamestate, inventory, topleft, sz, (w, h));
 
     unsafe {
         gl::Disable(gl::CULL_FACE);
         gl::Disable(gl::DEPTH_TEST);
     }
+
+    //Display sprite items
+    display_inventory_sprite_items(gamestate, inventory, topleft, sz, (w, h));
 
     //Display inventory number icons
     display_inventory_numbers(gamestate, inventory, topleft, sz, (w, h));

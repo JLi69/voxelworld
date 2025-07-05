@@ -4,7 +4,10 @@ pub const MAX_STACK_SIZE: u8 = 64;
 
 #[derive(Clone, Copy)]
 pub enum Item {
+    //Block, amt
     BlockItem(Block, u8),
+    //Atlas (or id), amt
+    SpriteItem(u16, u8),
     EmptyItem,
 }
 
@@ -12,6 +15,7 @@ pub enum Item {
 pub fn reduce_amt(item: Item) -> Item {
     match item {
         Item::BlockItem(block, _) => Item::BlockItem(block, 1),
+        Item::SpriteItem(id, _) => Item::SpriteItem(id, 1),
         Item::EmptyItem => Item::EmptyItem,
     }
 }
@@ -19,6 +23,7 @@ pub fn reduce_amt(item: Item) -> Item {
 pub fn multiply_items(item: Item, factor: u8) -> Item {
     match item {
         Item::BlockItem(block, amt) => Item::BlockItem(block, amt * factor),
+        Item::SpriteItem(id, amt) => Item::SpriteItem(id, amt * factor),
         Item::EmptyItem => Item::EmptyItem,
     }
 }
@@ -28,6 +33,13 @@ pub fn items_match(item1: Item, item2: Item) -> bool {
         Item::BlockItem(block1, _) => {
             if let Item::BlockItem(block2, _) = item2 {
                 block1 == block2
+            } else {
+                false
+            }
+        }
+        Item::SpriteItem(id1, _) => {
+            if let Item::SpriteItem(id2, _) = item2 {
+                id1 == id2
             } else {
                 false
             }
@@ -47,12 +59,12 @@ impl Item {
 pub fn item_to_string(item: Item) -> String {
     match item {
         Item::BlockItem(block, amt) => {
-            "block,".to_string()
-                + &block.id.to_string()
-                + ","
-                + &block.geometry.to_string()
-                + ","
-                + &amt.to_string()
+            let id = block.id;
+            let geometry = block.geometry;
+            format!("block,{id},{geometry},{amt}")
+        }
+        Item::SpriteItem(id, amt) => {
+            format!("item,{id},{amt}")
         }
         Item::EmptyItem => "empty".to_string(),
     }
@@ -67,12 +79,21 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
         let amt = tokens[3].parse::<u8>().unwrap_or(1);
 
         if amt == 0 || id == 0 {
-            return Ok(Item::EmptyItem);
+            return Err(());
         }
 
         let mut block = Block::new_id(id);
         block.geometry = geometry;
         Ok(Item::BlockItem(block, amt))
+    } else if tokens.len() == 3 && tokens[0] == "item" {
+        let id = tokens[1].parse::<u16>().unwrap_or(1);
+        let amt = tokens[2].parse::<u8>().unwrap_or(1);
+
+        if amt == 0 || id == 0 {
+            return Err(());
+        }
+
+        Ok(Item::SpriteItem(id, amt))
     } else if tokens.len() == 1 && tokens[0] == "empty" {
         Ok(Item::EmptyItem)
     } else {
@@ -85,7 +106,28 @@ fn string_to_item(s: &str) -> Item {
     string_to_item_err(s).unwrap_or(Item::EmptyItem)
 }
 
-//Returns (merged, leftover)
+//Returns the leftover items
+pub fn remove_amt_item(item: Item, remove_amt: u8) -> Item {
+    match item {
+        Item::BlockItem(block, amt) => {
+            if amt <= remove_amt {
+                Item::EmptyItem
+            } else {
+                Item::BlockItem(block, amt - remove_amt)
+            }
+        }
+        Item::SpriteItem(id, amt) => {
+            if amt <= remove_amt {
+                Item::EmptyItem
+            } else {
+                Item::SpriteItem(id, amt - remove_amt)
+            }
+        }
+        Item::EmptyItem => Item::EmptyItem,
+    }
+}
+
+//Returns (merged, leftover, was able to merge)
 fn merge_blocks(block1: Block, amt1: u8, block2: Block, amt2: u8) -> (Item, Item, bool) {
     if block1 == block2 {
         if MAX_STACK_SIZE - amt1 < amt2 {
@@ -103,17 +145,20 @@ fn merge_blocks(block1: Block, amt1: u8, block2: Block, amt2: u8) -> (Item, Item
     }
 }
 
-//Returns the leftover items
-pub fn remove_amt_item(item: Item, remove_amt: u8) -> Item {
-    match item {
-        Item::BlockItem(block, amt) => {
-            if amt <= remove_amt {
-                Item::EmptyItem
-            } else {
-                Item::BlockItem(block, amt - remove_amt)
-            }
+fn merge_sprite_items(id1: u16, amt1: u8, id2: u16, amt2: u8) -> (Item, Item, bool) {
+    if id1 == id2 {
+        if MAX_STACK_SIZE - amt1 < amt2 {
+            let leftover = Item::SpriteItem(id1, amt1 + amt2 - MAX_STACK_SIZE);
+            (Item::SpriteItem(id1, MAX_STACK_SIZE), leftover, true)
+        } else {
+            (Item::SpriteItem(id1, amt1 + amt2), Item::EmptyItem, true)
         }
-        Item::EmptyItem => Item::EmptyItem,
+    } else {
+        (
+            Item::SpriteItem(id1, amt1),
+            Item::SpriteItem(id2, amt2),
+            false,
+        )
     }
 }
 
@@ -125,6 +170,13 @@ pub fn merge_stacks(item1: Item, item2: Item) -> (Item, Item, bool) {
         Item::BlockItem(block1, amt1) => {
             if let Item::BlockItem(block2, amt2) = item2 {
                 merge_blocks(block1, amt1, block2, amt2)
+            } else {
+                (item1, item2, false)
+            }
+        }
+        Item::SpriteItem(id1, amt1) => {
+            if let Item::SpriteItem(id2, amt2) = item2 {
+                merge_sprite_items(id1, amt1, id2, amt2)
             } else {
                 (item1, item2, false)
             }

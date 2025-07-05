@@ -79,3 +79,27 @@
 	"output" = "door";
 	"amt" = "3";
 }
+
+"sticks" {
+	"width" = "1";
+	"height" = "2";
+	"items" = "plank|plank";
+	"output" = "stick";
+	"amt" = "4";
+}
+
+"fence" {
+	"width" = "3";
+	"height" = "2";
+	"items" = "stick|stick|stick|stick|stick|stick";
+	"output" = "fence";
+	"amt" = "3";
+}
+
+"gate" {
+	"width" = "3";
+	"height" = "2";
+	"items" = "stick|plank|stick|stick|plank|stick";
+	"output" = "gate";
+	"amt" = "1";
+}

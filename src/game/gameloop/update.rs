@@ -10,7 +10,14 @@ fn handle_hotbar_scroll(gamestate: &mut Game) {
         return;
     }
 
+    let prev_selected = gamestate.player.hotbar.selected;
     gamestate.player.hotbar.scroll(gamestate.get_scroll_state());
+    let current_selected = gamestate.player.hotbar.selected;
+
+    //Reset the break timer if the player switches items
+    if prev_selected != current_selected {
+        gamestate.player.break_timer = 0.0;
+    }
 }
 
 pub fn handle_input_actions(gamestate: &mut Game) {

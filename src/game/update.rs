@@ -310,6 +310,7 @@ impl Game {
                     self.player.hotbar.update_selected(item);
                 }
             }
+            Item::SpriteItem(_id, _amt) => {}
             Item::EmptyItem => {
                 self.place_block(chunktables);
             }
@@ -362,6 +363,9 @@ impl Game {
             self.display_inventory = !self.display_inventory;
             self.display_block_menu = false;
             self.paused = false;
+            //Reset player mining progress
+            self.player.break_timer = 0.0;
+            self.hand_animation = 0.0;
         }
 
         //Toggle the block menu with Tab (Note: the block menu pauses the game)

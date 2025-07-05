@@ -59,6 +59,9 @@ pub fn display_hand_item(gamestate: &Game) {
             }
             display_block_item(&mut chunk, block);
         }
+        Item::SpriteItem(id, _) => {
+            //TODO: display sprite item
+        }
         Item::EmptyItem => {}
     }
 }

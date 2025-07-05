@@ -57,3 +57,7 @@
 "digits" {
 	"path" = "assets/textures/digits.png";
 }
+
+"items" {
+	"path" = "assets/textures/items.png";
+}
