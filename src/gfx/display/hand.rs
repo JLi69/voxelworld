@@ -31,7 +31,7 @@ pub fn display_hand_item(gamestate: &Game) {
         Some(light.b()),
     );
     match held_item {
-        Item::BlockItem(block, _) => {
+        Item::Block(block, _) => {
             gamestate.shaders.use_program("chunk");
             gamestate.textures.bind("blocks");
             let chunk_shader = gamestate.shaders.get("chunk");
@@ -59,9 +59,9 @@ pub fn display_hand_item(gamestate: &Game) {
             }
             display_block_item(&mut chunk, block);
         }
-        Item::SpriteItem(id, _) => {
+        Item::Sprite(id, _) => {
             //TODO: display sprite item
         }
-        Item::EmptyItem => {}
+        Item::Empty => {}
     }
 }

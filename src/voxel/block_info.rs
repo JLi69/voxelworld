@@ -71,7 +71,7 @@ fn block_to_item(block: Block) -> Item {
         _ => block_copy.set_orientation(0),
     }
 
-    Item::BlockItem(block_copy, 1)
+    Item::Block(block_copy, 1)
 }
 
 impl BlockInfo {
@@ -85,14 +85,14 @@ impl BlockInfo {
             if let Some(weights) = droptable.get(&held_str) {
                 //If the item drops something special based on the item the player
                 //is holding, then return the dropped item from that table
-                get_rand_item(weights).unwrap_or(Item::EmptyItem)
+                get_rand_item(weights).unwrap_or(Item::Empty)
             } else {
                 //Otherwise, act like the player is holding nothing and default
                 //to that for drops
-                let empty_str = item_to_string(Item::EmptyItem);
+                let empty_str = item_to_string(Item::Empty);
                 let weights = droptable.get(&empty_str);
                 if let Some(weights) = weights {
-                    get_rand_item(weights).unwrap_or(Item::EmptyItem)
+                    get_rand_item(weights).unwrap_or(Item::Empty)
                 } else {
                     default_drop
                 }
@@ -159,7 +159,7 @@ fn parse_item_str_aliased(s: &str, item_aliases: &ItemAliases) -> Result<Item, (
 fn parse_block_id(s: &str, item_aliases: &ItemAliases) -> Result<u8, ()> {
     if let Ok(item) = parse_item_str_aliased(s, item_aliases) {
         return match item {
-            Item::BlockItem(block, _) => Ok(block.id),
+            Item::Block(block, _) => Ok(block.id),
             _ => Err(()),
         };
     }

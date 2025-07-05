@@ -477,7 +477,7 @@ pub fn interact_with_block(
     let (ix, iy, iz) = get_selected(pos, dir, world);
 
     let mut block;
-    if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
+    if let Item::Block(blockdata, _) = player.hotbar.get_selected() {
         block = blockdata;
         if block.is_fluid() {
             block.geometry = 7;
@@ -576,7 +576,7 @@ pub fn place_block(
     let (mut ix, mut iy, mut iz) = get_selected(pos, dir, world);
 
     let mut block;
-    if let Item::BlockItem(blockdata, _) = player.hotbar.get_selected() {
+    if let Item::Block(blockdata, _) = player.hotbar.get_selected() {
         block = blockdata;
         if block.is_fluid() {
             block.geometry = 7;

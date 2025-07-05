@@ -40,7 +40,7 @@ fn get_selected_slot(
 //Handle left click if nothing is held by the mouse, returns item held by mouse
 fn left_click_empty(inventory: &mut Inventory, ix: usize, iy: usize) -> Item {
     let mouse_item = inventory.get_item(ix, iy);
-    inventory.set_item(ix, iy, Item::EmptyItem);
+    inventory.set_item(ix, iy, Item::Empty);
     mouse_item
 }
 
@@ -70,7 +70,7 @@ fn shift_craft(gamestate: &mut Game) {
     let player = &mut gamestate.player;
     let output = recipe_table
         .get_output(&player.crafting_grid)
-        .unwrap_or(Item::EmptyItem);
+        .unwrap_or(Item::Empty);
 
     if output.is_empty() {
         return;
@@ -79,7 +79,7 @@ fn shift_craft(gamestate: &mut Game) {
     loop {
         let current_item = recipe_table
             .get_output(&player.crafting_grid)
-            .unwrap_or(Item::EmptyItem);
+            .unwrap_or(Item::Empty);
 
         //We are crafting nothing, stop
         if current_item.is_empty() {
@@ -122,7 +122,7 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     let output_item = gamestate
         .recipe_table
         .get_output(&gamestate.player.crafting_grid)
-        .unwrap_or(Item::EmptyItem);
+        .unwrap_or(Item::Empty);
     output_slot.set_item(0, 0, output_item);
     let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, 30.0, mousepos);
 
@@ -161,7 +161,7 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
 
     let mouse_item = gamestate.player.mouse_item;
     let item = match mouse_item {
-        Item::EmptyItem => {
+        Item::Empty => {
             if let Some((ix, iy)) = selected_inventory {
                 left_click_empty(&mut gamestate.player.inventory, ix, iy)
             } else if let Some((ix, iy)) = selected_hotbar {
@@ -213,23 +213,23 @@ fn split_stack(amt: u8) -> u8 {
 
 fn right_click_empty(inventory: &mut Inventory, ix: usize, iy: usize) -> Item {
     match inventory.get_item(ix, iy) {
-        Item::EmptyItem => {
+        Item::Empty => {
             //Do nothing
-            Item::EmptyItem
+            Item::Empty
         }
-        Item::BlockItem(block, amt) => {
+        Item::Block(block, amt) => {
             //Halve the stack
             let split = split_stack(amt);
             let item = remove_amt_item(inventory.get_item(ix, iy), split);
             inventory.set_item(ix, iy, item);
-            Item::BlockItem(block, split)
+            Item::Block(block, split)
         }
-        Item::SpriteItem(id, amt) => {
+        Item::Sprite(id, amt) => {
             //Halve the stack
             let split = split_stack(amt);
             let item = remove_amt_item(inventory.get_item(ix, iy), split);
             inventory.set_item(ix, iy, item);
-            Item::SpriteItem(id, split)
+            Item::Sprite(id, split)
         }
     }
 }
@@ -242,24 +242,24 @@ fn right_click_block(
     iy: usize,
 ) -> Item {
     match inventory.get_item(ix, iy) {
-        Item::EmptyItem => {
+        Item::Empty => {
             //Drop one item
-            inventory.set_item(ix, iy, Item::BlockItem(block, 1));
-            remove_amt_item(Item::BlockItem(block, amt), 1)
+            inventory.set_item(ix, iy, Item::Block(block, 1));
+            remove_amt_item(Item::Block(block, amt), 1)
         }
-        Item::BlockItem(slot_block, slot_amt) => {
+        Item::Block(slot_block, slot_amt) => {
             if slot_block == block {
                 //Drop one item on top
                 if slot_amt < MAX_STACK_SIZE {
-                    inventory.set_item(ix, iy, Item::BlockItem(block, slot_amt + 1));
-                    remove_amt_item(Item::BlockItem(block, amt), 1)
+                    inventory.set_item(ix, iy, Item::Block(block, slot_amt + 1));
+                    remove_amt_item(Item::Block(block, amt), 1)
                 } else {
-                    Item::BlockItem(block, amt)
+                    Item::Block(block, amt)
                 }
             } else {
                 //Swap items
                 let current = inventory.get_item(ix, iy);
-                let new = Item::BlockItem(block, amt);
+                let new = Item::Block(block, amt);
                 inventory.set_item(ix, iy, new);
                 //Do nothing if it's a different block
                 current
@@ -268,7 +268,7 @@ fn right_click_block(
         _ => {
             //Swap items
             let current = inventory.get_item(ix, iy);
-            let new = Item::BlockItem(block, amt);
+            let new = Item::Block(block, amt);
             inventory.set_item(ix, iy, new);
             current
         }
@@ -277,24 +277,24 @@ fn right_click_block(
 
 fn right_click_sprite(inventory: &mut Inventory, id: u16, amt: u8, ix: usize, iy: usize) -> Item {
     match inventory.get_item(ix, iy) {
-        Item::EmptyItem => {
+        Item::Empty => {
             //Drop one item
-            inventory.set_item(ix, iy, Item::SpriteItem(id, 1));
-            remove_amt_item(Item::SpriteItem(id, amt), 1)
+            inventory.set_item(ix, iy, Item::Sprite(id, 1));
+            remove_amt_item(Item::Sprite(id, amt), 1)
         }
-        Item::SpriteItem(slot_id, slot_amt) => {
+        Item::Sprite(slot_id, slot_amt) => {
             if slot_id == id {
                 //Drop one item on top
                 if slot_amt < MAX_STACK_SIZE {
-                    inventory.set_item(ix, iy, Item::SpriteItem(id, slot_amt + 1));
-                    remove_amt_item(Item::SpriteItem(id, amt), 1)
+                    inventory.set_item(ix, iy, Item::Sprite(id, slot_amt + 1));
+                    remove_amt_item(Item::Sprite(id, amt), 1)
                 } else {
-                    Item::SpriteItem(id, amt)
+                    Item::Sprite(id, amt)
                 }
             } else {
                 //Swap items
                 let current = inventory.get_item(ix, iy);
-                let new = Item::SpriteItem(id, amt);
+                let new = Item::Sprite(id, amt);
                 inventory.set_item(ix, iy, new);
                 //Do nothing if it's a different block
                 current
@@ -303,7 +303,7 @@ fn right_click_sprite(inventory: &mut Inventory, id: u16, amt: u8, ix: usize, iy
         _ => {
             //Swap items
             let current = inventory.get_item(ix, iy);
-            let new = Item::SpriteItem(id, amt);
+            let new = Item::Sprite(id, amt);
             inventory.set_item(ix, iy, new);
             current
         }
@@ -344,7 +344,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     gamestate.prev_selected_slot = selected;
 
     let item = match gamestate.player.mouse_item {
-        Item::EmptyItem => {
+        Item::Empty => {
             if let Some((ix, iy)) = selected_inventory {
                 right_click_empty(&mut gamestate.player.inventory, ix, iy)
             } else if let Some((ix, iy)) = selected_hotbar {
@@ -355,7 +355,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 gamestate.player.mouse_item
             }
         }
-        Item::BlockItem(block, amt) => {
+        Item::Block(block, amt) => {
             if let Some((ix, iy)) = selected_inventory {
                 right_click_block(&mut gamestate.player.inventory, block, amt, ix, iy)
             } else if let Some((ix, iy)) = selected_hotbar {
@@ -366,7 +366,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 gamestate.player.mouse_item
             }
         }
-        Item::SpriteItem(id, amt) => {
+        Item::Sprite(id, amt) => {
             if let Some((ix, iy)) = selected_inventory {
                 right_click_sprite(&mut gamestate.player.inventory, id, amt, ix, iy)
             } else if let Some((ix, iy)) = selected_hotbar {

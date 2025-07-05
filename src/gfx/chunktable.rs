@@ -40,7 +40,7 @@ pub fn set_fog(gamestate: &Game, shader: &ShaderProgram, skycolor: (f32, f32, f3
 
 //Set dynamic lighting based on what the player is holding
 pub fn set_dyn_light(gamestate: &Game, shader: &ShaderProgram) {
-    if let Item::BlockItem(b, _) = gamestate.player.hotbar.get_selected() {
+    if let Item::Block(b, _) = gamestate.player.hotbar.get_selected() {
         if let Some(src) = b.light_src() {
             let (r, g, b) = src.rgb_f32();
             shader.uniform_vec3f("lightcolor", r, g, b);

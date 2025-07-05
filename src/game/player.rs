@@ -72,7 +72,7 @@ impl Player {
             hotbar: Hotbar::empty_hotbar(),
             inventory: Inventory::empty_inventory(),
             crafting_grid: Inventory::empty_with_sz(3, 3),
-            mouse_item: Item::EmptyItem,
+            mouse_item: Item::Empty,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -106,7 +106,7 @@ impl Player {
             hotbar: self.hotbar.clone(),
             inventory: self.inventory.clone(),
             crafting_grid: self.crafting_grid.clone(),
-            mouse_item: Item::EmptyItem,
+            mouse_item: Item::Empty,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -570,7 +570,7 @@ impl Player {
             hotbar: Hotbar::empty_hotbar(),
             inventory: Inventory::empty_inventory(),
             crafting_grid: Inventory::empty_with_sz(3, 3),
-            mouse_item: Item::EmptyItem,
+            mouse_item: Item::Empty,
             jump_cooldown: 0.0,
             prev_swimming: false,
             swim_cooldown: 0.0,
@@ -594,7 +594,7 @@ impl Player {
     //Returns leftover items
     pub fn add_item(&mut self, item: Item) -> Item {
         if item.is_empty() {
-            return Item::EmptyItem;
+            return Item::Empty;
         }
         let hotbar_leftover = self.hotbar.merge_item(item);
         let inventory_leftover = self.inventory.merge_item(hotbar_leftover);

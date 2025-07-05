@@ -62,10 +62,7 @@ pub fn select_block(gamestate: &mut Game, menu: &[(u8, Vector2<f32>)], mousex: f
             if !block.is_flat_item() {
                 set_block_shape(&mut block, gamestate.get_block_menu_shape());
             }
-            gamestate
-                .player
-                .hotbar
-                .set_selected(Item::BlockItem(block, 1));
+            gamestate.player.hotbar.set_selected(Item::Block(block, 1));
         }
     }
 }

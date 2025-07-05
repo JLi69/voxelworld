@@ -26,7 +26,7 @@ impl Game {
     fn rotate_item(&mut self) {
         //Rotate the block in the player's hand
         if self.get_key_state(Key::R) == KeyState::JustPressed {
-            if let Item::BlockItem(b, amt) = self.player.hotbar.get_selected() {
+            if let Item::Block(b, amt) = self.player.hotbar.get_selected() {
                 match b.shape() {
                     1 => {
                         let mut rotated_block = b;
@@ -35,7 +35,7 @@ impl Game {
                         } else if rotated_block.orientation() != 0 {
                             rotated_block.set_orientation(0);
                         }
-                        let new_item = Item::BlockItem(rotated_block, amt);
+                        let new_item = Item::Block(rotated_block, amt);
                         self.player.hotbar.set_selected(new_item);
                     }
                     2..=4 => {
@@ -51,7 +51,7 @@ impl Game {
                             stair_block.set_shape(3);
                             stair_block.set_orientation(4);
                         }
-                        let new_item = Item::BlockItem(stair_block, amt);
+                        let new_item = Item::Block(stair_block, amt);
                         self.player.hotbar.set_selected(new_item);
                     }
                     _ => {}
@@ -129,7 +129,7 @@ impl Game {
         let q = self.get_key_state(Key::Q);
         if q == KeyState::JustPressed && lshift.is_held() {
             //Drop everything in selected slot
-            self.player.hotbar.set_selected(Item::EmptyItem);
+            self.player.hotbar.set_selected(Item::Empty);
         } else if q == KeyState::JustPressed {
             self.player.hotbar.drop_selected();
         }
@@ -302,7 +302,7 @@ impl Game {
     fn use_hand_item(&mut self, chunktables: &mut ChunkTables) {
         let selected = self.player.hotbar.get_selected();
         match selected {
-            Item::BlockItem(_block, _amt) => {
+            Item::Block(_block, _amt) => {
                 let placed = self.place_block(chunktables);
                 //Use item in survival mode
                 if placed && self.game_mode() == GameMode::Survival {
@@ -310,8 +310,8 @@ impl Game {
                     self.player.hotbar.update_selected(item);
                 }
             }
-            Item::SpriteItem(_id, _amt) => {}
-            Item::EmptyItem => {
+            Item::Sprite(_id, _amt) => {}
+            Item::Empty => {
                 self.place_block(chunktables);
             }
         }
@@ -504,7 +504,7 @@ impl Game {
         let mut items = vec![];
         //Attempt to add the mouse item to the inventory
         items.push(self.player.mouse_item);
-        self.player.mouse_item = Item::EmptyItem;
+        self.player.mouse_item = Item::Empty;
         //Attempt to add items in the crafting grid to the inventory
         for iy in 0..self.player.crafting_grid.h() {
             for ix in 0..self.player.crafting_grid.w() {

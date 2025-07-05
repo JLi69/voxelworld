@@ -11,7 +11,7 @@ pub type ItemAliases = HashMap<String, Item>;
 
 //Adds slab and stair items
 fn add_block_variants(aliases: &mut ItemAliases, name: &str, item: Item) {
-    if let Item::BlockItem(block, _) = item {
+    if let Item::Block(block, _) = item {
         if block.shape() != FULL_BLOCK {
             return;
         }
@@ -27,12 +27,12 @@ fn add_block_variants(aliases: &mut ItemAliases, name: &str, item: Item) {
         let mut slab = block;
         slab.set_shape(SLAB);
         let slab_name = format!("{name}_slab");
-        aliases.insert(slab_name, Item::BlockItem(slab, 1));
+        aliases.insert(slab_name, Item::Block(slab, 1));
 
         let mut stair = block;
         stair.set_shape(STAIR);
         let stair_name = format!("{name}_stair");
-        aliases.insert(stair_name, Item::BlockItem(stair, 1));
+        aliases.insert(stair_name, Item::Block(stair, 1));
     }
 }
 
@@ -76,7 +76,7 @@ impl Recipe {
                 string_to_item_err(s).ok()
             })
             .map(reduce_amt)
-            .chain(std::iter::repeat(Item::EmptyItem))
+            .chain(std::iter::repeat(Item::Empty))
             .take(w * h)
             .collect();
         let output_amt = entry.get_var("amt").parse().unwrap_or(1);
@@ -172,12 +172,12 @@ fn generate_slab_recipe(block: Block) -> Recipe {
     let mut slab = block;
     slab.set_shape(SLAB);
     let mut grid = Inventory::empty_with_sz(3, 1);
-    grid.set_item(0, 0, Item::BlockItem(block, 1));
-    grid.set_item(1, 0, Item::BlockItem(block, 1));
-    grid.set_item(2, 0, Item::BlockItem(block, 1));
+    grid.set_item(0, 0, Item::Block(block, 1));
+    grid.set_item(1, 0, Item::Block(block, 1));
+    grid.set_item(2, 0, Item::Block(block, 1));
     Recipe {
         ingredients: grid,
-        output: Item::BlockItem(slab, 6),
+        output: Item::Block(slab, 6),
         reflect: false,
     }
 }
@@ -188,15 +188,15 @@ fn generate_stair_recipe(block: Block) -> Recipe {
     stair.set_shape(STAIR);
     stair.set_orientation(2);
     let mut grid = Inventory::empty_with_sz(3, 3);
-    grid.set_item(0, 0, Item::BlockItem(block, 1));
-    grid.set_item(0, 1, Item::BlockItem(block, 1));
-    grid.set_item(1, 1, Item::BlockItem(block, 1));
-    grid.set_item(0, 2, Item::BlockItem(block, 1));
-    grid.set_item(1, 2, Item::BlockItem(block, 1));
-    grid.set_item(2, 2, Item::BlockItem(block, 1));
+    grid.set_item(0, 0, Item::Block(block, 1));
+    grid.set_item(0, 1, Item::Block(block, 1));
+    grid.set_item(1, 1, Item::Block(block, 1));
+    grid.set_item(0, 2, Item::Block(block, 1));
+    grid.set_item(1, 2, Item::Block(block, 1));
+    grid.set_item(2, 2, Item::Block(block, 1));
     Recipe {
         ingredients: grid,
-        output: Item::BlockItem(stair, 8),
+        output: Item::Block(stair, 8),
         reflect: true,
     }
 }
@@ -214,7 +214,7 @@ impl RecipeTable {
             .collect();
         let mut auto_generated_recipes = vec![];
         for item in item_aliases.values().copied() {
-            if let Item::BlockItem(block, _) = item {
+            if let Item::Block(block, _) = item {
                 if block.shape() != FULL_BLOCK {
                     continue;
                 }

@@ -109,7 +109,7 @@ fn display_hotbar_blocks(gamestate: &Game, w: i32, h: i32) {
             HOTBAR_SIZE * 14.0 / 16.0
         };
 
-        if let Item::BlockItem(block, _amt) = item {
+        if let Item::Block(block, _amt) = item {
             let transform = get_block_item_transform(size, position, *block);
             orthographic_shader.uniform_matrix4f("transform", &transform);
             display_block_item(&mut chunk, *block);
@@ -140,7 +140,7 @@ fn display_hotbar_sprite_items(gamestate: &Game, w: i32, h: i32) {
             HOTBAR_SIZE * 14.0 / 16.0
         };
 
-        if let Item::SpriteItem(id, _amt) = item {
+        if let Item::Sprite(id, _amt) = item {
             let ix = id % ITEM_TEX_SIZE;
             let iy = id / ITEM_TEX_SIZE;
             let tx = ix as f32 * ITEM_TEX_SCALE;
@@ -221,19 +221,19 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
         let y = -h as f32 / 2.0 + HOTBAR_SIZE * 0.6;
 
         match item {
-            Item::BlockItem(_block, amt) => {
+            Item::Block(_block, amt) => {
                 if amt <= 1 {
                     continue;
                 }
                 display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
             }
-            Item::SpriteItem(_id, amt) => {
+            Item::Sprite(_id, amt) => {
                 if amt <= 1 {
                     continue;
                 }
                 display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
             }
-            Item::EmptyItem => {}
+            Item::Empty => {}
         }
     }
 
@@ -305,7 +305,7 @@ fn display_inventory_blocks(
             let y = topy - step * iy as f32;
             let position = Vector3::new(x, y, 0.0);
 
-            if let Item::BlockItem(block, _amt) = inventory.get_item(ix, iy) {
+            if let Item::Block(block, _amt) = inventory.get_item(ix, iy) {
                 let transform = get_block_item_transform(sz, position, block);
                 orthographic_shader.uniform_matrix4f("transform", &transform);
                 display_block_item(&mut chunk, block);
@@ -338,19 +338,19 @@ fn display_inventory_numbers(
             let y = topy - step * iy as f32 - step / 4.0;
 
             match inventory.get_item(ix, iy) {
-                Item::BlockItem(_block, amt) => {
+                Item::Block(_block, amt) => {
                     if amt <= 1 {
                         continue;
                     }
                     display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
                 }
-                Item::SpriteItem(_id, amt) => {
+                Item::Sprite(_id, amt) => {
                     if amt <= 1 {
                         continue;
                     }
                     display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
                 }
-                Item::EmptyItem => {}
+                Item::Empty => {}
             }
         }
     }
@@ -382,7 +382,7 @@ fn display_inventory_sprite_items(
             let x = leftx + ix as f32 * step + step / 4.0 - sz / 2.0;
             let y = topy - step * iy as f32 - step / 4.0 + sz / 2.0;
 
-            if let Item::SpriteItem(id, _amt) = inventory.get_item(ix, iy) {
+            if let Item::Sprite(id, _amt) = inventory.get_item(ix, iy) {
                 let ix = id % ITEM_TEX_SIZE;
                 let iy = id / ITEM_TEX_SIZE;
                 let tx = ix as f32 * ITEM_TEX_SCALE;
@@ -489,7 +489,7 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
     let output = gamestate
         .recipe_table
         .get_output(&gamestate.player.crafting_grid)
-        .unwrap_or(Item::EmptyItem);
+        .unwrap_or(Item::Empty);
     output_slot.set_item(0, 0, output);
     display_inventory_slots(
         gamestate,

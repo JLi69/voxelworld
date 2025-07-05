@@ -5,68 +5,68 @@ pub const MAX_STACK_SIZE: u8 = 64;
 #[derive(Clone, Copy)]
 pub enum Item {
     //Block, amt
-    BlockItem(Block, u8),
+    Block(Block, u8),
     //Atlas (or id), amt
-    SpriteItem(u16, u8),
-    EmptyItem,
+    Sprite(u16, u8),
+    Empty,
 }
 
 //Converts item stack's amount to be 1
 pub fn reduce_amt(item: Item) -> Item {
     match item {
-        Item::BlockItem(block, _) => Item::BlockItem(block, 1),
-        Item::SpriteItem(id, _) => Item::SpriteItem(id, 1),
-        Item::EmptyItem => Item::EmptyItem,
+        Item::Block(block, _) => Item::Block(block, 1),
+        Item::Sprite(id, _) => Item::Sprite(id, 1),
+        Item::Empty => Item::Empty,
     }
 }
 
 pub fn multiply_items(item: Item, factor: u8) -> Item {
     match item {
-        Item::BlockItem(block, amt) => Item::BlockItem(block, amt * factor),
-        Item::SpriteItem(id, amt) => Item::SpriteItem(id, amt * factor),
-        Item::EmptyItem => Item::EmptyItem,
+        Item::Block(block, amt) => Item::Block(block, amt * factor),
+        Item::Sprite(id, amt) => Item::Sprite(id, amt * factor),
+        Item::Empty => Item::Empty,
     }
 }
 
 pub fn items_match(item1: Item, item2: Item) -> bool {
     match item1 {
-        Item::BlockItem(block1, _) => {
-            if let Item::BlockItem(block2, _) = item2 {
+        Item::Block(block1, _) => {
+            if let Item::Block(block2, _) = item2 {
                 block1 == block2
             } else {
                 false
             }
         }
-        Item::SpriteItem(id1, _) => {
-            if let Item::SpriteItem(id2, _) = item2 {
+        Item::Sprite(id1, _) => {
+            if let Item::Sprite(id2, _) = item2 {
                 id1 == id2
             } else {
                 false
             }
         }
-        Item::EmptyItem => {
-            matches!(item2, Item::EmptyItem)
+        Item::Empty => {
+            matches!(item2, Item::Empty)
         }
     }
 }
 
 impl Item {
     pub fn is_empty(&self) -> bool {
-        matches!(self, Item::EmptyItem)
+        matches!(self, Item::Empty)
     }
 }
 
 pub fn item_to_string(item: Item) -> String {
     match item {
-        Item::BlockItem(block, amt) => {
+        Item::Block(block, amt) => {
             let id = block.id;
             let geometry = block.geometry;
             format!("block,{id},{geometry},{amt}")
         }
-        Item::SpriteItem(id, amt) => {
+        Item::Sprite(id, amt) => {
             format!("item,{id},{amt}")
         }
-        Item::EmptyItem => "empty".to_string(),
+        Item::Empty => "empty".to_string(),
     }
 }
 
@@ -84,7 +84,7 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
 
         let mut block = Block::new_id(id);
         block.geometry = geometry;
-        Ok(Item::BlockItem(block, amt))
+        Ok(Item::Block(block, amt))
     } else if tokens.len() == 3 && tokens[0] == "item" {
         let id = tokens[1].parse::<u16>().unwrap_or(1);
         let amt = tokens[2].parse::<u8>().unwrap_or(1);
@@ -93,9 +93,9 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
             return Err(());
         }
 
-        Ok(Item::SpriteItem(id, amt))
+        Ok(Item::Sprite(id, amt))
     } else if tokens.len() == 1 && tokens[0] == "empty" {
-        Ok(Item::EmptyItem)
+        Ok(Item::Empty)
     } else {
         Err(())
     }
@@ -103,27 +103,27 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
 
 //Returns empty item if failed to parse
 fn string_to_item(s: &str) -> Item {
-    string_to_item_err(s).unwrap_or(Item::EmptyItem)
+    string_to_item_err(s).unwrap_or(Item::Empty)
 }
 
 //Returns the leftover items
 pub fn remove_amt_item(item: Item, remove_amt: u8) -> Item {
     match item {
-        Item::BlockItem(block, amt) => {
+        Item::Block(block, amt) => {
             if amt <= remove_amt {
-                Item::EmptyItem
+                Item::Empty
             } else {
-                Item::BlockItem(block, amt - remove_amt)
+                Item::Block(block, amt - remove_amt)
             }
         }
-        Item::SpriteItem(id, amt) => {
+        Item::Sprite(id, amt) => {
             if amt <= remove_amt {
-                Item::EmptyItem
+                Item::Empty
             } else {
-                Item::SpriteItem(id, amt - remove_amt)
+                Item::Sprite(id, amt - remove_amt)
             }
         }
-        Item::EmptyItem => Item::EmptyItem,
+        Item::Empty => Item::Empty,
     }
 }
 
@@ -131,34 +131,26 @@ pub fn remove_amt_item(item: Item, remove_amt: u8) -> Item {
 fn merge_blocks(block1: Block, amt1: u8, block2: Block, amt2: u8) -> (Item, Item, bool) {
     if block1 == block2 {
         if MAX_STACK_SIZE - amt1 < amt2 {
-            let leftover = Item::BlockItem(block1, amt1 + amt2 - MAX_STACK_SIZE);
-            (Item::BlockItem(block1, MAX_STACK_SIZE), leftover, true)
+            let leftover = Item::Block(block1, amt1 + amt2 - MAX_STACK_SIZE);
+            (Item::Block(block1, MAX_STACK_SIZE), leftover, true)
         } else {
-            (Item::BlockItem(block1, amt1 + amt2), Item::EmptyItem, true)
+            (Item::Block(block1, amt1 + amt2), Item::Empty, true)
         }
     } else {
-        (
-            Item::BlockItem(block1, amt1),
-            Item::BlockItem(block2, amt2),
-            false,
-        )
+        (Item::Block(block1, amt1), Item::Block(block2, amt2), false)
     }
 }
 
 fn merge_sprite_items(id1: u16, amt1: u8, id2: u16, amt2: u8) -> (Item, Item, bool) {
     if id1 == id2 {
         if MAX_STACK_SIZE - amt1 < amt2 {
-            let leftover = Item::SpriteItem(id1, amt1 + amt2 - MAX_STACK_SIZE);
-            (Item::SpriteItem(id1, MAX_STACK_SIZE), leftover, true)
+            let leftover = Item::Sprite(id1, amt1 + amt2 - MAX_STACK_SIZE);
+            (Item::Sprite(id1, MAX_STACK_SIZE), leftover, true)
         } else {
-            (Item::SpriteItem(id1, amt1 + amt2), Item::EmptyItem, true)
+            (Item::Sprite(id1, amt1 + amt2), Item::Empty, true)
         }
     } else {
-        (
-            Item::SpriteItem(id1, amt1),
-            Item::SpriteItem(id2, amt2),
-            false,
-        )
+        (Item::Sprite(id1, amt1), Item::Sprite(id2, amt2), false)
     }
 }
 
@@ -166,16 +158,16 @@ fn merge_sprite_items(id1: u16, amt1: u8, id2: u16, amt2: u8) -> (Item, Item, bo
 //Returns (merged, leftover, was able to merge)
 pub fn merge_stacks(item1: Item, item2: Item) -> (Item, Item, bool) {
     match item1 {
-        Item::EmptyItem => (item2, Item::EmptyItem, true),
-        Item::BlockItem(block1, amt1) => {
-            if let Item::BlockItem(block2, amt2) = item2 {
+        Item::Empty => (item2, Item::Empty, true),
+        Item::Block(block1, amt1) => {
+            if let Item::Block(block2, amt2) = item2 {
                 merge_blocks(block1, amt1, block2, amt2)
             } else {
                 (item1, item2, false)
             }
         }
-        Item::SpriteItem(id1, amt1) => {
-            if let Item::SpriteItem(id2, amt2) = item2 {
+        Item::Sprite(id1, amt1) => {
+            if let Item::Sprite(id2, amt2) = item2 {
                 merge_sprite_items(id1, amt1, id2, amt2)
             } else {
                 (item1, item2, false)
@@ -195,22 +187,22 @@ pub struct Hotbar {
 impl Hotbar {
     pub fn empty_hotbar() -> Self {
         Self {
-            items: [Item::EmptyItem; HOTBAR_SIZE],
+            items: [Item::Empty; HOTBAR_SIZE],
             selected: 0,
         }
     }
 
     pub fn init_hotbar() -> Self {
         let mut hotbar = Self::empty_hotbar();
-        hotbar.items[0] = Item::BlockItem(Block::new_id(1), 1);
-        hotbar.items[1] = Item::BlockItem(Block::new_id(2), 1);
-        hotbar.items[2] = Item::BlockItem(Block::new_id(4), 1);
-        hotbar.items[3] = Item::BlockItem(Block::new_id(5), 1);
-        hotbar.items[4] = Item::BlockItem(Block::new_id(6), 1);
-        hotbar.items[5] = Item::BlockItem(Block::new_id(7), 1);
-        hotbar.items[6] = Item::BlockItem(Block::new_id(8), 1);
-        hotbar.items[7] = Item::BlockItem(Block::new_id(9), 1);
-        hotbar.items[8] = Item::BlockItem(Block::new_id(10), 1);
+        hotbar.items[0] = Item::Block(Block::new_id(1), 1);
+        hotbar.items[1] = Item::Block(Block::new_id(2), 1);
+        hotbar.items[2] = Item::Block(Block::new_id(4), 1);
+        hotbar.items[3] = Item::Block(Block::new_id(5), 1);
+        hotbar.items[4] = Item::Block(Block::new_id(6), 1);
+        hotbar.items[5] = Item::Block(Block::new_id(7), 1);
+        hotbar.items[6] = Item::Block(Block::new_id(8), 1);
+        hotbar.items[7] = Item::Block(Block::new_id(9), 1);
+        hotbar.items[8] = Item::Block(Block::new_id(10), 1);
         hotbar
     }
 
@@ -251,7 +243,7 @@ impl Hotbar {
     }
 
     pub fn from_entry(entry: &impfile::Entry) -> Self {
-        let mut hotbar_items = [Item::EmptyItem; HOTBAR_SIZE];
+        let mut hotbar_items = [Item::Empty; HOTBAR_SIZE];
 
         for (i, item) in hotbar_items.iter_mut().enumerate() {
             let slot = i.to_string();
@@ -327,7 +319,7 @@ impl Inventory {
         Self {
             height: INVENTORY_HEIGHT,
             width: INVENTORY_WIDTH,
-            items: vec![Item::EmptyItem; INVENTORY_WIDTH * INVENTORY_HEIGHT],
+            items: vec![Item::Empty; INVENTORY_WIDTH * INVENTORY_HEIGHT],
         }
     }
 
@@ -335,7 +327,7 @@ impl Inventory {
         Self {
             width: w,
             height: h,
-            items: vec![Item::EmptyItem; w * h],
+            items: vec![Item::Empty; w * h],
         }
     }
 
@@ -381,7 +373,7 @@ impl Inventory {
             .get_var("items")
             .split("|")
             .map(string_to_item)
-            .chain(std::iter::repeat(Item::EmptyItem))
+            .chain(std::iter::repeat(Item::Empty))
             .take(w * h)
             .collect();
 
@@ -402,7 +394,7 @@ impl Inventory {
 
     pub fn get_item(&self, x: usize, y: usize) -> Item {
         if x >= self.width || y >= self.height {
-            return Item::EmptyItem;
+            return Item::Empty;
         }
 
         let index = y * self.width + x;
@@ -420,7 +412,7 @@ impl Inventory {
 
     pub fn clear(&mut self) {
         for item in &mut self.items {
-            *item = Item::EmptyItem;
+            *item = Item::Empty;
         }
     }
 
