@@ -310,8 +310,7 @@ impl Game {
                     self.player.hotbar.update_selected(item);
                 }
             }
-            Item::Sprite(_id, _amt) => {}
-            Item::Empty => {
+            _ => {
                 self.place_block(chunktables);
             }
         }

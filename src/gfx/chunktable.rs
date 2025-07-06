@@ -91,6 +91,19 @@ impl ChunkVao {
         }
     }
 
+    pub fn draw_instanced(&self, count: i32) {
+        unsafe {
+            gl::BindVertexArray(self.id);
+            gl::DrawElementsInstanced(
+                gl::TRIANGLES,
+                self.vert_count,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+                count,
+            );
+        }
+    }
+
     pub fn delete(&self) {
         unsafe {
             gl::DeleteVertexArrays(1, &self.id);

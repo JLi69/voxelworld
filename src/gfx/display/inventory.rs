@@ -62,6 +62,21 @@ pub fn display_block_item(chunk: &mut Chunk, block: Block) {
     vao.delete();
 }
 
+pub fn display_block_item_flat3d(chunk: &mut Chunk, block: Block) {
+    chunk.set_block_relative(1, 1, 1, block);
+    let mut vert_data = vec![];
+    add_block_vertices_flat(chunk, (1, 1, 1), &mut vert_data);
+
+    if vert_data.is_empty() {
+        return;
+    }
+
+    let face_count = vert_data.len() / (7 * 4);
+    let vao = ChunkVao::generate_new(&vert_data, &get_indices(face_count), 7);
+    vao.draw_instanced(8);
+    vao.delete();
+}
+
 //Assumes that we are using the "icon2d" shader
 pub fn display_u8(gamestate: &Game, x: f32, y: f32, w: f32, h: f32, num: u8) {
     let shader2d = gamestate.shaders.get("icon2d");
@@ -356,8 +371,8 @@ fn display_inventory_numbers(
     }
 }
 
-const ITEM_TEX_SIZE: u16 = 16;
-const ITEM_TEX_SCALE: f32 = 1.0 / (ITEM_TEX_SIZE as f32);
+pub const ITEM_TEX_SIZE: u16 = 16;
+pub const ITEM_TEX_SCALE: f32 = 1.0 / (ITEM_TEX_SIZE as f32);
 
 fn display_inventory_sprite_items(
     gamestate: &Game,

@@ -23,9 +23,14 @@ void main() {
 	float x = float(vertdata.x & 0x3Fu) + geox;
 	float y = float(vertdata.y & 0x3Fu) + geoy;
 	float z = float(vertdata.z & 0x3Fu) + geoz;	
-	uint id = vertdata.w;
+	uint id = vertdata.w;	
 
 	vec4 pos = vec4(x, y, z, 1.0) + vec4(chunkpos.xyz, 0.0);
+	
+	//This is only for when we are displaying a block item and it is a flat item
+	//and we want to give it some depth
+	pos.x -= 0.01 * gl_InstanceID;
+
 	fragpos = pos.xyz;
 	chunkfragpos = vec3(x, y, z);
 	gl_Position = persp * view * pos;

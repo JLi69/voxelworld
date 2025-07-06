@@ -62,3 +62,8 @@
 	"vert" = "assets/shaders/skyboxvert.glsl";
 	"frag" = "assets/shaders/skyboxfrag.glsl";
 }
+
+"quad3d" {
+	"vert" = "assets/shaders/quadvert3d.glsl";
+	"frag" = "assets/shaders/tintedspritefrag.glsl";
+}
