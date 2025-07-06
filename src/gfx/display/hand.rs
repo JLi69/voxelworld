@@ -69,11 +69,11 @@ pub fn display_hand_item(gamestate: &Game) {
         Item::Sprite(id, _) => {
             let hand_animation = gamestate.get_hand_animation();
             let item_rotation = if hand_animation < 0.5 {
-                Deg(hand_animation * 2.75 * -HAND_ANIMATION_MAX_ROTATION)
+                Deg(hand_animation * 3.0 * -HAND_ANIMATION_MAX_ROTATION)
             } else {
-                Deg((1.0 - hand_animation) * 2.75 * -HAND_ANIMATION_MAX_ROTATION)
+                Deg((1.0 - hand_animation) * 3.0 * -HAND_ANIMATION_MAX_ROTATION)
             };
-            let rotation_animation = Matrix4::<f32>::from_angle_z(item_rotation);
+            let rotation_animation = Matrix4::<f32>::from_angle_x(item_rotation);
 
             let quad3d = gamestate.shaders.use_program("quad3d");
             gamestate.textures.bind("items");
@@ -81,12 +81,12 @@ pub fn display_hand_item(gamestate: &Game) {
             let position = Vector3::new(1.0, -0.85, -1.5);
             let mut view = Matrix4::<f32>::identity();
             view = view * Matrix4::from_translation(position);
+            view = view * rotation_animation;
             view = view * Matrix4::from_angle_x(Deg(180.0));
             view = view * Matrix4::from_angle_y(Deg(180.0));
             view = view * Matrix4::from_scale(0.75);
             view = view * Matrix4::from_angle_y(Deg(-100.0));
             view = view * Matrix4::from_angle_z(Deg(-20.0));
-            view = view * rotation_animation;
             quad3d.uniform_matrix4f("view", &view);
             quad3d.uniform_matrix4f("transform", &Matrix4::from_scale(0.75));
             quad3d.uniform_matrix4f("persp", &gamestate.persp);

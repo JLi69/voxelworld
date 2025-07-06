@@ -13,7 +13,7 @@ void main() {
 	vec4 p = vec4(pos.x, 0.0, pos.y, 1.0);
 	vec4 transformed = transform * p;
 	//For clouds, to give them a 3D effect
-	transformed += vec4(0.0, gl_InstanceID, 0.0, 0.0);
+	transformed += vec4(0.0, gl_InstanceID * 0.75, 0.0, 0.0);
 	vec4 glpos = persp * view * transformed;
 	tc = pos.xy * 0.5 + vec2(0.5, 0.5);
 	tc = tc.yx;
