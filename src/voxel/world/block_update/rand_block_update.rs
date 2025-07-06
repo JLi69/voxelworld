@@ -25,6 +25,11 @@ fn update_grass(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
     if (above.transparent() || above.id == EMPTY_BLOCK) && !above.is_fluid() {
         return;
     }
+    //Ignore logs
+    if above.id == 6 {
+        return;
+    }
+    //Ignore water that isn't a full block
     if above.id == 12 && above.geometry < 7 {
         return;
     }

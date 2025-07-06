@@ -171,6 +171,8 @@ pub fn display_suffocation_screen(gamestate: &Game, w: i32, h: i32) {
     }
 }
 
+const CLOUD_LAYERS: i32 = 12;
+
 pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
     unsafe {
         gl::Disable(gl::CULL_FACE);
@@ -200,7 +202,7 @@ pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
     cloud_shader.uniform_float("fogdist", dist);
     cloud_shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
     cloud_shader.uniform_vec4f("fogcolor", sr, sg, sb, 1.0);
-    draw_elements(quad);
+    draw_elements_instanced(quad, CLOUD_LAYERS);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
@@ -238,7 +240,7 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
     cloud_shader.uniform_float("total_time", time_passed);
     cloud_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
     set_fog(gamestate, &cloud_shader, get_skycolor(gamestate.world.time));
-    draw_elements(quad);
+    draw_elements_instanced(quad, CLOUD_LAYERS);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
