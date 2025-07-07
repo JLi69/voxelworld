@@ -169,7 +169,9 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
             } else if let Some((ix, iy)) = selected_crafting {
                 left_click_empty(&mut gamestate.player.crafting_grid, ix, iy)
             } else if let Some((ix, iy)) = selected_output {
-                remove_inventory_items(&mut gamestate.player.crafting_grid);
+                if !output_item.is_empty() {
+                    remove_inventory_items(&mut gamestate.player.crafting_grid);
+                }
                 left_click_empty(&mut output_slot, ix, iy)
             } else {
                 gamestate.player.mouse_item
@@ -185,7 +187,9 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
             } else if selected_output.is_some() {
                 let (merged, leftover, _) = merge_stacks(mouse_item, output_item);
                 if leftover.is_empty() {
-                    remove_inventory_items(&mut gamestate.player.crafting_grid);
+                    if !output_item.is_empty() {
+                        remove_inventory_items(&mut gamestate.player.crafting_grid);
+                    }
                     merged
                 } else {
                     mouse_item
@@ -230,6 +234,10 @@ fn right_click_empty(inventory: &mut Inventory, ix: usize, iy: usize) -> Item {
             let item = remove_amt_item(inventory.get_item(ix, iy), split);
             inventory.set_item(ix, iy, item);
             Item::Sprite(id, split)
+        }
+        Item::Tool(id, info) => {
+            inventory.set_item(ix, iy, Item::Empty);
+            Item::Tool(id, info)
         }
     }
 }
@@ -310,6 +318,21 @@ fn right_click_sprite(inventory: &mut Inventory, id: u16, amt: u8, ix: usize, iy
     }
 }
 
+fn right_click_unstackable(inventory: &mut Inventory, item: Item, ix: usize, iy: usize) -> Item {
+    match inventory.get_item(ix, iy) {
+        Item::Empty => {
+            inventory.set_item(ix, iy, item);
+            Item::Empty
+        }
+        _ => {
+            //Swap items
+            let current = inventory.get_item(ix, iy);
+            inventory.set_item(ix, iy, item);
+            current
+        }
+    }
+}
+
 fn set_selected_str(selected_str: &mut String, selected: Option<(usize, usize)>, name: &str) {
     if let Some((ix, iy)) = selected {
         *selected_str = format!("{name},{ix},{iy}");
@@ -373,6 +396,27 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 right_click_sprite(&mut hotbar, id, amt, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
                 right_click_sprite(&mut gamestate.player.crafting_grid, id, amt, ix, iy)
+            } else {
+                gamestate.player.mouse_item
+            }
+        }
+        Item::Tool(..) => {
+            if let Some((ix, iy)) = selected_inventory {
+                right_click_unstackable(
+                    &mut gamestate.player.inventory,
+                    gamestate.player.mouse_item,
+                    ix,
+                    iy,
+                )
+            } else if let Some((ix, iy)) = selected_hotbar {
+                right_click_unstackable(&mut hotbar, gamestate.player.mouse_item, ix, iy)
+            } else if let Some((ix, iy)) = selected_crafting {
+                right_click_unstackable(
+                    &mut gamestate.player.crafting_grid,
+                    gamestate.player.mouse_item,
+                    ix,
+                    iy,
+                )
             } else {
                 gamestate.player.mouse_item
             }

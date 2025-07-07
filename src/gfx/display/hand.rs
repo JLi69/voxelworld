@@ -25,19 +25,29 @@ pub fn display_hand_item(gamestate: &Game) {
         Some(light.g()),
         Some(light.b()),
     );
-    match held_item {
+
+    let hand_animation = gamestate.get_hand_animation();
+
+    let t = if hand_animation < 0.5 {
+        hand_animation * 2.0
+    } else {
+        (1.0 - hand_animation) * 2.0
+    };
+
+    let item_rotation = Deg(t * -HAND_ANIMATION_MAX_ROTATION);
+    let rotation_animation = match held_item {
+        Item::Tool(..) | Item::Sprite(..) => {
+            Matrix4::<f32>::from_angle_x(item_rotation)
+                * Matrix4::<f32>::from_translation(Vector3::new(0.0, t, 0.0))
+        }
+        _ => {
+            Matrix4::<f32>::from_angle_x(item_rotation)
+                * Matrix4::<f32>::from_translation(Vector3::new(0.0, t * 0.5, 0.0))
+        }
+    };
+
+    let view = match held_item {
         Item::Block(block, _) => {
-            let hand_animation = gamestate.get_hand_animation();
-            let item_rotation = if hand_animation < 0.5 {
-                Deg(hand_animation * 2.0 * -HAND_ANIMATION_MAX_ROTATION)
-            } else {
-                Deg((1.0 - hand_animation) * 2.0 * -HAND_ANIMATION_MAX_ROTATION)
-            };
-            let rotation_animation = Matrix4::<f32>::from_angle_x(item_rotation);
-
-            let chunk_shader = gamestate.shaders.use_program("chunk");
-            gamestate.textures.bind("blocks");
-
             let mut view = Matrix4::<f32>::identity();
             let y = if block.is_flat_item() { -0.6 } else { -1.0 };
             let position = Vector3::<f32>::new(1.0, y, -1.5);
@@ -45,6 +55,38 @@ pub fn display_hand_item(gamestate: &Game) {
             view = view * rotation_animation;
             view = view * Matrix4::from_angle_y(Deg(45.0));
             view = view * Matrix4::from_scale(0.75);
+            view
+        }
+        Item::Tool(..) => {
+            let position = Vector3::new(1.0, -0.85, -1.5);
+            let mut view = Matrix4::<f32>::identity();
+            view = view * Matrix4::from_translation(position);
+            view = view * rotation_animation;
+            view = view * Matrix4::from_angle_x(Deg(180.0));
+            view = view * Matrix4::from_angle_y(Deg(180.0));
+            view = view * Matrix4::from_scale(0.75);
+            view = view * Matrix4::from_angle_y(Deg(-100.0));
+            view = view * Matrix4::from_angle_z(Deg(-20.0));
+            view
+        }
+        _ => {
+            let position = Vector3::new(1.0, -0.85, -1.5);
+            let mut view = Matrix4::<f32>::identity();
+            view = view * Matrix4::from_translation(position);
+            view = view * rotation_animation;
+            view = view * Matrix4::from_angle_x(Deg(180.0));
+            view = view * Matrix4::from_angle_y(Deg(180.0));
+            view = view * Matrix4::from_scale(0.75);
+            view = view * Matrix4::from_angle_y(Deg(-100.0));
+            view = view * Matrix4::from_angle_z(Deg(-20.0));
+            view
+        }
+    };
+
+    match held_item {
+        Item::Block(block, _) => {
+            let chunk_shader = gamestate.shaders.use_program("chunk");
+            gamestate.textures.bind("blocks");
 
             chunk_shader.uniform_matrix4f("persp", &gamestate.persp);
             chunk_shader.uniform_matrix4f("view", &view);
@@ -66,27 +108,10 @@ pub fn display_hand_item(gamestate: &Game) {
                 display_block_item(&mut chunk, block);
             }
         }
-        Item::Sprite(id, _) => {
-            let hand_animation = gamestate.get_hand_animation();
-            let item_rotation = if hand_animation < 0.5 {
-                Deg(hand_animation * 3.0 * -HAND_ANIMATION_MAX_ROTATION)
-            } else {
-                Deg((1.0 - hand_animation) * 3.0 * -HAND_ANIMATION_MAX_ROTATION)
-            };
-            let rotation_animation = Matrix4::<f32>::from_angle_x(item_rotation);
-
+        Item::Sprite(id, _) | Item::Tool(id, _) => {
             let quad3d = gamestate.shaders.use_program("quad3d");
             gamestate.textures.bind("items");
 
-            let position = Vector3::new(1.0, -0.85, -1.5);
-            let mut view = Matrix4::<f32>::identity();
-            view = view * Matrix4::from_translation(position);
-            view = view * rotation_animation;
-            view = view * Matrix4::from_angle_x(Deg(180.0));
-            view = view * Matrix4::from_angle_y(Deg(180.0));
-            view = view * Matrix4::from_scale(0.75);
-            view = view * Matrix4::from_angle_y(Deg(-100.0));
-            view = view * Matrix4::from_angle_z(Deg(-20.0));
             quad3d.uniform_matrix4f("view", &view);
             quad3d.uniform_matrix4f("transform", &Matrix4::from_scale(0.75));
             quad3d.uniform_matrix4f("persp", &gamestate.persp);

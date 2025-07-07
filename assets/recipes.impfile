@@ -103,3 +103,43 @@
 	"output" = "gate";
 	"amt" = "1";
 }
+
+"ladder" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "stick|empty|stick|stick|stick|stick|stick|empty|stick";
+	"output" = "ladder";
+	"amt" = "4";
+}
+
+"wood_pickaxe" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "plank|plank|plank|empty|stick|empty|empty|stick|empty";
+	"output" = "wood_pickaxe";
+	"amt" = "1";
+}
+
+"torch" {
+	"width" = "1";
+	"height" = "2";
+	"items" = "coal|stick";
+	"output" = "torch";
+	"amt" = "4";
+}
+
+"coal_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "coal|coal|coal|coal|coal|coal|coal|coal|coal";
+	"output" = "coal_block";
+	"amt" = "1";
+}
+
+"coal" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "coal_block";
+	"output" = "coal";
+	"amt" = "9";
+}

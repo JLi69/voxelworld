@@ -3,7 +3,7 @@
 # How long it takes to break a block, in seconds
 "break_time" {
 	# Instant break (plants mostly)
-	"0.0" = "47,48,49,50,51,52,53,54,55,56,69,71,72,73,74,77,90";
+	"0.0" = "47,48,49,50,51,52,53,54,55,56,69,71,72,73,74,77,90,92";
 	# Ladders, leaves, etc.
 	"0.5" = "7,75,91";
 	# Grass, dirt, leaves, etc.

@@ -338,7 +338,10 @@ impl World {
         let x = (pos.x / CHUNK_SIZE_F32).floor() as i32;
         let y = (pos.y / CHUNK_SIZE_F32).floor() as i32;
         let z = (pos.z / CHUNK_SIZE_F32).floor() as i32;
-        if x == self.centerx && y == self.centery && z == self.centerz {
+        let dx = (x - self.centerx).abs();
+        let dy = (y - self.centery).abs();
+        let dz = (z - self.centerz).abs();
+        if dx <= 1 && dy <= 1 && dz <= 1 {
             return;
         }
 

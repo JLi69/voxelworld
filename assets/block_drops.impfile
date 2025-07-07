@@ -26,10 +26,12 @@
 
 "stone" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "cobblestone/1.0";
 }
 
 "bricks" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "bricks/1.0";
 }
 
 "leaves" {
@@ -42,6 +44,7 @@
 
 "stone_bricks" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "stone_bricks/1.0";
 }
 
 "obsidian" {
@@ -50,14 +53,17 @@
 
 "magma_stone" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "magma_stone/1.0";
 }
 
 "cobblestone" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "cobblestone/1.0";
 }
 
 "coal_ore" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "coal/1.0";
 }
 
 "iron_ore" {
@@ -82,46 +88,57 @@
 
 "coal_block" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "coal_block/1.0";
 }
 
 "iron_block" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "iron_block/1.0";
 }
 
 "gold_block" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "gold_block/1.0";
 }
 
 "diamond_block" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "diamond_block/1.0";
 }
 
 "rainbow_block" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "rainbow_block/1.0";
 }
 
 "red_block" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "red_block/1.0";
 }
 
 "sand_bricks" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "sand_bricks/1.0";
 }
 
 "magma_bricks" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "magma_bricks/1.0";
 }
 
 "smooth_stone" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "smooth_stone/1.0";
 }
 
 "smooth_magma" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "smooth_magma/1.0";
 }
 
 "smooth_sand" {
 	"empty" = "empty/1.0";
+	"wood_pickaxe" = "smooth_sand/1.0";
 }
 
 "wet_farmland" {

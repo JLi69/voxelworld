@@ -93,4 +93,8 @@
 
 	# Sprite items
 	"stick" = "item,1,1";
+	"coal" = "item,2,1";
+
+	# Tools
+	"wood_pickaxe" = "tool,32,wood/pickaxe"
 }

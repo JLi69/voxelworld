@@ -167,6 +167,18 @@ fn display_hotbar_sprite_items(gamestate: &Game, w: i32, h: i32) {
             transform = Matrix4::from_translation(position) * transform;
             icon2d.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
+        } else if let Item::Tool(id, _info) = item {
+            let ix = id % ITEM_TEX_SIZE;
+            let iy = id / ITEM_TEX_SIZE;
+            let tx = ix as f32 * ITEM_TEX_SCALE;
+            let ty = iy as f32 * ITEM_TEX_SCALE;
+
+            icon2d.uniform_vec2f("texoffset", tx, ty);
+            let mut transform = Matrix4::identity();
+            transform = Matrix4::from_scale(size * 14.0 / 16.0) * transform;
+            transform = Matrix4::from_translation(position) * transform;
+            icon2d.uniform_matrix4f("transform", &transform);
+            draw_elements(quad.clone());
         }
     }
 }
@@ -248,7 +260,7 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
                 }
                 display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
             }
-            Item::Empty => {}
+            _ => {}
         }
     }
 
@@ -365,7 +377,7 @@ fn display_inventory_numbers(
                     }
                     display_u8(gamestate, x, y, DIGIT_W, DIGIT_H, amt);
                 }
-                Item::Empty => {}
+                _ => {}
             }
         }
     }
@@ -398,6 +410,19 @@ fn display_inventory_sprite_items(
             let y = topy - step * iy as f32 - step / 4.0 + sz / 2.0;
 
             if let Item::Sprite(id, _amt) = inventory.get_item(ix, iy) {
+                let ix = id % ITEM_TEX_SIZE;
+                let iy = id / ITEM_TEX_SIZE;
+                let tx = ix as f32 * ITEM_TEX_SCALE;
+                let ty = iy as f32 * ITEM_TEX_SCALE;
+
+                shader2d.uniform_vec2f("texoffset", tx, ty);
+                let mut transform = Matrix4::identity();
+                transform = Matrix4::from_scale(sz * 14.0 / 16.0) * transform;
+                transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
+                shader2d.uniform_matrix4f("transform", &transform);
+                let quad = gamestate.models.bind("quad2d");
+                draw_elements(quad);
+            } else if let Item::Tool(id, _info) = inventory.get_item(ix, iy) {
                 let ix = id % ITEM_TEX_SIZE;
                 let iy = id / ITEM_TEX_SIZE;
                 let tx = ix as f32 * ITEM_TEX_SCALE;

@@ -1,4 +1,9 @@
+pub mod tools;
+
 use crate::{impfile, voxel::Block};
+use tools::ToolInfo;
+
+use self::tools::string_to_tool_info;
 
 pub const MAX_STACK_SIZE: u8 = 64;
 
@@ -8,6 +13,8 @@ pub enum Item {
     Block(Block, u8),
     //Atlas (or id), amt
     Sprite(u16, u8),
+    //Atlas (or id), tool info
+    Tool(u16, ToolInfo),
     Empty,
 }
 
@@ -16,6 +23,7 @@ pub fn reduce_amt(item: Item) -> Item {
     match item {
         Item::Block(block, _) => Item::Block(block, 1),
         Item::Sprite(id, _) => Item::Sprite(id, 1),
+        Item::Tool(id, info) => Item::Tool(id, info.reduce_info()),
         Item::Empty => Item::Empty,
     }
 }
@@ -24,7 +32,7 @@ pub fn multiply_items(item: Item, factor: u8) -> Item {
     match item {
         Item::Block(block, amt) => Item::Block(block, amt * factor),
         Item::Sprite(id, amt) => Item::Sprite(id, amt * factor),
-        Item::Empty => Item::Empty,
+        _ => item,
     }
 }
 
@@ -40,6 +48,13 @@ pub fn items_match(item1: Item, item2: Item) -> bool {
         Item::Sprite(id1, _) => {
             if let Item::Sprite(id2, _) = item2 {
                 id1 == id2
+            } else {
+                false
+            }
+        }
+        Item::Tool(id1, info1) => {
+            if let Item::Tool(id2, info2) = item2 {
+                id1 == id2 && info1.reduce_info() == info2.reduce_info()
             } else {
                 false
             }
@@ -66,6 +81,7 @@ pub fn item_to_string(item: Item) -> String {
         Item::Sprite(id, amt) => {
             format!("item,{id},{amt}")
         }
+        Item::Tool(id, info) => format!("tool,{id},{info}"),
         Item::Empty => "empty".to_string(),
     }
 }
@@ -86,14 +102,18 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
         block.geometry = geometry;
         Ok(Item::Block(block, amt))
     } else if tokens.len() == 3 && tokens[0] == "item" {
-        let id = tokens[1].parse::<u16>().unwrap_or(1);
+        let id = tokens[1].parse::<u16>().unwrap_or(0);
         let amt = tokens[2].parse::<u8>().unwrap_or(1);
 
-        if amt == 0 || id == 0 {
+        if amt == 0 {
             return Err(());
         }
 
         Ok(Item::Sprite(id, amt))
+    } else if tokens.len() == 3 && tokens[0] == "tool" {
+        let id = tokens[1].parse::<u16>().unwrap_or(0);
+        let info = string_to_tool_info(&tokens[2]).map_err(|_| ())?;
+        Ok(Item::Tool(id, info))
     } else if tokens.len() == 1 && tokens[0] == "empty" {
         Ok(Item::Empty)
     } else {
@@ -123,7 +143,7 @@ pub fn remove_amt_item(item: Item, remove_amt: u8) -> Item {
                 Item::Sprite(id, amt - remove_amt)
             }
         }
-        Item::Empty => Item::Empty,
+        _ => Item::Empty,
     }
 }
 
@@ -173,6 +193,7 @@ pub fn merge_stacks(item1: Item, item2: Item) -> (Item, Item, bool) {
                 (item1, item2, false)
             }
         }
+        Item::Tool(..) => (item1, item2, false),
     }
 }
 
