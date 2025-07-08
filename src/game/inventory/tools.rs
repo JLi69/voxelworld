@@ -139,6 +139,14 @@ impl ToolInfo {
             attack: self.attack,
         }
     }
+
+    pub fn update_durability(&mut self, amt: u32) {
+        if amt > self.durability {
+            self.durability = 0;
+            return;
+        }
+        self.durability -= amt;
+    }
 }
 
 impl Display for ToolInfo {

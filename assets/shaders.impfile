@@ -28,6 +28,11 @@
 	"frag" = "assets/shaders/quadfrag.glsl";
 }
 
+"gradientquad" {
+	"vert" = "assets/shaders/vert2d.glsl";
+	"frag" = "assets/shaders/gradientfrag.glsl";
+}
+
 "icon2d" {
 	"vert" = "assets/shaders/vert2d.glsl";
 	"frag" = "assets/shaders/iconfrag.glsl";

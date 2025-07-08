@@ -263,6 +263,57 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
             _ => {}
         }
     }
+    
+    let shader2d = gamestate.shaders.use_program("2d");
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_float("alpha", 1.0); 
+    gamestate.textures.bind("black_bg");
+    for (i, item) in gamestate.player.hotbar.items.iter().copied().enumerate() {
+        let x = i as f32 * HOTBAR_SIZE * 2.0 
+            - HOTBAR_SIZE * hotbar_sz as f32 
+            + HOTBAR_SIZE * 1.0;
+        let y = -h as f32 / 2.0 + HOTBAR_SIZE * 0.35 + 1.0;
+    
+        if let Item::Tool(_, info) = item {
+            if info.durability >= info.max_durability {
+                continue;
+            }
+            let mut transform = Matrix4::identity();
+            transform = Matrix4::from_nonuniform_scale(HOTBAR_SIZE - 10.0, 2.0, 1.0) * transform;
+            transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
+            shader2d.uniform_matrix4f("transform", &transform);
+            draw_elements(quad.clone());
+        }
+    }
+
+    let shader2d = gamestate.shaders.use_program("gradientquad");
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_vec4f("start", 1.0, 0.0, 0.0, 1.0);
+    shader2d.uniform_vec4f("mid", 1.0, 1.0, 0.0, 1.0);
+    shader2d.uniform_vec4f("end", 0.0, 1.0, 0.0, 1.0);
+
+    for (i, item) in gamestate.player.hotbar.items.iter().copied().enumerate() {
+        let x = i as f32 * HOTBAR_SIZE * 2.0 
+            - HOTBAR_SIZE * hotbar_sz as f32 
+            + HOTBAR_SIZE * 1.0;
+        let y = -h as f32 / 2.0 + HOTBAR_SIZE * 0.35 + 1.0;
+
+        if let Item::Tool(_, info) = item {
+            if info.durability >= info.max_durability {
+                continue;
+            }
+            let perc = info.durability as f32 / info.max_durability as f32;
+            shader2d.uniform_float("perc", perc);
+            let mut transform = Matrix4::identity();
+            let width = (HOTBAR_SIZE - 10.0) * perc;
+            let offset = (1.0 - perc) * (HOTBAR_SIZE - 10.0);
+            let pos = Vector3::new(x - offset, y, 0.0);
+            transform = Matrix4::from_nonuniform_scale(width, 2.0, 1.0) * transform;
+            transform = Matrix4::from_translation(pos) * transform;
+            shader2d.uniform_matrix4f("transform", &transform);
+            draw_elements(quad.clone());
+        }
+    }
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
@@ -383,6 +434,70 @@ fn display_inventory_numbers(
     }
 }
 
+fn display_tool_durability(
+    gamestate: &Game,
+    inventory: &Inventory,
+    topleft: (f32, f32),
+    sz: f32,
+    win_dimensions: (i32, i32),
+) {
+    let quad = gamestate.models.bind("quad2d");
+    let (w, h) = win_dimensions;
+    let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
+    let (leftx, topy) = topleft;
+    let step = (sz / 2.0 + 2.0) * 4.0;
+
+    let shader2d = gamestate.shaders.use_program("2d");
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_float("alpha", 1.0); 
+    gamestate.textures.bind("black_bg");
+    for iy in 0..inventory.h() {
+        for ix in 0..inventory.w() {
+            let x = leftx + ix as f32 * step;
+            let y = topy - step * iy as f32 - sz + 6.0;
+
+            if let Item::Tool(_, info) = inventory.get_item(ix, iy) {
+                if info.durability >= info.max_durability {
+                    continue;
+                }
+                let mut transform = Matrix4::identity();
+                transform = Matrix4::from_nonuniform_scale(sz - 6.0, 2.0, 1.0) * transform;
+                transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
+                shader2d.uniform_matrix4f("transform", &transform);
+                draw_elements(quad.clone());
+            }
+        }
+    }
+    
+    let shader2d = gamestate.shaders.use_program("gradientquad");
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    shader2d.uniform_vec4f("start", 1.0, 0.0, 0.0, 1.0);
+    shader2d.uniform_vec4f("mid", 1.0, 1.0, 0.0, 1.0);
+    shader2d.uniform_vec4f("end", 0.0, 1.0, 0.0, 1.0);
+    for iy in 0..inventory.h() {
+        for ix in 0..inventory.w() {
+            let x = leftx + ix as f32 * step;
+            let y = topy - step * iy as f32 - sz + 6.0;
+
+            if let Item::Tool(_, info) = inventory.get_item(ix, iy) {
+                if info.durability >= info.max_durability {
+                    continue;
+                }
+                let perc = info.durability as f32 / info.max_durability as f32;
+                shader2d.uniform_float("perc", perc);
+                let mut transform = Matrix4::identity();
+                let width = (sz - 6.0) * perc;
+                let offset = (1.0 - perc) * (sz - 6.0);
+                let pos = Vector3::new(x - offset, y, 0.0);
+                transform = Matrix4::from_nonuniform_scale(width, 2.0, 1.0) * transform;
+                transform = Matrix4::from_translation(pos) * transform;
+                shader2d.uniform_matrix4f("transform", &transform);
+                draw_elements(quad.clone());
+            }
+        }
+    }
+}
+
 pub const ITEM_TEX_SIZE: u16 = 16;
 pub const ITEM_TEX_SCALE: f32 = 1.0 / (ITEM_TEX_SIZE as f32);
 
@@ -464,6 +579,8 @@ fn display_inventory_items(
     //Display sprite items
     display_inventory_sprite_items(gamestate, inventory, topleft, sz, (w, h));
 
+    //Display durability bars
+    display_tool_durability(gamestate, inventory, topleft, sz, (w, h));
     //Display inventory number icons
     display_inventory_numbers(gamestate, inventory, topleft, sz, (w, h));
 }

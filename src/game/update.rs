@@ -167,6 +167,33 @@ impl Game {
         }
     }
 
+    fn update_tool_durability(&mut self, destroyed_block: Block) {
+        let (id, mut tool) = match self.player.hotbar.get_selected() {
+            Item::Tool(id, tool) => (id, tool),
+            _ => return,
+        };
+      
+        let block_info = self.block_info.get(&destroyed_block.id);
+        let (preferred_tool, break_time) = if let Some(block_info) = block_info {
+            (block_info.preferred_tool, block_info.break_time)
+        } else {
+            (None, 0.0)
+        };
+
+        if break_time > 0.0 && Some(tool.tool_type) == preferred_tool {
+            tool.update_durability(1);
+        } else if break_time > 0.0 && Some(tool.tool_type) != preferred_tool {
+            tool.update_durability(2);
+        }
+
+        let selected = self.player.hotbar.selected;
+        if tool.durability > 0 {
+            self.player.hotbar.items[selected] = Item::Tool(id, tool);
+        } else {
+            self.player.hotbar.items[selected] = Item::Empty;
+        }
+    }
+
     //Returns true if a block has been destroyed
     fn destroy_block(&mut self, chunktables: &mut ChunkTables) -> bool {
         let pos = self.cam.position;
@@ -252,6 +279,7 @@ impl Game {
                 //If the player does not have enough space in their inventory,
                 //just drop the items on the ground
                 self.player.add_item(drop);
+                self.update_tool_durability(block);
             }
             self.player.break_timer = 0.0;
         }
