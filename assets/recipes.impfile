@@ -143,3 +143,11 @@
 	"output" = "coal";
 	"amt" = "9";
 }
+
+"bush_sticks" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "dead_bush";
+	"output" = "stick";
+	"amt" = "3";
+}

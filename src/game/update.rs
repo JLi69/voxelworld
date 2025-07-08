@@ -243,9 +243,10 @@ impl Game {
         let block = self.world.get_block(x, y, z);
         let info = self.get_block_info(block.id);
 
-        if self.player.break_timer > info.break_time && block.id != EMPTY_BLOCK {
+        let held = self.player.hotbar.get_selected();
+        let break_time = info.get_break_time(held);
+        if self.player.break_timer > break_time && block.id != EMPTY_BLOCK {
             if self.destroy_block(chunktables) {
-                let held = self.player.hotbar.get_selected();
                 let drop = get_drop(&self.block_info, held, block);
                 //TODO: implement dropped items
                 //If the player does not have enough space in their inventory,

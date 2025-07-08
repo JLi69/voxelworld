@@ -33,8 +33,10 @@ pub fn display_selected_outline(gamestate: &Game) {
 
     let block = gamestate.world.get_block(ix, iy, iz);
     let info = gamestate.get_block_info(block.id);
+    let held = gamestate.player.hotbar.get_selected();
+    let break_time = info.get_break_time(held);
     let perc = if info.break_time != 0.0 {
-        gamestate.player.break_timer / info.break_time
+        gamestate.player.break_timer / break_time
     } else {
         0.0
     };

@@ -236,6 +236,7 @@ impl RecipeTable {
             }
         }
         self.recipes.extend(auto_generated_recipes);
+        eprintln!("Loaded {} recipes.", self.recipes.len());
     }
 
     //Returns option for an output

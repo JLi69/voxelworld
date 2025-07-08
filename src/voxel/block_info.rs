@@ -2,7 +2,11 @@ use super::{Block, EMPTY_BLOCK, FULL_BLOCK};
 use crate::{
     game::{
         crafting::{load_item_aliases, ItemAliases},
-        inventory::{item_to_string, reduce_amt, string_to_item_err, Item},
+        inventory::{
+            item_to_string, reduce_amt, string_to_item_err,
+            tools::{string_to_tool_type, ToolType},
+            Item,
+        },
     },
     impfile::{self, Entry},
 };
@@ -26,6 +30,7 @@ pub struct BlockInfo {
     //Used to determine how long it takes to break the block
     //Will be adjusted based on the tool being used
     pub break_time: f32,
+    pub preferred_tool: Option<ToolType>,
     //None = block always drops itself when broken
     pub block_drops: Option<HashMap<String, WeightTable>>,
 }
@@ -103,6 +108,55 @@ impl BlockInfo {
             default_drop
         }
     }
+
+    pub fn get_break_time(&self, held_item: Item) -> f32 {
+        //Check if the item can be harvested by hand
+        let can_harvest_with_hand = if let Some(droptable) = &self.block_drops {
+            let empty_str = item_to_string(Item::Empty);
+            //Attempt to get a random item based on the drop table
+            if let Some(weights) = droptable.get(&empty_str) {
+                !(weights.len() == 1 && weights[0].item.is_empty())
+            } else {
+                true
+            }
+        } else {
+            true
+        };
+
+        let can_harvest = if let Some(droptable) = &self.block_drops {
+            let held_reduced = reduce_amt(held_item);
+            let held_str = item_to_string(held_reduced);
+            //Attempt to get a random item based on the drop table
+            if let Some(weights) = droptable.get(&held_str) {
+                !(weights.len() == 1 && weights[0].item.is_empty())
+            } else {
+                can_harvest_with_hand
+            }
+        } else {
+            true
+        };
+
+        let multiplier = match held_item {
+            Item::Tool(_, info) => {
+                if Some(info.tool_type) == self.preferred_tool {
+                    info.speed
+                } else {
+                    1.0
+                }
+            }
+            _ => 1.0,
+        };
+
+        if can_harvest {
+            if can_harvest_with_hand {
+                self.break_time / multiplier
+            } else {
+                self.break_time * 0.3 / multiplier
+            }
+        } else {
+            self.break_time
+        }
+    }
 }
 
 fn update_info<T>(table: &mut BlockInfoTable, id: u8, update_fn: T)
@@ -128,19 +182,26 @@ where
     }
 }
 
-fn parse_block_list(val: &str) -> Vec<u8> {
+fn parse_block_list(val: &str, item_aliases: &ItemAliases) -> Vec<u8> {
     val.split(",")
-        .map(|s| s.parse::<u8>())
+        .map(|s| parse_block_id(s, item_aliases))
         .filter_map(|b| b.ok())
         .collect()
 }
 
 fn update_break_time(entry: &Entry, table: &mut BlockInfoTable) {
+    let alias_path = entry.get_var("alias_path");
+    let item_aliases = if !alias_path.is_empty() {
+        load_item_aliases(&alias_path)
+    } else {
+        HashMap::new()
+    };
+
     let vars = entry.get_all_vars();
     for (name, val) in vars {
         let break_time = name.parse::<f32>();
         if let Ok(break_time) = break_time {
-            let blocks = parse_block_list(&val);
+            let blocks = parse_block_list(&val, &item_aliases);
             update_info_list(table, &blocks, |info| {
                 info.break_time = break_time;
             })
@@ -240,6 +301,24 @@ fn update_block_drops(entry: &Entry, table: &mut BlockInfoTable) {
     }
 }
 
+fn update_preferred_tool(entry: &Entry, table: &mut BlockInfoTable) {
+    let alias_path = entry.get_var("alias_path");
+    let item_aliases = if !alias_path.is_empty() {
+        load_item_aliases(&alias_path)
+    } else {
+        HashMap::new()
+    };
+    for (blocks_str, tool_str) in entry.get_all_vars() {
+        let tool = string_to_tool_type(&tool_str);
+        if let Ok(tool) = tool {
+            let blocks = parse_block_list(&blocks_str, &item_aliases);
+            update_info_list(table, &blocks, |info| {
+                info.preferred_tool = Some(tool);
+            });
+        }
+    }
+}
+
 //id -> block info
 pub fn load_block_info(path: &str) -> BlockInfoTable {
     let mut table = BlockInfoTable::new();
@@ -250,6 +329,7 @@ pub fn load_block_info(path: &str) -> BlockInfoTable {
         match e.get_name().as_str() {
             "break_time" => update_break_time(&e, &mut table),
             "drops" => update_block_drops(&e, &mut table),
+            "tools" => update_preferred_tool(&e, &mut table),
             _ => {}
         }
     }
