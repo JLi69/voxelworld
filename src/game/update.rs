@@ -144,6 +144,10 @@ impl Game {
         if self.get_key_state(Key::F3) == KeyState::JustPressed {
             self.display_debug = !self.display_debug;
         }
+
+        if self.display_debug {
+            self.display_inventory = false;
+        }
     }
 
     //Only run in survival mode
@@ -358,7 +362,7 @@ impl Game {
             self.paused = !self.paused;
         }
 
-        if self.get_key_state(Key::E) == KeyState::JustPressed {
+        if self.get_key_state(Key::E) == KeyState::JustPressed && !self.display_debug {
             self.display_inventory = !self.display_inventory;
             self.display_block_menu = false;
             self.paused = false;

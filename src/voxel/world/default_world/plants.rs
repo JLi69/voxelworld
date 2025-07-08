@@ -56,9 +56,9 @@ pub fn generate_plants(
             continue;
         }
 
-        let temperature = world_generator.get_temperature(*x, *z);
+        let temperature = (world_generator.get_temperature(*x, *z) * 100.0).ceil() as i32;
         //Desert biome
-        if temperature > 0.75 {
+        if temperature > 75 {
             match rand_val {
                 //Dead bush
                 0..20 => chunk.set_block(*x, h + 1, *z, Block::new_id(90)),
@@ -70,7 +70,7 @@ pub fn generate_plants(
         }
 
         //Cold biome
-        if temperature < 0.25 {
+        if temperature < 25 {
             if (0..10).contains(&rand_val) {
                 //Mushroom
                 chunk.set_block(*x, h + 1, *z, Block::new_id(48));

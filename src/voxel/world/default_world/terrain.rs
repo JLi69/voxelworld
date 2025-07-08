@@ -34,7 +34,7 @@ pub fn get_height(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
 }
 
 pub fn get_temperature(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {
-    (world_generator.get_temperature(x, z) * 100.0) as i32
+    (world_generator.get_temperature(x, z) * 100.0).ceil() as i32
 }
 
 pub fn get_mountain(x: i32, z: i32, world_generator: &WorldGenerator) -> i32 {

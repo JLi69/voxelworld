@@ -132,8 +132,8 @@ fn gen_tree(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &Wo
         return;
     }
 
-    let temperature = world_generator.get_temperature(x, z);
-    let leaf_id = if temperature < 0.25 {
+    let temperature = (world_generator.get_temperature(x, z) * 100.0).ceil() as i32;
+    let leaf_id = if temperature < 25 {
         //Snowy leaf in cold biomes
         91
     } else {

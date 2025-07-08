@@ -44,7 +44,7 @@
 }
 
 "clouds" {
-	"vert" = "assets/shaders/skyquad.glsl";
+	"vert" = "assets/shaders/cloudvert.glsl";
 	"frag" = "assets/shaders/cloudfrag.glsl";
 }
 

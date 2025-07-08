@@ -26,7 +26,7 @@ fn update_grass(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateLis
         return;
     }
     //Ignore logs
-    if above.id == 6 {
+    if above.id == 8 {
         return;
     }
     //Ignore water that isn't a full block

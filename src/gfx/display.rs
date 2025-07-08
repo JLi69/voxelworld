@@ -188,13 +188,14 @@ pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
     let view = gamestate.cam.get_view();
     cloud_shader.uniform_matrix4f("view", &view);
     let mut transform = Matrix4::identity();
-    let sz = 7.0 * CHUNK_SIZE_F32 * 16.0;
+    let sz = CHUNK_SIZE_F32 * 16.0;
     transform = Matrix4::from_nonuniform_scale(sz, 0.0, sz) * transform;
     transform = Matrix4::from_translation(Vector3::new(0.0, 120.0, 0.0)) * transform;
     cloud_shader.uniform_matrix4f("transform", &transform);
     cloud_shader.uniform_vec3f("campos", 0.0, 0.0, 0.0);
     cloud_shader.uniform_float("total_time", time_passed);
     cloud_shader.uniform_float("skybrightness", 1.0);
+    cloud_shader.uniform_uint("worldsz", 7);
     //Fog
     let (sr, sg, sb) = DAY;
     let range = 7.0 * CHUNK_SIZE_F32;
@@ -202,7 +203,7 @@ pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
     cloud_shader.uniform_float("fogdist", dist);
     cloud_shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
     cloud_shader.uniform_vec4f("fogcolor", sr, sg, sb, 1.0);
-    draw_elements_instanced(quad, CLOUD_LAYERS);
+    draw_elements_instanced(quad, CLOUD_LAYERS * 7 * 7);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
@@ -224,7 +225,7 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
     let view = gamestate.cam.get_view();
     cloud_shader.uniform_matrix4f("view", &view);
     let mut transform = Matrix4::identity();
-    let sz = gamestate.world.get_range() as f32 * CHUNK_SIZE_F32 * 16.0;
+    let sz = CHUNK_SIZE_F32 * 16.0;
     transform = Matrix4::from_nonuniform_scale(sz, 0.0, sz) * transform;
     let camx = gamestate.cam.position.x;
     let camz = gamestate.cam.position.z;
@@ -239,8 +240,10 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
     );
     cloud_shader.uniform_float("total_time", time_passed);
     cloud_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
+    let worldsz = gamestate.world.get_range() + 1;
+    cloud_shader.uniform_uint("worldsz", worldsz as u32);
     set_fog(gamestate, &cloud_shader, get_skycolor(gamestate.world.time));
-    draw_elements_instanced(quad, CLOUD_LAYERS);
+    draw_elements_instanced(quad, CLOUD_LAYERS * worldsz * worldsz);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
