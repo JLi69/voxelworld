@@ -154,7 +154,7 @@ impl BlockInfo {
                 self.break_time * 0.3 / multiplier
             }
         } else {
-            self.break_time
+            self.break_time / multiplier
         }
     }
 }
