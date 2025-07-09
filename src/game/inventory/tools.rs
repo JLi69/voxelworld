@@ -10,6 +10,15 @@ pub enum ToolMaterial {
     Rainbow,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ToolType {
+    Pickaxe,
+    Shovel,
+    Axe,
+    Hoe,
+    Sword,
+}
+
 const fn get_material_speed(material: ToolMaterial) -> f32 {
     match material {
         ToolMaterial::Wood => 2.0,
@@ -65,15 +74,6 @@ const fn tool_atk(tool_type: ToolType, material: ToolMaterial) -> u32 {
     let multiplier = tool_atk_multiplier(tool_type);
     let add = multiplier * get_material_attack(material) as f32;
     get_tool_base(tool_type) + add as u32
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum ToolType {
-    Pickaxe,
-    Shovel,
-    Axe,
-    Hoe,
-    Sword,
 }
 
 pub fn tool_type_to_string(tool_type: ToolType) -> String {

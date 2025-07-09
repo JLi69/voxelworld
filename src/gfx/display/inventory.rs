@@ -263,17 +263,15 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
             _ => {}
         }
     }
-    
+
     let shader2d = gamestate.shaders.use_program("2d");
     shader2d.uniform_matrix4f("screen", &screen_mat);
-    shader2d.uniform_float("alpha", 1.0); 
+    shader2d.uniform_float("alpha", 1.0);
     gamestate.textures.bind("black_bg");
     for (i, item) in gamestate.player.hotbar.items.iter().copied().enumerate() {
-        let x = i as f32 * HOTBAR_SIZE * 2.0 
-            - HOTBAR_SIZE * hotbar_sz as f32 
-            + HOTBAR_SIZE * 1.0;
+        let x = i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE * 1.0;
         let y = -h as f32 / 2.0 + HOTBAR_SIZE * 0.35 + 1.0;
-    
+
         if let Item::Tool(_, info) = item {
             if info.durability >= info.max_durability {
                 continue;
@@ -293,9 +291,7 @@ pub fn display_hotbar(gamestate: &Game, w: i32, h: i32) {
     shader2d.uniform_vec4f("end", 0.0, 1.0, 0.0, 1.0);
 
     for (i, item) in gamestate.player.hotbar.items.iter().copied().enumerate() {
-        let x = i as f32 * HOTBAR_SIZE * 2.0 
-            - HOTBAR_SIZE * hotbar_sz as f32 
-            + HOTBAR_SIZE * 1.0;
+        let x = i as f32 * HOTBAR_SIZE * 2.0 - HOTBAR_SIZE * hotbar_sz as f32 + HOTBAR_SIZE * 1.0;
         let y = -h as f32 / 2.0 + HOTBAR_SIZE * 0.35 + 1.0;
 
         if let Item::Tool(_, info) = item {
@@ -449,7 +445,7 @@ fn display_tool_durability(
 
     let shader2d = gamestate.shaders.use_program("2d");
     shader2d.uniform_matrix4f("screen", &screen_mat);
-    shader2d.uniform_float("alpha", 1.0); 
+    shader2d.uniform_float("alpha", 1.0);
     gamestate.textures.bind("black_bg");
     for iy in 0..inventory.h() {
         for ix in 0..inventory.w() {
@@ -468,7 +464,7 @@ fn display_tool_durability(
             }
         }
     }
-    
+
     let shader2d = gamestate.shaders.use_program("gradientquad");
     shader2d.uniform_matrix4f("screen", &screen_mat);
     shader2d.uniform_vec4f("start", 1.0, 0.0, 0.0, 1.0);

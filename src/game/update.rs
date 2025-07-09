@@ -1,3 +1,4 @@
+use super::inventory::tools::ToolType;
 use super::inventory::{remove_amt_item, Item};
 use super::player::PLAYER_HEIGHT;
 use super::{Game, GameMode, KeyState};
@@ -172,7 +173,7 @@ impl Game {
             Item::Tool(id, tool) => (id, tool),
             _ => return,
         };
-      
+
         let block_info = self.block_info.get(&destroyed_block.id);
         let (preferred_tool, break_time) = if let Some(block_info) = block_info {
             (block_info.preferred_tool, block_info.break_time)
@@ -186,11 +187,10 @@ impl Game {
             tool.update_durability(2);
         }
 
-        let selected = self.player.hotbar.selected;
         if tool.durability > 0 {
-            self.player.hotbar.items[selected] = Item::Tool(id, tool);
+            self.player.hotbar.update_selected(Item::Tool(id, tool));
         } else {
-            self.player.hotbar.items[selected] = Item::Empty;
+            self.player.hotbar.update_selected(Item::Empty);
         }
     }
 
@@ -332,6 +332,58 @@ impl Game {
         false
     }
 
+    //Returns true if the hoe was used to till dirt
+    fn use_hoe(&mut self, chunktables: &mut ChunkTables) -> bool {
+        //Place blocks
+        if !self.get_mouse_state(MouseButtonRight).is_held() {
+            self.build_cooldown = 0.0;
+            return false;
+        }
+
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
+
+        //Attempt to interact with a block
+        let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
+        if interacted.is_some() {
+            let update_mesh = self.world.update_single_block_light(interacted);
+            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
+            self.hand_animation = 0.1;
+            self.build_cooldown = BUILD_COOLDOWN;
+            return false;
+        }
+
+        if let Some((x, y, z)) = self.player.target_block {
+            let target = self.world.get_block(x, y, z);
+            let above = self.world.get_block(x, y + 1, z);
+            if !above.transparent() && above.id != EMPTY_BLOCK {
+                self.place_block(chunktables);
+                return false;
+            }
+            //Ignore non dirt and non grass blocks
+            if target.id != 1 && target.id != 4 {
+                self.place_block(chunktables);
+                return false;
+            }
+            if target.shape() != FULL_BLOCK {
+                self.place_block(chunktables);
+                return false;
+            }
+            self.hand_animation = 0.1;
+            //Set it to be dry farmland
+            self.world.set_block(x, y, z, Block::new_id(45));
+            let update_mesh = self.world.update_single_block_light(Some((x, y, z)));
+            gfx::update_chunk_vaos(chunktables, Some((x, y, z)), &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
+        }
+        true
+    }
+
     fn use_hand_item(&mut self, chunktables: &mut ChunkTables) {
         let selected = self.player.hotbar.get_selected();
         match selected {
@@ -341,6 +393,22 @@ impl Game {
                 if placed && self.game_mode() == GameMode::Survival {
                     let item = remove_amt_item(selected, 1);
                     self.player.hotbar.update_selected(item);
+                }
+            }
+            Item::Tool(id, info) => {
+                if info.tool_type == ToolType::Hoe {
+                    if self.use_hoe(chunktables) {
+                        let mut info_copy = info;
+                        info_copy.update_durability(1);
+                        let updated_tool = if info_copy.durability > 0 {
+                            Item::Tool(id, info_copy)
+                        } else {
+                            Item::Empty
+                        };
+                        self.player.hotbar.update_selected(updated_tool)
+                    }
+                } else {
+                    self.place_block(chunktables);
                 }
             }
             _ => {
@@ -391,7 +459,10 @@ impl Game {
             self.paused = !self.paused;
         }
 
-        if self.get_key_state(Key::E) == KeyState::JustPressed && !self.display_debug {
+        if self.get_key_state(Key::E) == KeyState::JustPressed
+            && !self.display_debug
+            && !self.paused
+        {
             self.display_inventory = !self.display_inventory;
             self.display_block_menu = false;
             self.paused = false;

@@ -29,9 +29,16 @@
 
 "tools" {	
 	"alias_path" = "assets/item_aliases.impfile";
+	
 	"stone,bricks,glass,stone_bricks,obsidian,magma_stone,cobblestone" = "pickaxe";
 	"coal_ore,iron_ore,gold_ore,diamond_ore,rainbow_ore,red_ore" = "pickaxe";
 	"coal_block,iron_block,gold_block,diamond_block,rainbow_block,red_block" = "pickaxe";
-	"sand_bricks,magma_bricks,smooth_stone,smooth_magma,smooth_sand" = "pickaxe";
+	"sand_bricks,magma_bricks,smooth_stone,smooth_magma,smooth_sand,ice" = "pickaxe";
 	"furnace,companion_cube" = "pickaxe";
+
+	"dirt,grass,sand,wet_farmland,dry_farmland,snow,snowy_grass" = "shovel";
+
+	"plank,log,bark,chest,ladder,fence,gate,door" = "axe";
+
+	"leaves,moss,hay,cactus,snowy_leaves" = "hoe";
 }

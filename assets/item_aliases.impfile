@@ -96,5 +96,15 @@
 	"coal" = "item,2,1";
 
 	# Tools
-	"wood_pickaxe" = "tool,32,wood/pickaxe"
+	"wood_pickaxe" = "tool,32,wood/pickaxe";
+	"wood_shovel" = "tool,33,wood/shovel";
+	"wood_axe" = "tool,34,wood/axe";
+	"wood_hoe" = "tool,35,wood/hoe";
+	"wood_sword" = "tool,36,wood/sword";
+
+	"stone_pickaxe" = "tool,37,stone/pickaxe";
+	"stone_shovel" = "tool,38,stone/shovel";
+	"stone_axe" = "tool,39,stone/axe";
+	"stone_hoe" = "tool,40,stone/hoe";
+	"stone_sword" = "tool,41,stone/sword";
 }
