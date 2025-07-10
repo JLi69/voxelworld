@@ -250,11 +250,15 @@ impl Game {
             || self.player.head_intersection(&self.world, 12);
 
         //Slow down mining if submerged or suffocating
-        let multiplier = if submerged || self.player.suffocating(&self.world) {
-            0.33
-        } else {
-            1.0
-        };
+        let mut multiplier = 1.0; 
+
+        if submerged || self.player.suffocating(&self.world) {
+            multiplier *= 0.2;
+        }
+
+        if self.player.is_falling() {
+            multiplier *= 0.2;
+        }
 
         if self.player.target_block == Some(new_target)
             && self.get_mouse_state(MouseButtonLeft).is_held()

@@ -8,6 +8,8 @@
 	"0.5" = "7,75,91";
 	# Grass, dirt, leaves, etc.
 	"1.0" = "1,4,9,11,17,43,45,82,86,87,88,91,57,58,59,60,61,62,63,64,65,66,67,68";
+	# Clay
+	"1.5"= "93";
 	# Ice
 	"2.0" = "85";
 	# Wood
@@ -36,7 +38,7 @@
 	"sand_bricks,magma_bricks,smooth_stone,smooth_magma,smooth_sand,ice" = "pickaxe";
 	"furnace,companion_cube" = "pickaxe";
 
-	"dirt,grass,sand,wet_farmland,dry_farmland,snow,snowy_grass" = "shovel";
+	"dirt,grass,sand,wet_farmland,dry_farmland,snow,snowy_grass,clay" = "shovel";
 
 	"plank,log,bark,chest,ladder,fence,gate,door,81" = "axe";
 

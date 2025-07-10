@@ -601,4 +601,8 @@ impl Player {
         let hotbar_leftover = self.hotbar.add_item(inventory_leftover);
         self.inventory.add_item(hotbar_leftover)
     }
+
+    pub fn is_falling(&self) -> bool {
+        self.falling
+    }
 }

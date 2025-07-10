@@ -9,7 +9,7 @@ mod terrain;
 
 use self::{
     gen_trees::get_tree_gen_info,
-    ore::{generate_magma_blocks, generate_ore},
+    ore::{generate_magma_blocks, generate_ore, generate_clay},
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
     terrain::{get_height, get_mountain, get_temperature},
 };
@@ -324,6 +324,9 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
             for y in posy..(posy + CHUNK_SIZE_I32).min(h) {
                 generate_ore(chunk, x, y, z, &mut ore_rng);
                 generate_magma_blocks(chunk, x, y, z, &mut ore_rng);
+                if y == terrain_h || y == terrain_h - 1 {
+                    generate_clay(chunk, x, y, z, &mut rng);
+                }
             }
         }
     }
