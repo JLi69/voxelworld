@@ -9,7 +9,7 @@ mod terrain;
 
 use self::{
     gen_trees::get_tree_gen_info,
-    ore::{generate_magma_blocks, generate_ore, generate_clay},
+    ore::{generate_clay, generate_magma_blocks, generate_ore},
     plants::{generate_plants, generate_sugarcane, get_plant_positions, get_water_adjacent},
     terrain::{get_height, get_mountain, get_temperature},
 };
@@ -194,13 +194,20 @@ fn get_surface_block(temperature: i32, mountain_h: i32, terrain_h: i32) -> Block
         }
     }
 
+    let h = terrain_h.max(mountain_h);
     if temperature > 75 {
         //Desert, sand
         Block::new_id(11)
     } else if temperature < 25 {
+        if h < SEA_LEVEL {
+            return Block::new_id(4);
+        }
         //Cold, snowy grass
         Block::new_id(87)
     } else {
+        if h < SEA_LEVEL {
+            return Block::new_id(4);
+        }
         Block::new_id(1)
     }
 }
@@ -223,6 +230,14 @@ fn get_under_block(temperature: i32, mountain_h: i32, terrain_h: i32) -> Block {
 
 fn out_of_bounds(y: i32) -> bool {
     !(-4..=5).contains(&y)
+}
+
+pub fn is_beach(temperature: i32, height: i32) -> bool {
+    ((12..18).contains(&temperature)
+        || (30..45).contains(&temperature)
+        || (50..55).contains(&temperature)
+        || temperature > 65)
+        && height <= SAND_LEVEL
 }
 
 fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenerator) {
@@ -278,7 +293,13 @@ fn gen_chunk(chunk: &mut Chunk, gen_info: GenInfo, world_generator: &WorldGenera
                 }
 
                 //Sand
-                if y > height - 4 && y <= height && height <= SAND_LEVEL {
+                if y > height - 4 && y <= height && height <= SEA_LEVEL - 3 {
+                    chunk.set_block(x, y, z, Block::new_id(11));
+                    continue;
+                }
+
+                //Beaches
+                if is_beach(temperature, height) && y > height - 4 && y <= height {
                     chunk.set_block(x, y, z, Block::new_id(11));
                     continue;
                 }

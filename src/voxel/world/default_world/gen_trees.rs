@@ -1,5 +1,5 @@
 use super::terrain::{get_height, get_height_mountain, is_noise_cave};
-use super::{is_mountain, WorldGenerator, SAND_LEVEL};
+use super::{is_beach, is_mountain, WorldGenerator, SEA_LEVEL};
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use noise::{NoiseFn, Perlin};
 use std::collections::HashSet;
@@ -99,7 +99,7 @@ fn gen_cactus(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &
     }
 
     //Below sea level
-    if h <= SAND_LEVEL {
+    if h <= SEA_LEVEL {
         return;
     }
 
@@ -123,7 +123,7 @@ fn gen_tree(chunk: &mut Chunk, x: i32, z: i32, height: i32, world_generator: &Wo
     }
 
     //Below sea level
-    if h <= SAND_LEVEL {
+    if h < SEA_LEVEL {
         return;
     }
 
@@ -164,13 +164,20 @@ pub fn generate_trees(
     let lower_z = chunkpos.z * CHUNK_SIZE_I32;
     let upper_z = chunkpos.z * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1;
 
-    for (i, (x, z)) in tree_positions.iter().enumerate() {
+    for (i, (x, z)) in tree_positions.iter().copied().enumerate() {
         //Do not generate trees in deserts
-        if world_generator.get_temperature(*x, *z) > 0.75 {
+        let temperature = (world_generator.get_temperature(x, z) * 100.0).ceil() as i32;
+
+        let height = get_height_mountain(x, z, world_generator);
+        if is_beach(temperature, height) {
+            continue;
+        }
+
+        if temperature > 75 {
             //Generate cacti instead
             if i % 3 == 0 {
                 //Only a third of the time
-                gen_cactus(chunk, *x, *z, tree_heights[i], world_generator);
+                gen_cactus(chunk, x, z, tree_heights[i], world_generator);
             }
             continue;
         }
@@ -179,6 +186,6 @@ pub fn generate_trees(
             continue;
         }
 
-        gen_tree(chunk, *x, *z, tree_heights[i], world_generator);
+        gen_tree(chunk, x, z, tree_heights[i], world_generator);
     }
 }

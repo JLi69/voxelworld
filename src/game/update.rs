@@ -250,7 +250,7 @@ impl Game {
             || self.player.head_intersection(&self.world, 12);
 
         //Slow down mining if submerged or suffocating
-        let mut multiplier = 1.0; 
+        let mut multiplier = 1.0;
 
         if submerged || self.player.suffocating(&self.world) {
             multiplier *= 0.2;

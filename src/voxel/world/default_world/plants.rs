@@ -1,7 +1,7 @@
 use super::{
-    is_mountain, is_noise_cave,
+    is_beach, is_mountain, is_noise_cave,
     terrain::{get_height, get_height_mountain},
-    WorldGenerator, SAND_LEVEL, SEA_LEVEL,
+    WorldGenerator, SEA_LEVEL,
 };
 use crate::voxel::{Block, Chunk, CHUNK_SIZE_I32, EMPTY_BLOCK};
 use fastrand::Rng;
@@ -40,6 +40,11 @@ pub fn generate_plants(
             continue;
         }
 
+        let temperature = (world_generator.get_temperature(*x, *z) * 100.0).ceil() as i32;
+        if is_beach(temperature, h) {
+            continue;
+        }
+
         let replace = chunk.get_block(*x, h + 1, *z);
         //Replace any non solid block or empty block
         if !(replace == Block::new() || replace.shape() != 0) {
@@ -47,7 +52,7 @@ pub fn generate_plants(
         }
 
         //Below sea level
-        if h <= SAND_LEVEL {
+        if h < SEA_LEVEL {
             continue;
         }
 
@@ -56,7 +61,6 @@ pub fn generate_plants(
             continue;
         }
 
-        let temperature = (world_generator.get_temperature(*x, *z) * 100.0).ceil() as i32;
         //Desert biome
         if temperature > 75 {
             match rand_val {

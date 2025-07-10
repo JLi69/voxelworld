@@ -52,6 +52,7 @@
 	"sapling" = "block,47,0,1";
 	"mushroom" = "block,48,0,1";
 	"tall_grass" = "block,49,0,1";
+	"wheat" = "block,53,0,1";
 	"red_flower" = "block,54,0,1";
 	"yellow_flower" = "block,55,0,1";
 	"blue_flower" = "block,56,0,1";
