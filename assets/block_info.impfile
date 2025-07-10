@@ -38,7 +38,7 @@
 
 	"dirt,grass,sand,wet_farmland,dry_farmland,snow,snowy_grass" = "shovel";
 
-	"plank,log,bark,chest,ladder,fence,gate,door" = "axe";
+	"plank,log,bark,chest,ladder,fence,gate,door,81" = "axe";
 
 	"leaves,moss,hay,cactus,snowy_leaves" = "hoe";
 }

@@ -244,3 +244,19 @@
 	"output" = "stone_sword";
 	"amt" = "1";
 }
+
+"snowy_grass" {
+	"width" = "1";
+	"height" = "2";
+	"items" = "snow_slab|dirt";
+	"output" = "snowy_grass";
+	"amt" = "1";
+}
+
+"snow" {
+	"width" = "1";
+	"height" = "2";
+	"items" = "snow_slab|snow_slab";
+	"output" = "snow";
+	"amt" = "1";
+}

@@ -364,7 +364,7 @@ impl Game {
                 return false;
             }
             //Ignore non dirt and non grass blocks
-            if target.id != 1 && target.id != 4 {
+            if target.id != 1 && target.id != 4 && target.id != 87 {
                 self.place_block(chunktables);
                 return false;
             }
