@@ -4,7 +4,7 @@
  * */
 
 use super::{Player, DAMAGE_COOLDOWN, DEFAULT_MAX_HEALTH, DROWN_TIME};
-use crate::voxel::World;
+use crate::{game::inventory::food::FoodInfo, voxel::World};
 
 pub const DAMAGE_TIME: f32 = 1.5; //In seconds
 
@@ -17,6 +17,13 @@ impl Player {
         self.health -= amt;
         self.health = self.health.clamp(0, DEFAULT_MAX_HEALTH);
         self.death_msg = msg.to_string();
+    }
+
+    pub fn eat(&mut self, food_info: FoodInfo) {
+        self.health += food_info.health;
+        self.health = self.health.clamp(0, DEFAULT_MAX_HEALTH);
+        self.stamina += food_info.get_stamina_perc();
+        self.stamina = self.stamina.clamp(0.0, 1.0);
     }
 
     pub fn apply_fall_damage(&mut self) {

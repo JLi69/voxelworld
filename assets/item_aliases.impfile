@@ -97,6 +97,10 @@
 	"stick" = "item,1,1";
 	"coal" = "item,2,1";
 
+	# Food
+	# Format of food info: health restored/% stamina restored
+	"apple" = "food,64,2/10";
+
 	# Tools
 	"wood_pickaxe" = "tool,32,wood/pickaxe";
 	"wood_shovel" = "tool,33,wood/shovel";

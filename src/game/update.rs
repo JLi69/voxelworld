@@ -1,6 +1,6 @@
 use super::inventory::tools::ToolType;
 use super::inventory::{remove_amt_item, Item};
-use super::player::PLAYER_HEIGHT;
+use super::player::{PLAYER_HEIGHT, DEFAULT_MAX_HEALTH};
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
@@ -338,9 +338,12 @@ impl Game {
 
     //Returns true if the hoe was used to till dirt
     fn use_hoe(&mut self, chunktables: &mut ChunkTables) -> bool {
-        //Place blocks
         if !self.get_mouse_state(MouseButtonRight).is_held() {
             self.build_cooldown = 0.0;
+            return false;
+        }
+
+        if self.build_cooldown > 0.0 {
             return false;
         }
 
@@ -388,6 +391,40 @@ impl Game {
         true
     }
 
+    //Returns true if the player can eat 
+    fn can_eat(&mut self, chunktables: &mut ChunkTables) -> bool {
+        if !self.get_mouse_state(MouseButtonRight).is_held() {
+            self.build_cooldown = 0.0;
+            return false;
+        }
+
+        if self.build_cooldown > 0.0 {
+            return false;
+        }
+
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
+
+        //Attempt to interact with a block
+        let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
+        if interacted.is_some() {
+            let update_mesh = self.world.update_single_block_light(interacted);
+            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
+            self.hand_animation = 0.1;
+            self.build_cooldown = BUILD_COOLDOWN;
+            return false;
+        }
+
+        if self.player.health == DEFAULT_MAX_HEALTH && self.player.stamina >= 0.99 {
+            return false;
+        }
+
+        true
+    }
+
     fn use_hand_item(&mut self, chunktables: &mut ChunkTables) {
         let selected = self.player.hotbar.get_selected();
         match selected {
@@ -413,6 +450,12 @@ impl Game {
                     }
                 } else {
                     self.place_block(chunktables);
+                }
+            }
+            Item::Food(_id, info) => {
+                if self.can_eat(chunktables) {
+                    self.player.eat(info);
+                    self.player.hotbar.update_selected(Item::Empty);
                 }
             }
             _ => {

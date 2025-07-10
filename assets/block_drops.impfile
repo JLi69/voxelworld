@@ -35,7 +35,7 @@
 }
 
 "leaves" {
-	"empty" = "sapling/1.0|empty/9.0";
+	"empty" = "sapling/5.0|apple/1.0|empty/44.0";
 }
 
 "glass" {

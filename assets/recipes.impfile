@@ -260,3 +260,27 @@
 	"output" = "snow";
 	"amt" = "1";
 }
+
+"seeds" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "wheat";
+	"output" = "seeds";
+	"amt" = "3";
+}
+
+"hay" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "wheat|wheat|wheat|wheat|wheat|wheat|wheat|wheat|wheat";
+	"output" = "hay";
+	"amt" = "1";
+}
+
+"wheat" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "hay";
+	"output" = "wheat";
+	"amt" = "9";
+}

@@ -36,11 +36,11 @@ pub fn display_hand_item(gamestate: &Game) {
 
     let item_rotation = Deg(t * -HAND_ANIMATION_MAX_ROTATION);
     let rotation_animation = match held_item {
-        Item::Tool(..) | Item::Sprite(..) => {
+        Item::Food(..) | Item::Tool(..) | Item::Sprite(..) => {
             Matrix4::<f32>::from_angle_x(item_rotation)
                 * Matrix4::<f32>::from_translation(Vector3::new(0.0, t, 0.0))
         }
-        _ => {
+        Item::Block(..) | Item::Empty => {
             Matrix4::<f32>::from_angle_x(item_rotation)
                 * Matrix4::<f32>::from_translation(Vector3::new(0.0, t * 0.5, 0.0))
         }
@@ -108,7 +108,7 @@ pub fn display_hand_item(gamestate: &Game) {
                 display_block_item(&mut chunk, block);
             }
         }
-        Item::Sprite(id, _) | Item::Tool(id, _) => {
+        Item::Sprite(id, _) | Item::Tool(id, _) | Item::Food(id, _) => {
             let quad3d = gamestate.shaders.use_program("quad3d");
             gamestate.textures.bind("items");
 

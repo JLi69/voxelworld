@@ -1,9 +1,12 @@
+pub mod food;
 pub mod tools;
 
+use self::{
+    food::{string_to_food_info, FoodInfo},
+    tools::string_to_tool_info,
+};
 use crate::{impfile, voxel::Block};
 use tools::ToolInfo;
-
-use self::tools::string_to_tool_info;
 
 pub const MAX_STACK_SIZE: u8 = 64;
 
@@ -15,6 +18,8 @@ pub enum Item {
     Sprite(u16, u8),
     //Atlas (or id), tool info
     Tool(u16, ToolInfo),
+    //Atlast (or id), food info
+    Food(u16, FoodInfo),
     Empty,
 }
 
@@ -24,6 +29,7 @@ pub fn reduce_amt(item: Item) -> Item {
         Item::Block(block, _) => Item::Block(block, 1),
         Item::Sprite(id, _) => Item::Sprite(id, 1),
         Item::Tool(id, info) => Item::Tool(id, info.reduce_info()),
+        Item::Food(id, info) => Item::Food(id, info),
         Item::Empty => Item::Empty,
     }
 }
@@ -59,6 +65,13 @@ pub fn items_match(item1: Item, item2: Item) -> bool {
                 false
             }
         }
+        Item::Food(id1, info1) => {
+            if let Item::Food(id2, info2) = item2 {
+                id1 == id2 && info1 == info2
+            } else {
+                false
+            }
+        }
         Item::Empty => {
             matches!(item2, Item::Empty)
         }
@@ -82,6 +95,7 @@ pub fn item_to_string(item: Item) -> String {
             format!("item,{id},{amt}")
         }
         Item::Tool(id, info) => format!("tool,{id},{info}"),
+        Item::Food(id, info) => format!("food,{id},{info}"),
         Item::Empty => "empty".to_string(),
     }
 }
@@ -114,6 +128,10 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
         let id = tokens[1].parse::<u16>().unwrap_or(0);
         let info = string_to_tool_info(&tokens[2]).map_err(|_| ())?;
         Ok(Item::Tool(id, info))
+    } else if tokens.len() == 3 && tokens[0] == "food" {
+        let id = tokens[1].parse::<u16>().unwrap_or(0);
+        let info = string_to_food_info(&tokens[2]).map_err(|_| ())?;
+        Ok(Item::Food(id, info))
     } else if tokens.len() == 1 && tokens[0] == "empty" {
         Ok(Item::Empty)
     } else {
@@ -193,7 +211,7 @@ pub fn merge_stacks(item1: Item, item2: Item) -> (Item, Item, bool) {
                 (item1, item2, false)
             }
         }
-        Item::Tool(..) => (item1, item2, false),
+        Item::Tool(..) | Item::Food(..) => (item1, item2, false),
     }
 }
 
