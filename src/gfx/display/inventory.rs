@@ -502,7 +502,7 @@ fn display_inventory_sprite_items(
     let step = (sz / 2.0 + 2.0) * 4.0;
     for iy in 0..inventory.h() {
         for ix in 0..inventory.w() {
-            let x = leftx + ix as f32 * step + step / 4.0 - sz / 2.0;
+            let x = leftx + ix as f32 * step + step / 4.0 - sz / 2.0 - 2.0;
             let y = topy - step * iy as f32 - step / 4.0 + sz / 2.0;
 
             match inventory.get_item(ix, iy) {

@@ -5,7 +5,9 @@ use self::{
     food::{string_to_food_info, FoodInfo},
     tools::string_to_tool_info,
 };
+use super::crafting::{load_item_aliases, ItemAliases};
 use crate::{impfile, voxel::Block};
+use std::collections::HashMap;
 use tools::ToolInfo;
 
 pub const MAX_STACK_SIZE: u8 = 64;
@@ -491,4 +493,31 @@ impl Inventory {
         }
         current_item
     }
+}
+
+fn parse_aliased_items(s: &str, item_aliases: &ItemAliases) -> Result<Item, ()> {
+    let aliased = item_aliases.get(s);
+    if let Some(item) = aliased {
+        return Ok(*item);
+    }
+    string_to_item_err(s)
+}
+
+pub fn load_leftover_table(item_alias_path: &str, leftovers_path: &str) -> HashMap<String, Item> {
+    let entries = impfile::parse_file(leftovers_path);
+    let item_aliases = load_item_aliases(item_alias_path);
+    let mut leftovers_table = HashMap::new();
+    for e in entries {
+        for (name, value) in e.get_all_vars() {
+            let item = parse_aliased_items(&name, &item_aliases);
+            if item.is_err() {
+                continue;
+            }
+            let item_str = item_to_string(item.unwrap_or(Item::Empty));
+            let leftover = parse_aliased_items(&value, &item_aliases).unwrap_or(Item::Empty);
+            leftovers_table.insert(item_str, leftover);
+        }
+    }
+
+    leftovers_table
 }

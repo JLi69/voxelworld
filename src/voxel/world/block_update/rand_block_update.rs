@@ -9,8 +9,8 @@ pub const RANDOM_UPDATE_INTERVAL: f32 = 0.25;
 
 fn grow_wheat(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut UpdateList) {
     let below = world.get_block(x, y - 1, z);
-    let skip_dry_farmland = below.id == 45 && fastrand::i32(0..5) < 4;
-    let skip_wet_farmland = below.id == 43 && fastrand::i32(0..5) < 2;
+    let skip_dry_farmland = below.id == 45 && fastrand::i32(0..12) < 11;
+    let skip_wet_farmland = below.id == 43 && fastrand::i32(0..10) < 7;
     if skip_wet_farmland || skip_dry_farmland {
         return;
     }
@@ -116,7 +116,7 @@ fn update_wet_farmland(world: &World, x: i32, y: i32, z: i32, to_update: &mut Up
 
 //Have sugar cane grow
 fn grow_sugarcane(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList) {
-    if fastrand::i32(0..5) >= 2 {
+    if fastrand::i32(0..8) >= 1 {
         return;
     }
 

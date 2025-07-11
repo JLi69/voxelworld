@@ -1,0 +1,11 @@
+# This is a file containing a table of items that have something left over when
+# they are consumed
+# Example:
+# "mushroom_soup" = "bowl"
+# When mushroom soup is consumed, a bowl is left over
+
+"leftovers" {
+	"mushroom_soup" = "bowl";
+	"flower_soup" = "bowl";
+	"desert_soup" = "bowl";
+}

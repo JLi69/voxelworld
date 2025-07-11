@@ -2,7 +2,7 @@ pub mod models;
 pub mod shaders;
 pub mod textures;
 
-use super::Game;
+use super::{inventory::load_leftover_table, Game};
 use egui_backend::egui::{FontData, FontDefinitions, FontFamily};
 use egui_gl_glfw as egui_backend;
 use std::{fs::File, io::Read};
@@ -46,5 +46,11 @@ impl Game {
         self.models.add_default_models();
         self.shaders.load_shaders("assets/shaders.impfile");
         self.textures.load_textures("assets/textures.impfile");
+
+        self.load_block_info("assets/block_info.impfile");
+        self.recipe_table
+            .load_recipes("assets/item_aliases.impfile", "assets/recipes.impfile");
+        self.leftover_table =
+            load_leftover_table("assets/item_aliases.impfile", "assets/leftovers.impfile");
     }
 }

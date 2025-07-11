@@ -1,6 +1,6 @@
 use super::inventory::tools::ToolType;
-use super::inventory::{remove_amt_item, Item};
-use super::player::{PLAYER_HEIGHT, DEFAULT_MAX_HEALTH};
+use super::inventory::{item_to_string, remove_amt_item, Item};
+use super::player::{DEFAULT_MAX_HEALTH, PLAYER_HEIGHT};
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
@@ -391,7 +391,7 @@ impl Game {
         true
     }
 
-    //Returns true if the player can eat 
+    //Returns true if the player can eat
     fn can_eat(&mut self, chunktables: &mut ChunkTables) -> bool {
         if !self.get_mouse_state(MouseButtonRight).is_held() {
             self.build_cooldown = 0.0;
@@ -427,6 +427,12 @@ impl Game {
 
     fn use_hand_item(&mut self, chunktables: &mut ChunkTables) {
         let selected = self.player.hotbar.get_selected();
+        let selected_str = item_to_string(selected);
+        let leftover = self
+            .leftover_table
+            .get(&selected_str)
+            .cloned()
+            .unwrap_or(Item::Empty);
         match selected {
             Item::Block(_block, _amt) => {
                 let placed = self.place_block(chunktables);
@@ -455,7 +461,7 @@ impl Game {
             Item::Food(_id, info) => {
                 if self.can_eat(chunktables) {
                     self.player.eat(info);
-                    self.player.hotbar.update_selected(Item::Empty);
+                    self.player.hotbar.update_selected(leftover);
                 }
             }
             _ => {
@@ -650,6 +656,8 @@ impl Game {
     }
 
     pub fn close_inventory(&mut self) {
+        self.prev_selected_slot = "".to_string();
+
         //Items to drop
         let mut items = vec![];
         //Attempt to add the mouse item to the inventory

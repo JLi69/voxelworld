@@ -284,3 +284,61 @@
 	"output" = "wheat";
 	"amt" = "9";
 }
+
+"bowl" {
+	"width" = "3";
+	"height" = "2";
+	"items" = "plank|empty|plank|empty|plank|empty";
+	"output" = "bowl";
+	"amt" = "3";
+}
+
+"bread" {
+	"width" = "3";
+	"height" = "1";
+	"items" = "wheat|wheat|wheat";
+	"output" = "bread";
+	"amt" = "1";
+}
+
+"mushroom_soup" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "mushroom|mushroom|mushroom|mushroom|mushroom|mushroom|empty|bowl|empty";
+	"output" = "mushroom_soup";
+	"amt" = "1";
+}
+
+"flower_soup" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "red_flower|blue_flower|yellow_flower|red_flower|blue_flower|yellow_flower|empty|bowl|empty";
+	"output" = "flower_soup";
+	"amt" = "1";
+	"reflect" = "true";
+}
+
+"sugar" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "sugarcane";
+	"output" = "sugar";
+	"amt" = "1";
+}
+
+"cake" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "sugar|sugar|sugar|wheat|wheat|wheat|wheat|wheat|wheat";
+	"output" = "cake";
+	"amt" = "1";
+}
+
+"desert_soup" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "empty|cactus|empty|cactus|dead_bush|cactus|empty|bowl|empty";
+	"output" = "desert_soup";
+	"amt" = "1";
+	"reflect" = "true";
+}

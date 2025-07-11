@@ -33,6 +33,7 @@ use player::Player;
 pub use std::collections::HashMap;
 
 use self::crafting::RecipeTable;
+use self::inventory::Item;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameMode {
@@ -138,6 +139,8 @@ pub struct Game {
     block_info: BlockInfoTable,
     //Crafting recipes
     pub recipe_table: RecipeTable,
+    //Item that is left over when it is used
+    pub leftover_table: HashMap<String, Item>,
 }
 
 impl Game {
@@ -174,6 +177,7 @@ impl Game {
             display_hud: true,
             block_info: BlockInfoTable::new(),
             recipe_table: RecipeTable::new(),
+            leftover_table: HashMap::new(),
         }
     }
 
