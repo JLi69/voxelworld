@@ -115,6 +115,7 @@ pub struct Game {
     build_cooldown: f32,
     destroy_cooldown: f32,
     hand_animation: f32,
+    eat_animation: f32,
     //Display inventory
     pub display_inventory: bool,
     pub prev_selected_slot: String,
@@ -160,6 +161,7 @@ impl Game {
             build_cooldown: 0.0,
             destroy_cooldown: 0.0,
             hand_animation: 0.0,
+            eat_animation: 0.0,
             display_inventory: false,
             prev_selected_slot: String::new(),
             world: World::empty(),

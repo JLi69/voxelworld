@@ -398,15 +398,15 @@ impl Game {
             return false;
         }
 
-        if self.build_cooldown > 0.0 {
-            return false;
-        }
-
         let pos = self.cam.position;
         let dir = self.cam.forward();
 
         //Attempt to interact with a block
-        let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
+        let interacted = if self.build_cooldown <= 0.0 && self.eat_animation <= 0.0 {
+            interact_with_block(pos, dir, &mut self.world, &self.player)
+        } else {
+            None
+        };
         if interacted.is_some() {
             let update_mesh = self.world.update_single_block_light(interacted);
             gfx::update_chunk_vaos(chunktables, interacted, &self.world);
@@ -425,7 +425,7 @@ impl Game {
         true
     }
 
-    fn use_hand_item(&mut self, chunktables: &mut ChunkTables) {
+    fn use_hand_item(&mut self, chunktables: &mut ChunkTables, dt: f32) {
         let selected = self.player.hotbar.get_selected();
         let selected_str = item_to_string(selected);
         let leftover = self
@@ -460,8 +460,15 @@ impl Game {
             }
             Item::Food(_id, info) => {
                 if self.can_eat(chunktables) {
+                    self.eat_animation += dt * 1.33; 
+                } else {
+                    self.eat_animation = 0.0;
+                }
+                
+                if self.eat_animation > 1.0 {
                     self.player.eat(info);
                     self.player.hotbar.update_selected(leftover);
+                    self.eat_animation = 0.0;
                 }
             }
             _ => {
@@ -488,7 +495,7 @@ impl Game {
             GameMode::Survival => self.destroy_blocks_survival(chunktables, dt),
         }
 
-        self.use_hand_item(chunktables);
+        self.use_hand_item(chunktables, dt);
     }
 
     //Toggle pause screens
@@ -558,6 +565,10 @@ impl Game {
 
     pub fn get_hand_animation(&self) -> f32 {
         self.hand_animation
+    }
+
+    pub fn get_eat_animation(&self) -> f32 {
+        self.eat_animation
     }
 
     //Toggle hud

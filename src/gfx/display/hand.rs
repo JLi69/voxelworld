@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use super::{
     get_sky_brightness,
     inventory::{display_block_item, display_block_item_flat3d, ITEM_TEX_SCALE, ITEM_TEX_SIZE},
@@ -36,7 +37,17 @@ pub fn display_hand_item(gamestate: &Game) {
 
     let item_rotation = Deg(t * -HAND_ANIMATION_MAX_ROTATION);
     let rotation_animation = match held_item {
-        Item::Food(..) | Item::Tool(..) | Item::Sprite(..) => {
+        Item::Food(..) => {
+            let eat_t = gamestate.get_eat_animation();
+            let eat_rotation = Deg((eat_t / 0.2).clamp(0.0, 1.0) * 75.0);
+            let dy = (eat_t * 6.0 * PI).sin() * 0.1;
+            let dx = -(eat_t / 0.2).clamp(0.0, 1.0) * 0.8;
+            Matrix4::<f32>::from_translation(Vector3::new(dx, dy, 0.0))
+                * Matrix4::<f32>::from_angle_y(eat_rotation)
+                * Matrix4::<f32>::from_angle_x(item_rotation)
+                * Matrix4::<f32>::from_translation(Vector3::new(0.0, t, 0.0))
+        }
+        Item::Tool(..) | Item::Sprite(..) => {
             Matrix4::<f32>::from_angle_x(item_rotation)
                 * Matrix4::<f32>::from_translation(Vector3::new(0.0, t, 0.0))
         }
