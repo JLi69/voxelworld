@@ -8,7 +8,9 @@ use crate::assets::shader::ShaderProgram;
 use crate::game::inventory::Item;
 use crate::game::physics::Hitbox;
 use crate::game::Game;
-use crate::voxel::{world_to_chunk_position, wrap_coord, Chunk, ChunkPos, World, CHUNK_SIZE_I32};
+use crate::voxel::{
+    world_to_chunk_position, wrap_coord, Block, Chunk, ChunkPos, World, CHUNK_SIZE_I32,
+};
 use crate::CHUNK_SIZE_F32;
 use cgmath::Vector3;
 use std::collections::{HashMap, VecDeque};
@@ -42,6 +44,14 @@ pub fn set_fog(gamestate: &Game, shader: &ShaderProgram, skycolor: (f32, f32, f3
 pub fn set_dyn_light(gamestate: &Game, shader: &ShaderProgram) {
     if let Item::Block(b, _) = gamestate.player.hotbar.get_selected() {
         if let Some(src) = b.light_src() {
+            let (r, g, b) = src.rgb_f32();
+            shader.uniform_vec3f("lightcolor", r, g, b);
+        } else {
+            shader.uniform_vec3f("lightcolor", 0.0, 0.0, 0.0);
+        }
+    } else if let Item::Bucket(blockid) = gamestate.player.hotbar.get_selected() {
+        let block = Block::new_id(blockid);
+        if let Some(src) = block.light_src() {
             let (r, g, b) = src.rgb_f32();
             shader.uniform_vec3f("lightcolor", r, g, b);
         } else {

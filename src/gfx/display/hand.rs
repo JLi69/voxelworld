@@ -8,7 +8,12 @@ use crate::{
         inventory::{get_item_atlas_id, Item},
         Game,
     },
-    voxel::{chunk, coordinates::f32coord_to_int, light::LU},
+    voxel::{
+        chunk,
+        coordinates::f32coord_to_int,
+        light::{LightSrc, LU},
+        Block,
+    },
 };
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 use chunk::Chunk;
@@ -98,6 +103,15 @@ pub fn display_hand_item(gamestate: &Game) {
         }
     };
 
+    let (item_r, item_g, item_b) = if let Item::Bucket(blockid) = held_item {
+        Block::new_id(blockid)
+            .light_src()
+            .unwrap_or(LightSrc::new(0, 0, 0))
+            .rgb_f32()
+    } else {
+        (0.0, 0.0, 0.0)
+    };
+
     let id = get_item_atlas_id(held_item);
     match held_item {
         Item::Block(block, _) => {
@@ -134,9 +148,9 @@ pub fn display_hand_item(gamestate: &Game) {
 
             let brightness = get_sky_brightness(gamestate.world.time);
             let daylight = (light.skylight() as f32 * brightness) as u16;
-            let r = light.r().max(daylight) as f32 / 15.0;
-            let g = light.g().max(daylight) as f32 / 15.0;
-            let b = light.b().max(daylight) as f32 / 15.0;
+            let r = (light.r().max(daylight) as f32 / 15.0).max(item_r);
+            let g = (light.g().max(daylight) as f32 / 15.0).max(item_g);
+            let b = (light.b().max(daylight) as f32 / 15.0).max(item_b);
             quad3d.uniform_vec4f("tint", r, g, b, 1.0);
             quad3d.uniform_vec2f("texscale", ITEM_TEX_SCALE, ITEM_TEX_SCALE);
             let ix = id % ITEM_TEX_SIZE;

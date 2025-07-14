@@ -69,7 +69,13 @@ fn ray_intersects_block(
 }
 
 //Scan to see if we hit a voxel in the x direction
-fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignore: fn(Block) -> bool) -> Vector3<f32> {
+fn scan_x(
+    pos: Vector3<f32>,
+    dir: Vector3<f32>,
+    range: f32,
+    world: &World,
+    ignore: fn(Block) -> bool,
+) -> Vector3<f32> {
     if dir.x == 0.0 {
         return pos + dir * range;
     }
@@ -88,7 +94,8 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignor
     let mut x = convert_coord_to_voxel(current_pos.x, dir.x);
     let mut y = current_pos.y.floor() as i32;
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
+    while (current_pos - pos).magnitude() < range
+        && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
     {
         current_pos += diff;
         x = convert_coord_to_voxel(current_pos.x, dir.x);
@@ -100,7 +107,13 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignor
 }
 
 //Scan to see if we hit a voxel in the y direction
-fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignore: fn(Block) -> bool) -> Vector3<f32> {
+fn scan_y(
+    pos: Vector3<f32>,
+    dir: Vector3<f32>,
+    range: f32,
+    world: &World,
+    ignore: fn(Block) -> bool,
+) -> Vector3<f32> {
     if dir.y == 0.0 {
         return pos + dir * range;
     }
@@ -119,7 +132,8 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignor
     let mut x = current_pos.x.floor() as i32;
     let mut y = convert_coord_to_voxel(current_pos.y, dir.y);
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
+    while (current_pos - pos).magnitude() < range
+        && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -131,7 +145,13 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignor
 }
 
 //Scan to see if we hit a voxel in the z direction
-fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignore: fn(Block) -> bool) -> Vector3<f32> {
+fn scan_z(
+    pos: Vector3<f32>,
+    dir: Vector3<f32>,
+    range: f32,
+    world: &World,
+    ignore: fn(Block) -> bool,
+) -> Vector3<f32> {
     if dir.z == 0.0 {
         return pos + dir * range;
     }
@@ -150,7 +170,8 @@ fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignor
     let mut x = current_pos.x.floor() as i32;
     let mut y = current_pos.y.floor() as i32;
     let mut z = convert_coord_to_voxel(current_pos.z, dir.z);
-    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
+    while (current_pos - pos).magnitude() < range
+        && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -190,9 +211,7 @@ pub fn raycast(
 
 pub fn get_selected(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32, i32, i32) {
     let (posx, posy, posz) = f32coord_to_int(pos.x, pos.y, pos.z);
-    let ignore = |block: Block| {
-        block.is_fluid() || block.id == EMPTY_BLOCK
-    };
+    let ignore = |block: Block| block.is_fluid() || block.id == EMPTY_BLOCK;
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world, ignore);
     if ray_intersects_block(pos, dir, posx, posy, posz, world, ignore) {
         (posx, posy, posz)
@@ -203,9 +222,7 @@ pub fn get_selected(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32
 
 pub fn get_selected_fluid(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32, i32, i32) {
     let (posx, posy, posz) = f32coord_to_int(pos.x, pos.y, pos.z);
-    let ignore = |block: Block| {
-        (block.is_fluid() && block.geometry < 7) || block.id == EMPTY_BLOCK
-    };
+    let ignore = |block: Block| (block.is_fluid() && block.geometry < 7) || block.id == EMPTY_BLOCK;
     let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world, ignore);
     if ray_intersects_block(pos, dir, posx, posy, posz, world, ignore) {
         (posx, posy, posz)

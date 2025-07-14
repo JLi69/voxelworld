@@ -425,12 +425,12 @@ impl Game {
         true
     }
 
-    fn use_bucket(&mut self, chunktables: &mut ChunkTables, blockid: u8) { 
+    fn use_bucket(&mut self, chunktables: &mut ChunkTables, blockid: u8) {
         if blockid == 0 {
             if self.get_mouse_state(MouseButtonRight) != KeyState::JustPressed {
                 return;
             }
-            
+
             if self.build_cooldown > 0.0 {
                 return;
             }
