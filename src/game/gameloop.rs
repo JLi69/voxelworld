@@ -131,6 +131,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
             let menu =
                 game::block_menu::get_shape_icon_positions(BLOCK_MENU_WIDTH, -BLOCK_MENU_HEIGHT);
             game::block_menu::change_block_shape(gamestate, &menu, mousex_f32, mousey_f32);
+        } else if gamestate.paused {
+            pause_action = gui::run_pause_menu(&ctx, &mut input_state, &mut painter);
         } else if gamestate.player.is_dead() {
             pause_action = gui::run_death_screen(
                 &ctx,
@@ -138,8 +140,6 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
                 &mut painter,
                 &gamestate.player.death_msg,
             );
-        } else if gamestate.paused {
-            pause_action = gui::run_pause_menu(&ctx, &mut input_state, &mut painter);
         }
 
         //Handle pause menu action

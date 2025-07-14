@@ -1,7 +1,7 @@
 use crate::{
     game::{
         assets::models::draw_elements,
-        inventory::{Inventory, Item},
+        inventory::{get_item_atlas_id, Inventory, Item},
         inventory_screen::mouse_selecting_slot,
         Game,
     },
@@ -155,8 +155,9 @@ fn display_hotbar_sprite_items(gamestate: &Game, w: i32, h: i32) {
             HOTBAR_SIZE * 14.0 / 16.0
         };
 
+        let id = get_item_atlas_id(*item);
         match item {
-            Item::Sprite(id, _) | Item::Food(id, _) | Item::Tool(id, _) => {
+            Item::Sprite(..) | Item::Food(..) | Item::Tool(..) | Item::Bucket(..) => {
                 let ix = id % ITEM_TEX_SIZE;
                 let iy = id / ITEM_TEX_SIZE;
                 let tx = ix as f32 * ITEM_TEX_SCALE;
@@ -505,8 +506,9 @@ fn display_inventory_sprite_items(
             let x = leftx + ix as f32 * step + step / 4.0 - sz / 2.0 - 2.0;
             let y = topy - step * iy as f32 - step / 4.0 + sz / 2.0;
 
+            let id = get_item_atlas_id(inventory.get_item(ix, iy));
             match inventory.get_item(ix, iy) {
-                Item::Sprite(id, _) | Item::Tool(id, _) | Item::Food(id, _) => {
+                Item::Sprite(..) | Item::Tool(..) | Item::Food(..) | Item::Bucket(..) => {
                     let ix = id % ITEM_TEX_SIZE;
                     let iy = id / ITEM_TEX_SIZE;
                     let tx = ix as f32 * ITEM_TEX_SCALE;

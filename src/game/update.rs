@@ -425,6 +425,43 @@ impl Game {
         true
     }
 
+    fn use_bucket(&mut self, chunktables: &mut ChunkTables, blockid: u8) { 
+        if blockid == 0 {
+            if self.get_mouse_state(MouseButtonRight) != KeyState::JustPressed {
+                return;
+            }
+            
+            if self.build_cooldown > 0.0 {
+                return;
+            }
+            //Empty bucket, attempt to pick up water or lava
+            //Attempt to get the fluid block the player is targeting
+            let pos = self.cam.position;
+            let dir = self.cam.forward();
+            let (x, y, z) = voxel::build::get_selected_fluid(pos, dir, &self.world);
+            let block = self.world.get_block(x, y, z);
+            if block.is_fluid() && block.geometry == 7 {
+                self.world.set_block(x, y, z, Block::new());
+                self.player.hotbar.update_selected(Item::Bucket(block.id));
+                let update_mesh = self.world.update_single_block_light(Some((x, y, z)));
+                gfx::update_chunk_vaos(chunktables, Some((x, y, z)), &self.world);
+                for (x, y, z) in update_mesh {
+                    chunktables.update_table(&self.world, x, y, z);
+                }
+                self.hand_animation = 0.1;
+                self.build_cooldown = BUILD_COOLDOWN;
+            }
+        } else {
+            if self.get_mouse_state(MouseButtonRight) != KeyState::JustPressed {
+                return;
+            }
+
+            if self.place_block(chunktables) {
+                self.player.hotbar.update_selected(Item::Bucket(0));
+            }
+        }
+    }
+
     fn use_hand_item(&mut self, chunktables: &mut ChunkTables, dt: f32) {
         let selected = self.player.hotbar.get_selected();
         let selected_str = item_to_string(selected);
@@ -446,7 +483,9 @@ impl Game {
                 if info.tool_type == ToolType::Hoe {
                     if self.use_hoe(chunktables) {
                         let mut info_copy = info;
-                        info_copy.update_durability(1);
+                        if self.game_mode() == GameMode::Survival {
+                            info_copy.update_durability(1);
+                        }
                         let updated_tool = if info_copy.durability > 0 {
                             Item::Tool(id, info_copy)
                         } else {
@@ -460,16 +499,19 @@ impl Game {
             }
             Item::Food(_id, info) => {
                 if self.can_eat(chunktables) {
-                    self.eat_animation += dt * 1.33; 
+                    self.eat_animation += dt * 1.33;
                 } else {
                     self.eat_animation = 0.0;
                 }
-                
+
                 if self.eat_animation > 1.0 {
                     self.player.eat(info);
                     self.player.hotbar.update_selected(leftover);
                     self.eat_animation = 0.0;
                 }
+            }
+            Item::Bucket(blockid) => {
+                self.use_bucket(chunktables, blockid);
             }
             _ => {
                 self.place_block(chunktables);

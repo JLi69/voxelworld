@@ -43,6 +43,7 @@ fn ray_intersects_block(
     y: i32,
     z: i32,
     world: &World,
+    ignore: fn(Block) -> bool,
 ) -> bool {
     let block = world.get_block(x, y, z);
     let hit = match Hitbox::from_block_data(x, y, z, block) {
@@ -64,11 +65,11 @@ fn ray_intersects_block(
         return false;
     }
 
-    !(block.id == EMPTY_BLOCK || block.is_fluid())
+    !ignore(block)
 }
 
 //Scan to see if we hit a voxel in the x direction
-fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Vector3<f32> {
+fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignore: fn(Block) -> bool) -> Vector3<f32> {
     if dir.x == 0.0 {
         return pos + dir * range;
     }
@@ -87,7 +88,7 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = convert_coord_to_voxel(current_pos.x, dir.x);
     let mut y = current_pos.y.floor() as i32;
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
     {
         current_pos += diff;
         x = convert_coord_to_voxel(current_pos.x, dir.x);
@@ -99,7 +100,7 @@ fn scan_x(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
 }
 
 //Scan to see if we hit a voxel in the y direction
-fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Vector3<f32> {
+fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignore: fn(Block) -> bool) -> Vector3<f32> {
     if dir.y == 0.0 {
         return pos + dir * range;
     }
@@ -118,7 +119,7 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = convert_coord_to_voxel(current_pos.y, dir.y);
     let mut z = current_pos.z.floor() as i32;
-    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -130,7 +131,7 @@ fn scan_y(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
 }
 
 //Scan to see if we hit a voxel in the z direction
-fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Vector3<f32> {
+fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World, ignore: fn(Block) -> bool) -> Vector3<f32> {
     if dir.z == 0.0 {
         return pos + dir * range;
     }
@@ -149,7 +150,7 @@ fn scan_z(pos: Vector3<f32>, dir: Vector3<f32>, range: f32, world: &World) -> Ve
     let mut x = current_pos.x.floor() as i32;
     let mut y = current_pos.y.floor() as i32;
     let mut z = convert_coord_to_voxel(current_pos.z, dir.z);
-    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world)
+    while (current_pos - pos).magnitude() < range && !ray_intersects_block(pos, dir, x, y, z, world, ignore)
     {
         current_pos += diff;
         x = current_pos.x.floor() as i32;
@@ -166,10 +167,11 @@ pub fn raycast(
     dir: Vector3<f32>,
     range: f32,
     world: &World,
+    ignore: fn(Block) -> bool,
 ) -> (f32, f32, f32, Axis) {
-    let hitx = scan_x(pos, dir, range, world);
-    let hity = scan_y(pos, dir, range, world);
-    let hitz = scan_z(pos, dir, range, world);
+    let hitx = scan_x(pos, dir, range, world, ignore);
+    let hity = scan_y(pos, dir, range, world, ignore);
+    let hitz = scan_z(pos, dir, range, world, ignore);
 
     let lengthx = (hitx - pos).magnitude();
     let lengthy = (hity - pos).magnitude();
@@ -188,8 +190,24 @@ pub fn raycast(
 
 pub fn get_selected(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32, i32, i32) {
     let (posx, posy, posz) = f32coord_to_int(pos.x, pos.y, pos.z);
-    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
-    if ray_intersects_block(pos, dir, posx, posy, posz, world) {
+    let ignore = |block: Block| {
+        block.is_fluid() || block.id == EMPTY_BLOCK
+    };
+    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world, ignore);
+    if ray_intersects_block(pos, dir, posx, posy, posz, world, ignore) {
+        (posx, posy, posz)
+    } else {
+        get_raycast_voxel(x, y, z, dir, axis)
+    }
+}
+
+pub fn get_selected_fluid(pos: Vector3<f32>, dir: Vector3<f32>, world: &World) -> (i32, i32, i32) {
+    let (posx, posy, posz) = f32coord_to_int(pos.x, pos.y, pos.z);
+    let ignore = |block: Block| {
+        (block.is_fluid() && block.geometry < 7) || block.id == EMPTY_BLOCK
+    };
+    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world, ignore);
+    if ray_intersects_block(pos, dir, posx, posy, posz, world, ignore) {
         (posx, posy, posz)
     } else {
         get_raycast_voxel(x, y, z, dir, axis)
@@ -492,6 +510,13 @@ pub fn interact_with_block(
         if (block.id == 7 || block.id == 91) && block.geometry == 0 {
             block.set_orientation(1);
         }
+    } else if let Item::Bucket(blockid) = player.hotbar.get_selected() {
+        //Place fluid with a bucket
+        if Block::new_id(blockid).is_fluid() {
+            block = Block::new_fluid(blockid);
+        } else {
+            block = Block::new();
+        }
     } else {
         block = Block::new();
     }
@@ -562,7 +587,9 @@ pub fn place_block(
     world: &mut World,
     player: &Player,
 ) -> Option<(i32, i32, i32)> {
-    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world);
+    let (x, y, z, axis) = raycast(pos, dir, BLOCK_REACH, world, |block| {
+        block.is_fluid() || block.id == EMPTY_BLOCK
+    });
     //The id of the block we are placing another block on
     let blockid = {
         let (ix, iy, iz) = get_raycast_voxel(x, y, z, dir, axis);
@@ -590,6 +617,13 @@ pub fn place_block(
         //a better solution.
         if (block.id == 7 || block.id == 91) && block.geometry == 0 {
             block.set_orientation(1);
+        }
+    } else if let Item::Bucket(blockid) = player.hotbar.get_selected() {
+        //Place fluid with a bucket
+        if Block::new_id(blockid).is_fluid() {
+            block = Block::new_fluid(blockid);
+        } else {
+            block = Block::new();
         }
     } else {
         block = Block::new();

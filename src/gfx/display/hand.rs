@@ -1,14 +1,18 @@
-use std::f32::consts::PI;
 use super::{
     get_sky_brightness,
     inventory::{display_block_item, display_block_item_flat3d, ITEM_TEX_SCALE, ITEM_TEX_SIZE},
 };
 use crate::{
-    game::{assets::models::draw_elements_instanced, inventory::Item, Game},
+    game::{
+        assets::models::draw_elements_instanced,
+        inventory::{get_item_atlas_id, Item},
+        Game,
+    },
     voxel::{chunk, coordinates::f32coord_to_int, light::LU},
 };
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
 use chunk::Chunk;
+use std::f32::consts::PI;
 
 const HAND_ANIMATION_MAX_ROTATION: f32 = 90.0;
 
@@ -47,7 +51,7 @@ pub fn display_hand_item(gamestate: &Game) {
                 * Matrix4::<f32>::from_angle_x(item_rotation)
                 * Matrix4::<f32>::from_translation(Vector3::new(0.0, t, 0.0))
         }
-        Item::Tool(..) | Item::Sprite(..) => {
+        Item::Tool(..) | Item::Sprite(..) | Item::Bucket(..) => {
             Matrix4::<f32>::from_angle_x(item_rotation)
                 * Matrix4::<f32>::from_translation(Vector3::new(0.0, t, 0.0))
         }
@@ -94,6 +98,7 @@ pub fn display_hand_item(gamestate: &Game) {
         }
     };
 
+    let id = get_item_atlas_id(held_item);
     match held_item {
         Item::Block(block, _) => {
             let chunk_shader = gamestate.shaders.use_program("chunk");
@@ -119,7 +124,7 @@ pub fn display_hand_item(gamestate: &Game) {
                 display_block_item(&mut chunk, block);
             }
         }
-        Item::Sprite(id, _) | Item::Tool(id, _) | Item::Food(id, _) => {
+        Item::Sprite(..) | Item::Tool(..) | Item::Food(..) | Item::Bucket(..) => {
             let quad3d = gamestate.shaders.use_program("quad3d");
             gamestate.textures.bind("items");
 

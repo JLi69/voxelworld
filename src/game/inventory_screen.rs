@@ -243,6 +243,10 @@ fn right_click_empty(inventory: &mut Inventory, ix: usize, iy: usize) -> Item {
             inventory.set_item(ix, iy, Item::Empty);
             Item::Food(id, info)
         }
+        Item::Bucket(blockid) => {
+            inventory.set_item(ix, iy, Item::Empty);
+            Item::Bucket(blockid)
+        }
     }
 }
 
@@ -404,7 +408,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 gamestate.player.mouse_item
             }
         }
-        Item::Tool(..) | Item::Food(..) => {
+        Item::Tool(..) | Item::Food(..) | Item::Bucket(..) => {
             if let Some((ix, iy)) = selected_inventory {
                 right_click_unstackable(
                     &mut gamestate.player.inventory,

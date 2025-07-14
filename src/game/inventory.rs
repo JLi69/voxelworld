@@ -20,8 +20,10 @@ pub enum Item {
     Sprite(u16, u8),
     //Atlas (or id), tool info
     Tool(u16, ToolInfo),
-    //Atlast (or id), food info
+    //Atlas (or id), food info
     Food(u16, FoodInfo),
+    //Block id
+    Bucket(u8),
     Empty,
 }
 
@@ -32,6 +34,7 @@ pub fn reduce_amt(item: Item) -> Item {
         Item::Sprite(id, _) => Item::Sprite(id, 1),
         Item::Tool(id, info) => Item::Tool(id, info.reduce_info()),
         Item::Food(id, info) => Item::Food(id, info),
+        Item::Bucket(blockid) => Item::Bucket(blockid),
         Item::Empty => Item::Empty,
     }
 }
@@ -74,6 +77,13 @@ pub fn items_match(item1: Item, item2: Item) -> bool {
                 false
             }
         }
+        Item::Bucket(blockid1) => {
+            if let Item::Bucket(blockid2) = item2 {
+                blockid1 == blockid2
+            } else {
+                false
+            }
+        }
         Item::Empty => {
             matches!(item2, Item::Empty)
         }
@@ -98,6 +108,7 @@ pub fn item_to_string(item: Item) -> String {
         }
         Item::Tool(id, info) => format!("tool,{id},{info}"),
         Item::Food(id, info) => format!("food,{id},{info}"),
+        Item::Bucket(blockid) => format!("bucket,{blockid}"),
         Item::Empty => "empty".to_string(),
     }
 }
@@ -134,6 +145,9 @@ pub fn string_to_item_err(s: &str) -> Result<Item, ()> {
         let id = tokens[1].parse::<u16>().unwrap_or(0);
         let info = string_to_food_info(&tokens[2]).map_err(|_| ())?;
         Ok(Item::Food(id, info))
+    } else if tokens.len() == 2 && tokens[0] == "bucket" {
+        let blockid = tokens[1].parse::<u8>().unwrap_or(0);
+        Ok(Item::Bucket(blockid))
     } else if tokens.len() == 1 && tokens[0] == "empty" {
         Ok(Item::Empty)
     } else {
@@ -213,7 +227,7 @@ pub fn merge_stacks(item1: Item, item2: Item) -> (Item, Item, bool) {
                 (item1, item2, false)
             }
         }
-        Item::Tool(..) | Item::Food(..) => (item1, item2, false),
+        Item::Tool(..) | Item::Food(..) | Item::Bucket(..) => (item1, item2, false),
     }
 }
 
@@ -520,4 +534,17 @@ pub fn load_leftover_table(item_alias_path: &str, leftovers_path: &str) -> HashM
     }
 
     leftovers_table
+}
+
+pub const fn get_item_atlas_id(item: Item) -> u16 {
+    match item {
+        Item::Tool(id, _) | Item::Food(id, _) | Item::Sprite(id, _) => id,
+        Item::Bucket(blockid) => match blockid {
+            0 => 16,
+            12 => 17,
+            13 => 18,
+            _ => 0,
+        },
+        _ => 0,
+    }
 }
