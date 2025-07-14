@@ -426,6 +426,31 @@ impl Game {
     }
 
     fn use_bucket(&mut self, chunktables: &mut ChunkTables, blockid: u8) {
+        if !self.get_mouse_state(MouseButtonRight).is_held() {
+            self.build_cooldown = 0.0;
+            return;
+        }
+
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
+
+        //Attempt to interact with a block
+        let interacted = if self.build_cooldown <= 0.0 {
+            interact_with_block(pos, dir, &mut self.world, &self.player)
+        } else {
+            None
+        };
+        if interacted.is_some() {
+            let update_mesh = self.world.update_single_block_light(interacted);
+            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
+            self.hand_animation = 0.1;
+            self.build_cooldown = BUILD_COOLDOWN;
+            return;
+        }
+
         if blockid == 0 {
             if self.get_mouse_state(MouseButtonRight) != KeyState::JustPressed {
                 return;

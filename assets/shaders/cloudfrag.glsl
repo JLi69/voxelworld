@@ -22,14 +22,11 @@ void main() {
 
 	float alpha = color.a;
 	color *= (skybrightness * 0.75 + 0.25);
-	color.a = alpha;
-
-	if(color.a < 0.5)
-		discard;
 
 	//subtract (0.0, 160.0, 0.0) and divide by 2 from campos to display more clouds
 	float d = length(fragpos - campos - vec3(0.0, 160.0, 0.0)) / 2.0;
 	float fogamt = max(d - fogdist, 0.0) / (scale * 4.0);
 	float mixamt = clamp(fogamt * fogstrength, 0.0, 0.95);
 	color = mix(color, fogcolor, mixamt);
+	color.a = alpha;
 }

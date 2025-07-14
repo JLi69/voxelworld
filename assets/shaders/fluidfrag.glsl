@@ -54,7 +54,4 @@ void main() {
 	float mixamt = min(max(length(fragpos - campos) - fogdist, 0.0) * fogstrength, 1.0);
 	color = mix(color, fogcolor, mixamt);
 	color.a = alpha;
-
-	if(color.a < 0.5)
-		discard;
 }
