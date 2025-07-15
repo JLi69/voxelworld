@@ -59,7 +59,9 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     //Update hand animation
     gamestate.update_hand_animation(dt);
     //Update blocks
-    let sim_range = (gamestate.world.get_range() / 2).min(7);
+    let sim_range = (gamestate.world.get_range() / 2 + 1)
+        .min(7)
+        .min(gamestate.world.get_range() - 1);
     gamestate.world.update_sim_range(sim_range);
     gamestate.world.update_blocks(dt, chunktables, sim_range);
     gamestate

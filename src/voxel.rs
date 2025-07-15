@@ -165,6 +165,10 @@ impl Block {
 
     //Returns if the voxel can be destroyed by fluid
     pub fn fluid_destructibe(&self) -> bool {
+        //Snow bottom slab
+        if self.id == 86 && self.shape() == SLAB && self.orientation() == 0 {
+            return true;
+        }
         get_flag(self.id) & FLUID_DESTRUCTIBLE != 0
     }
 
@@ -176,7 +180,7 @@ impl Block {
     //Returns if the voxel can by replaced by player placing a block
     pub fn replaceable(&self) -> bool {
         //Snow bottom slab is replaceable
-        if self.id == 86 && self.shape() == 1 && self.orientation() == 0 {
+        if self.id == 86 && self.shape() == SLAB && self.orientation() == 0 {
             return true;
         }
         get_flag(self.id) & REPLACEABLE != 0
