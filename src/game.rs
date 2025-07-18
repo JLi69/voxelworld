@@ -2,6 +2,7 @@ pub mod assets;
 pub mod block_menu;
 pub mod camera;
 pub mod crafting;
+pub mod entities;
 pub mod gameloop;
 pub mod input;
 pub mod inventory;
@@ -12,6 +13,9 @@ pub mod player;
 pub mod save;
 pub mod update;
 
+use self::crafting::RecipeTable;
+use self::entities::EntitiesTable;
+use self::inventory::Item;
 use crate::game::inventory::Hotbar;
 use crate::impfile;
 use crate::voxel::block_info::{load_block_info, BlockInfo, BlockInfoTable};
@@ -31,9 +35,6 @@ pub use input::{release_cursor, EventHandler, KeyState};
 use physics::Hitbox;
 use player::Player;
 pub use std::collections::HashMap;
-
-use self::crafting::RecipeTable;
-use self::inventory::Item;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameMode {
@@ -142,6 +143,8 @@ pub struct Game {
     pub recipe_table: RecipeTable,
     //Item that is left over when it is used
     pub leftover_table: HashMap<String, Item>,
+    //Entities
+    pub entities: EntitiesTable,
 }
 
 impl Game {
@@ -180,6 +183,7 @@ impl Game {
             block_info: BlockInfoTable::new(),
             recipe_table: RecipeTable::new(),
             leftover_table: HashMap::new(),
+            entities: EntitiesTable::new(),
         }
     }
 
@@ -190,6 +194,7 @@ impl Game {
         self.destroy_cooldown = 0.0;
         self.paused = false;
         self.invert_backface_culling = false;
+        self.entities = EntitiesTable::new();
     }
 
     //Initialize game state

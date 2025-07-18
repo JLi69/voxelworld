@@ -126,13 +126,17 @@ impl Game {
         //Rotate current item in the hotbar (if it is rotatable
         self.rotate_item();
         //Drop item
-        //TODO: implement dropped items
         let q = self.get_key_state(Key::Q);
         if q == KeyState::JustPressed && lshift.is_held() {
+            let item = self.player.hotbar.get_selected();
+            let dropped = self.player.throw_item(item, self.cam.forward());
+            self.entities.dropped_items.add_item(dropped);
             //Drop everything in selected slot
             self.player.hotbar.set_selected(Item::Empty);
         } else if q == KeyState::JustPressed {
-            self.player.hotbar.drop_selected();
+            let item = self.player.hotbar.drop_selected();
+            let dropped = self.player.throw_item(item, self.cam.forward());
+            self.entities.dropped_items.add_item(dropped);
         }
     }
 

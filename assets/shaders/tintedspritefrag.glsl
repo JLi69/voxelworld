@@ -11,4 +11,7 @@ uniform vec2 texoffset;
 void main() {
 	vec2 transformedTc = tc * texscale + texoffset;
 	color = texture(tex, transformedTc) * tint;
+
+	if(color.a < 0.1)
+		discard;
 }

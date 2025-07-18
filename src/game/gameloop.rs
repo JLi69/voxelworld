@@ -69,6 +69,8 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         let aspect = gfx::calculate_aspect(window);
         gamestate.aspect = aspect;
 
+        //Display entities
+        gfx::display::display_entities(gamestate);
         //Display chunks
         chunks_drawn += chunktables.chunk_vaos.display_chunks(gamestate, "chunk");
 

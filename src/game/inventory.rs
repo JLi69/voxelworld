@@ -348,9 +348,17 @@ impl Hotbar {
     }
 
     //Drops one item
-    pub fn drop_selected(&mut self) {
+    //Returns the item that was dropped
+    pub fn drop_selected(&mut self) -> Item {
         let leftover = remove_amt_item(self.items[self.selected], 1);
+        let held = self.get_selected();
         self.items[self.selected] = leftover;
+
+        match held {
+            Item::Block(block, _) => Item::Block(block, 1),
+            Item::Sprite(id, _) => Item::Sprite(id, 1),
+            _ => held,
+        }
     }
 
     //Update selected item

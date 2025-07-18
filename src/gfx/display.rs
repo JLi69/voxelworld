@@ -1,4 +1,5 @@
 pub mod block_menu;
+pub mod dropped_items;
 mod hand;
 pub mod hud;
 pub mod inventory;
@@ -13,8 +14,13 @@ use crate::voxel::{self, CHUNK_SIZE_F32};
 use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
 use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
+pub use dropped_items::display_dropped_items;
 pub use hand::display_hand_item;
 pub use inventory::{display_hotbar, display_inventory_screen, display_mouse_item};
+
+pub fn display_entities(gamestate: &Game) {
+    display_dropped_items(gamestate);
+}
 
 pub fn display_selected_outline(gamestate: &Game) {
     gamestate.textures.bind("breaking");

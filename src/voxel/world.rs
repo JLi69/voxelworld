@@ -5,8 +5,7 @@ mod gen_more;
 pub mod light;
 mod old_world;
 mod save;
-
-use crate::game::GameMode;
+use crate::{game::GameMode, gfx::display::get_sky_brightness};
 
 use super::{
     light::{Light, SkyLightMap, LU},
@@ -288,6 +287,15 @@ impl World {
         Light::black()
     }
 
+    pub fn get_client_light(&self, x: i32, y: i32, z: i32) -> (f32, f32, f32) {
+        let light = self.get_light(x, y, z);
+        let skylight = light.skylight() as f32 / 15.0 * get_sky_brightness(self.time);
+        let r = (light.r() as f32 / 15.0).max(skylight);
+        let g = (light.g() as f32 / 15.0).max(skylight);
+        let b = (light.b() as f32 / 15.0).max(skylight);
+        (r, g, b)
+    }
+
     //Updates light at a position
     //Does nothing if the position is out of range for the world
     pub fn update_light(&mut self, x: i32, y: i32, z: i32, update: LU) {
@@ -423,8 +431,26 @@ impl World {
         !self.chunks.contains_key(&pos)
     }
 
+    pub fn chunk_in_world(&self, x: i32, y: i32, z: i32) -> bool {
+        self.chunks.contains_key(&(x, y, z))
+    }
+
     //Returns the chunk coordinates of the center of the world
     pub fn get_center(&self) -> (i32, i32, i32) {
         (self.centerx, self.centery, self.centerz)
     }
+}
+
+pub fn get_simulation_dist(world: &World) -> i32 {
+    (world.get_range() / 2 + 1)
+        .min(7)
+        .min(world.get_range() - 1)
+}
+
+pub fn in_sim_range(center: (i32, i32, i32), pos: (i32, i32, i32), sim_dist: i32) -> bool {
+    let (centerx, centery, centerz) = center;
+    let (x, y, z) = pos;
+    (x - centerx).abs() <= sim_dist
+        && (y - centery).abs() <= sim_dist
+        && (z - centerz).abs() <= sim_dist
 }

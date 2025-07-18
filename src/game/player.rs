@@ -3,10 +3,11 @@ mod movement;
 mod survival_mode;
 
 use self::movement::JUMP_FORCE;
-
+use super::entities::dropped_item::DroppedItem;
 use super::inventory::{Hotbar, Inventory, Item};
 use super::Hitbox;
 use super::KeyState;
+use crate::game::entities::GRAVITY;
 use crate::impfile;
 use crate::voxel::World;
 use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
@@ -18,7 +19,6 @@ pub const DEFAULT_PLAYER_SPEED: f32 = 4.0;
 pub const PLAYER_HEIGHT: f32 = 1.8;
 pub const PLAYER_SIZE: f32 = 0.6;
 pub const CAMERA_OFFSET: f32 = 0.7;
-pub const GRAVITY: f32 = 24.0;
 pub const JUMP_COOLDOWN: f32 = 1.0 / 20.0;
 const BLOCK_OFFSET: f32 = 0.01;
 const MAX_CROUCH_HEIGHT: f32 = 0.15;
@@ -604,5 +604,15 @@ impl Player {
 
     pub fn is_falling(&self) -> bool {
         self.falling
+    }
+
+    pub fn throw_item(&self, item: Item, dir: Vector3<f32>) -> DroppedItem {
+        DroppedItem::thrown_item(
+            item,
+            self.position.x,
+            self.position.y + PLAYER_HEIGHT / 4.0,
+            self.position.z,
+            dir * 6.0,
+        )
     }
 }
