@@ -1,4 +1,7 @@
-use super::inventory::{ITEM_TEX_SCALE, ITEM_TEX_SIZE};
+use super::{
+    get_sky_brightness,
+    inventory::{ITEM_TEX_SCALE, ITEM_TEX_SIZE},
+};
 use crate::{
     game::{
         assets::models::draw_elements,
@@ -131,6 +134,7 @@ pub fn display_dropped_items(gamestate: &Game) {
     let chunk_shader = gamestate.shaders.use_program("chunk");
     chunk_shader.uniform_matrix4f("persp", &gamestate.persp);
     let camview = gamestate.cam.get_view();
+    chunk_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
     chunk_shader.uniform_vec3f("chunkpos", -1.5, -1.5, -1.5);
     chunk_shader.uniform_vec3f("campos", 0.0, 0.0, 0.0);
     for (pos, list) in gamestate.entities.dropped_items.items() {
