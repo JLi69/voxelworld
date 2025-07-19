@@ -26,8 +26,13 @@ impl Player {
         self.stamina = self.stamina.clamp(0.0, 1.0);
     }
 
-    pub fn apply_fall_damage(&mut self) {
+    pub fn apply_fall_damage(&mut self, world: &World) {
         if self.falling {
+            return;
+        }
+
+        if self.climbing(world) {
+            self.dist_fallen = 0.0;
             return;
         }
 
@@ -72,7 +77,7 @@ impl Player {
         self.update_stamina(dt);
         self.damage_timer -= dt;
         self.damage_cooldown -= dt;
-        self.apply_fall_damage();
+        self.apply_fall_damage(world);
 
         if self.head_intersection(world, 12) {
             //Drowning in water

@@ -193,5 +193,15 @@ impl DroppedItemTable {
         for dropped_item in updated {
             self.add_item(dropped_item);
         }
+
+        let to_delete: Vec<(i32, i32, i32)> = self
+            .item_list
+            .iter()
+            .filter(|(_, list)| list.is_empty())
+            .map(|(pos, _)| *pos)
+            .collect();
+        for pos in to_delete {
+            self.item_list.remove(&pos);
+        }
     }
 }

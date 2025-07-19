@@ -5,7 +5,18 @@ use crate::{
         inventory::{get_item_atlas_id, Item},
         Game,
     },
-    voxel::world::{get_simulation_dist, in_sim_range},
+    gfx::{
+        buildchunk::{
+            add_block_vertices, add_block_vertices_fluid, add_block_vertices_transparent,
+            get_indices,
+        },
+        chunktable::ChunkVao,
+    },
+    voxel::{
+        light::LU,
+        world::{get_simulation_dist, in_sim_range},
+        Chunk,
+    },
 };
 use cgmath::{vec3, Deg, Matrix4, SquareMatrix};
 
@@ -112,9 +123,76 @@ pub fn display_dropped_items(gamestate: &Game) {
         }
     }
 
-    //Display 3D blocks
-
     unsafe {
         gl::Enable(gl::CULL_FACE);
+    }
+
+    //Display 3D blocks
+    let chunk_shader = gamestate.shaders.use_program("chunk");
+    chunk_shader.uniform_matrix4f("persp", &gamestate.persp);
+    let camview = gamestate.cam.get_view();
+    chunk_shader.uniform_vec3f("chunkpos", -1.5, -1.5, -1.5);
+    chunk_shader.uniform_vec3f("campos", 0.0, 0.0, 0.0);
+    for (pos, list) in gamestate.entities.dropped_items.items() {
+        if !in_sim_range(center, *pos, sim_dist) {
+            continue;
+        }
+
+        for dropped_item in list {
+            let block = match dropped_item.item {
+                Item::Block(block, _) => {
+                    if block.is_flat_item() {
+                        continue;
+                    }
+                    block
+                }
+                _ => continue,
+            };
+
+            let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
+            let light = gamestate.world.get_light(
+                pos.x.floor() as i32,
+                pos.y.floor() as i32,
+                pos.z.floor() as i32,
+            );
+            let lu = LU::new(
+                Some(light.sky()),
+                Some(light.r()),
+                Some(light.g()),
+                Some(light.b()),
+            );
+
+            let mut chunk = Chunk::new(0, 0, 0);
+            //Fill in the light for the chunk
+            for x in 0..=2 {
+                for y in 0..=2 {
+                    for z in 0..=2 {
+                        chunk.update_light(x, y, z, lu);
+                    }
+                }
+            }
+            chunk.set_block_relative(1, 1, 1, block);
+            let mut vert_data = vec![];
+            let adj_chunks = [None; 6];
+            add_block_vertices(&mut chunk, adj_chunks, (1, 1, 1), &mut vert_data);
+            add_block_vertices_transparent(&mut chunk, adj_chunks, (1, 1, 1), &mut vert_data);
+            add_block_vertices_fluid(&mut chunk, adj_chunks, (1, 1, 1), &mut vert_data);
+
+            if vert_data.is_empty() {
+                continue;
+            }
+
+            let mut transform = Matrix4::identity();
+            transform = transform * Matrix4::from_translation(pos);
+            let scale = dropped_item.scale();
+            transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
+            transform = transform * Matrix4::from_angle_y(Deg(dropped_item.rotation));
+
+            chunk_shader.uniform_matrix4f("view", &(camview * transform));
+            let face_count = vert_data.len() / (7 * 4);
+            let vao = ChunkVao::generate_new(&vert_data, &get_indices(face_count), 7);
+            vao.draw();
+            vao.delete();
+        }
     }
 }
