@@ -178,9 +178,9 @@ pub fn display_dropped_items(gamestate: &Game) {
             chunk.set_block_relative(1, 1, 1, block);
             let mut vert_data = vec![];
             let adj_chunks = [None; 6];
-            add_block_vertices(&mut chunk, adj_chunks, (1, 1, 1), &mut vert_data);
-            add_block_vertices_transparent(&mut chunk, adj_chunks, (1, 1, 1), &mut vert_data);
-            add_block_vertices_fluid(&mut chunk, adj_chunks, (1, 1, 1), &mut vert_data);
+            add_block_vertices(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
+            add_block_vertices_transparent(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
+            add_block_vertices_fluid(&chunk, adj_chunks, (1, 1, 1), &mut vert_data);
 
             if vert_data.is_empty() {
                 continue;
