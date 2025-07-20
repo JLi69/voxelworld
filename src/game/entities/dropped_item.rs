@@ -16,7 +16,7 @@ pub const ITEM_LIFETIME: f32 = 300.0;
 const ITEM_IGNORE_PICKUP: f32 = 1.0;
 const MAX_Y_OFFSET: f32 = 0.2;
 const YSPEED: f32 = 0.1;
-const LAVA_DESTRUCTION_TIME: f32 = 0.5;
+const LAVA_DESTRUCTION_TIME: f32 = 0.15;
 
 #[derive(Clone)]
 pub struct DroppedItem {
