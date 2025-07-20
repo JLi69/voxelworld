@@ -14,13 +14,15 @@ pub const DROPPED_ITEM_SIZE: f32 = 0.25;
 pub const ITEM_LIFETIME: f32 = 300.0;
 //In seconds
 const ITEM_IGNORE_PICKUP: f32 = 1.0;
+const MAX_Y_OFFSET: f32 = 0.2;
+const YSPEED: f32 = 0.1;
 
 #[derive(Clone)]
 pub struct DroppedItem {
     pub item: Item,
     pub entity: Entity,
-    //In degrees
-    pub rotation: f32,
+    pub yoffset: f32,
+    dy: f32,
     //Ignore this item for this amount of time when it is dropped by the player
     ignore_pickup_timer: f32,
     //How long until this item is destroyed (in seconds)
@@ -29,35 +31,43 @@ pub struct DroppedItem {
 
 impl DroppedItem {
     pub fn new(item: Item, x: f32, y: f32, z: f32) -> Self {
+        let mut e = Entity::new(
+            vec3(x, y, z),
+            vec3(DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE),
+            vec3(0.0, 0.0, 0.0),
+        );
+        e.yaw = fastrand::f32() * 360.0;
+
         Self {
             item,
-            entity: Entity::new(
-                vec3(x, y, z),
-                vec3(DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE),
-                vec3(0.0, 0.0, 0.0),
-            ),
+            yoffset: fastrand::f32() * MAX_Y_OFFSET,
+            dy: YSPEED,
+            entity: e,
             ignore_pickup_timer: 0.0,
-            rotation: fastrand::f32() * 360.0,
             lifetime_timer: ITEM_LIFETIME,
         }
     }
 
     pub fn thrown_item(item: Item, x: f32, y: f32, z: f32, vel: Vec3) -> Self {
+        let mut e = Entity::from_vel(
+            vec3(x, y, z),
+            vec3(DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE),
+            vel,
+        );
+        e.yaw = fastrand::f32() * 360.0;
+
         Self {
             item,
-            entity: Entity::from_vel(
-                vec3(x, y, z),
-                vec3(DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE, DROPPED_ITEM_SIZE),
-                vel,
-            ),
+            yoffset: fastrand::f32() * MAX_Y_OFFSET,
+            dy: YSPEED,
+            entity: e,
             ignore_pickup_timer: ITEM_IGNORE_PICKUP,
-            rotation: fastrand::f32() * 360.0,
             lifetime_timer: ITEM_LIFETIME,
         }
     }
 
     pub fn update(&mut self, dt: f32, world: &World, player: &mut Player) {
-        self.rotation += 90.0 * dt;
+        self.entity.yaw += 90.0 * dt;
 
         if self.ignore_pickup_timer > 0.0 {
             self.ignore_pickup_timer -= dt;
@@ -81,6 +91,12 @@ impl DroppedItem {
         if self.ignore_pickup_timer <= 0.0 {
             self.lifetime_timer -= dt;
         }
+
+        self.yoffset += self.dy * dt;
+        if self.yoffset > MAX_Y_OFFSET || self.yoffset < 0.0 {
+            self.dy *= -1.0;
+        }
+        self.yoffset = self.yoffset.clamp(0.0, MAX_Y_OFFSET);
 
         if self.entity.stuck(world) {
             return;
@@ -108,7 +124,7 @@ impl DroppedItem {
     }
 
     pub fn pos(&self) -> Vec3 {
-        self.entity.position
+        self.entity.position + vec3(0.0, self.yoffset, 0.0)
     }
 
     pub fn scale(&self) -> Vec3 {

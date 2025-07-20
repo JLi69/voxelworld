@@ -10,7 +10,7 @@ use super::KeyState;
 use crate::game::entities::GRAVITY;
 use crate::impfile;
 use crate::voxel::World;
-use cgmath::{Deg, InnerSpace, Matrix4, Vector3, Vector4};
+use cgmath::{vec3, Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
 pub const DEFAULT_MAX_HEALTH: i32 = 20;
 pub const DAMAGE_COOLDOWN: f32 = 1.0; //In seconds
@@ -607,12 +607,7 @@ impl Player {
     }
 
     pub fn throw_item(&self, item: Item, dir: Vector3<f32>) -> DroppedItem {
-        DroppedItem::thrown_item(
-            item,
-            self.position.x,
-            self.position.y + PLAYER_HEIGHT / 4.0,
-            self.position.z,
-            dir * 6.0,
-        )
+        let pos = self.position + vec3(0.0, PLAYER_HEIGHT / 4.0, 0.0);
+        DroppedItem::thrown_item(item, pos.x, pos.y, pos.z, dir * 6.0)
     }
 }

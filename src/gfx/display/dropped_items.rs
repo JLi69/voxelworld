@@ -71,8 +71,9 @@ pub fn display_dropped_items(gamestate: &Game) {
             transform = transform * Matrix4::from_translation(pos);
             let scale = dropped_item.scale();
             transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
-            transform = transform * Matrix4::from_angle_y(Deg(dropped_item.rotation));
+            transform = transform * Matrix4::from_angle_y(Deg(-gamestate.cam.yaw));
             transform = transform * Matrix4::from_angle_z(Deg(180.0));
+            transform = transform * Matrix4::from_angle_x(Deg(gamestate.cam.pitch));
             transform = transform * Matrix4::from_angle_y(Deg(180.0));
             quadshader.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
@@ -118,8 +119,9 @@ pub fn display_dropped_items(gamestate: &Game) {
             transform = transform * Matrix4::from_translation(pos);
             let scale = dropped_item.scale();
             transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
-            transform = transform * Matrix4::from_angle_y(Deg(dropped_item.rotation));
+            transform = transform * Matrix4::from_angle_y(Deg(-gamestate.cam.yaw));
             transform = transform * Matrix4::from_angle_z(Deg(180.0));
+            transform = transform * Matrix4::from_angle_x(Deg(gamestate.cam.pitch));
             transform = transform * Matrix4::from_angle_y(Deg(180.0));
             quadshader.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
@@ -190,7 +192,7 @@ pub fn display_dropped_items(gamestate: &Game) {
             transform = transform * Matrix4::from_translation(pos);
             let scale = dropped_item.scale();
             transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
-            transform = transform * Matrix4::from_angle_y(Deg(dropped_item.rotation));
+            transform = transform * Matrix4::from_angle_y(Deg(dropped_item.entity.yaw));
 
             chunk_shader.uniform_matrix4f("view", &(camview * transform));
             let face_count = vert_data.len() / (7 * 4);
