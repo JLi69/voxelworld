@@ -16,6 +16,7 @@ pub const ITEM_LIFETIME: f32 = 300.0;
 const ITEM_IGNORE_PICKUP: f32 = 1.0;
 const MAX_Y_OFFSET: f32 = 0.2;
 const YSPEED: f32 = 0.1;
+const LAVA_DESTRUCTION_TIME: f32 = 0.5;
 
 #[derive(Clone)]
 pub struct DroppedItem {
@@ -27,6 +28,9 @@ pub struct DroppedItem {
     ignore_pickup_timer: f32,
     //How long until this item is destroyed (in seconds)
     lifetime_timer: f32,
+    //This timer goes down if the dropped item is in lava
+    //if it goes below 0.0, then the item is destroyed
+    lava_destruction_timer: f32,
 }
 
 impl DroppedItem {
@@ -45,6 +49,7 @@ impl DroppedItem {
             entity: e,
             ignore_pickup_timer: 0.0,
             lifetime_timer: ITEM_LIFETIME,
+            lava_destruction_timer: LAVA_DESTRUCTION_TIME,
         }
     }
 
@@ -63,6 +68,7 @@ impl DroppedItem {
             entity: e,
             ignore_pickup_timer: ITEM_IGNORE_PICKUP,
             lifetime_timer: ITEM_LIFETIME,
+            lava_destruction_timer: LAVA_DESTRUCTION_TIME,
         }
     }
 
@@ -113,6 +119,13 @@ impl DroppedItem {
             self.entity.velocity.x = 0.0;
             self.entity.velocity.z = 0.0;
         }
+
+        //Check if the dropped item is intersecting lava
+        if self.entity.is_intersecting(world, 13) {
+            self.lava_destruction_timer -= dt;
+        } else {
+            self.lava_destruction_timer = LAVA_DESTRUCTION_TIME;
+        }
     }
 
     pub fn get_chunk(&self) -> (i32, i32, i32) {
@@ -120,7 +133,7 @@ impl DroppedItem {
     }
 
     pub fn destroyed(&self) -> bool {
-        self.entity.destroyed || self.lifetime_timer <= 0.0
+        self.entity.destroyed || self.lifetime_timer <= 0.0 || self.lava_destruction_timer < 0.0
     }
 
     pub fn pos(&self) -> Vec3 {

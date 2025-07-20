@@ -2,7 +2,7 @@ pub mod dropped_item;
 
 use self::dropped_item::DroppedItemTable;
 use super::{
-    physics::{get_block_collision, Hitbox},
+    physics::{get_block_collision, scan_block_hitbox, Hitbox},
     player::Player,
 };
 use crate::voxel::{World, CHUNK_SIZE_F32};
@@ -253,6 +253,16 @@ impl Entity {
 
     pub fn destroy(&mut self) {
         self.destroyed = true;
+    }
+
+    //Returns true if the player is intersecting a specific block type
+    pub fn is_intersecting(&self, world: &World, block_id: u8) -> bool {
+        let ix = self.position.x.floor() as i32;
+        let iy = self.position.y.floor() as i32;
+        let iz = self.position.z.floor() as i32;
+
+        let hitbox = self.get_hitbox();
+        scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| block.id != block_id).is_some()
     }
 }
 

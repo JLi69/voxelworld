@@ -5,7 +5,9 @@ use super::{
 use crate::{
     game::{
         assets::models::draw_elements,
+        entities::{dropped_item::DroppedItem, Vec3},
         inventory::{get_item_atlas_id, Item},
+        physics::Hitbox,
         Game,
     },
     gfx::{
@@ -14,6 +16,7 @@ use crate::{
             get_indices,
         },
         chunktable::ChunkVao,
+        frustum::Frustum,
     },
     voxel::{
         light::LU,
@@ -23,7 +26,36 @@ use crate::{
 };
 use cgmath::{vec3, Deg, Matrix4, SquareMatrix};
 
+fn get_flat_dropped_transform(pos: Vec3, scale: Vec3, yaw: f32, pitch: f32) -> Matrix4<f32> {
+    let mut transform = Matrix4::<f32>::identity();
+    transform = transform * Matrix4::from_translation(pos);
+    transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
+    transform = transform * Matrix4::from_angle_y(Deg(-yaw));
+    transform = transform * Matrix4::from_angle_z(Deg(180.0));
+    transform = transform * Matrix4::from_angle_x(Deg(pitch));
+    transform = transform * Matrix4::from_angle_y(Deg(180.0));
+    transform
+}
+
+fn get_block_dropped_transform(pos: Vec3, scale: Vec3, yaw: f32) -> Matrix4<f32> {
+    let mut transform = Matrix4::identity();
+    transform = transform * Matrix4::from_translation(pos);
+    transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
+    transform = transform * Matrix4::from_angle_y(Deg(yaw));
+    transform
+}
+
+fn get_frustum_hitbox(dropped_item: &DroppedItem) -> Hitbox {
+    let mut hitbox = dropped_item.entity.get_hitbox();
+    //Double the dimensions of the hitbox for frustum culling so that we have
+    //a bit of buffer to avoid an item disappearing when it might still be visible
+    hitbox.dimensions *= 2.0;
+    hitbox
+}
+
 pub fn display_dropped_items(gamestate: &Game) {
+    let frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
+
     gamestate.textures.bind("items");
     let quad = gamestate.models.bind("quad2d");
     let quadshader = gamestate.shaders.use_program("quad3d");
@@ -45,6 +77,12 @@ pub fn display_dropped_items(gamestate: &Game) {
         }
 
         for dropped_item in list {
+            //Frustum culling
+            if !frustum.intersects(&get_frustum_hitbox(dropped_item)) {
+                continue;
+            }
+
+            //Filter out all non sprite items
             match dropped_item.item {
                 Item::Block(..) | Item::Empty => continue,
                 _ => {}
@@ -67,14 +105,9 @@ pub fn display_dropped_items(gamestate: &Game) {
                 ty as f32 * ITEM_TEX_SCALE,
             );
 
-            let mut transform = Matrix4::<f32>::identity();
-            transform = transform * Matrix4::from_translation(pos);
             let scale = dropped_item.scale();
-            transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
-            transform = transform * Matrix4::from_angle_y(Deg(-gamestate.cam.yaw));
-            transform = transform * Matrix4::from_angle_z(Deg(180.0));
-            transform = transform * Matrix4::from_angle_x(Deg(gamestate.cam.pitch));
-            transform = transform * Matrix4::from_angle_y(Deg(180.0));
+            let transform =
+                get_flat_dropped_transform(pos, scale, gamestate.cam.yaw, gamestate.cam.pitch);
             quadshader.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
         }
@@ -89,6 +122,12 @@ pub fn display_dropped_items(gamestate: &Game) {
         }
 
         for dropped_item in list {
+            //Frustum culling
+            if !frustum.intersects(&get_frustum_hitbox(dropped_item)) {
+                continue;
+            }
+
+            //Filter all non-flat blocks
             let id = match dropped_item.item {
                 Item::Block(block, _) => {
                     if !block.is_flat_item() {
@@ -115,14 +154,9 @@ pub fn display_dropped_items(gamestate: &Game) {
                 ty as f32 * ITEM_TEX_SCALE,
             );
 
-            let mut transform = Matrix4::<f32>::identity();
-            transform = transform * Matrix4::from_translation(pos);
             let scale = dropped_item.scale();
-            transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
-            transform = transform * Matrix4::from_angle_y(Deg(-gamestate.cam.yaw));
-            transform = transform * Matrix4::from_angle_z(Deg(180.0));
-            transform = transform * Matrix4::from_angle_x(Deg(gamestate.cam.pitch));
-            transform = transform * Matrix4::from_angle_y(Deg(180.0));
+            let transform =
+                get_flat_dropped_transform(pos, scale, gamestate.cam.yaw, gamestate.cam.pitch);
             quadshader.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
         }
@@ -145,6 +179,12 @@ pub fn display_dropped_items(gamestate: &Game) {
         }
 
         for dropped_item in list {
+            //Frustum culling
+            if !frustum.intersects(&get_frustum_hitbox(dropped_item)) {
+                continue;
+            }
+
+            //Filter out all flat blocks/flat items
             let block = match dropped_item.item {
                 Item::Block(block, _) => {
                     if block.is_flat_item() {
@@ -155,6 +195,7 @@ pub fn display_dropped_items(gamestate: &Game) {
                 _ => continue,
             };
 
+            //Get lighting for item
             let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
             let light = gamestate.world.get_light(
                 pos.x.floor() as i32,
@@ -188,11 +229,8 @@ pub fn display_dropped_items(gamestate: &Game) {
                 continue;
             }
 
-            let mut transform = Matrix4::identity();
-            transform = transform * Matrix4::from_translation(pos);
             let scale = dropped_item.scale();
-            transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
-            transform = transform * Matrix4::from_angle_y(Deg(dropped_item.entity.yaw));
+            let transform = get_block_dropped_transform(pos, scale, dropped_item.entity.yaw);
 
             chunk_shader.uniform_matrix4f("view", &(camview * transform));
             let face_count = vert_data.len() / (7 * 4);
