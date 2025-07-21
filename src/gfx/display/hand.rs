@@ -1,5 +1,5 @@
 use super::{
-    get_sky_brightness,
+    get_sky_brightness, get_skycolor,
     inventory::{display_block_item, display_block_item_flat3d, ITEM_TEX_SCALE, ITEM_TEX_SIZE},
 };
 use crate::{
@@ -8,6 +8,7 @@ use crate::{
         inventory::{get_item_atlas_id, Item},
         Game,
     },
+    gfx::chunktable::set_fog,
     voxel::{
         chunk,
         coordinates::f32coord_to_int,
@@ -145,6 +146,8 @@ pub fn display_hand_item(gamestate: &Game) {
             quad3d.uniform_matrix4f("view", &view);
             quad3d.uniform_matrix4f("transform", &Matrix4::from_scale(0.75));
             quad3d.uniform_matrix4f("persp", &gamestate.persp);
+            quad3d.uniform_vec3f("campos", 0.0, 0.0, 0.0);
+            set_fog(gamestate, &quad3d, get_skycolor(gamestate.world.time));
 
             let brightness = get_sky_brightness(gamestate.world.time);
             let daylight = (light.skylight() as f32 * brightness) as u16;

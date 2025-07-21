@@ -58,6 +58,7 @@ fn get_frustum_hitbox(dropped_item: &DroppedItem) -> Hitbox {
 
 pub fn display_dropped_items(gamestate: &Game) {
     let frustum = Frustum::new(&gamestate.cam, gamestate.aspect);
+    let campos = gamestate.cam.position;
 
     gamestate.textures.bind("items");
     let quad = gamestate.models.bind("quad2d");
@@ -66,6 +67,8 @@ pub fn display_dropped_items(gamestate: &Game) {
     quadshader.uniform_matrix4f("persp", &gamestate.persp);
     quadshader.uniform_matrix4f("view", &gamestate.cam.get_view());
     quadshader.uniform_vec2f("texscale", ITEM_TEX_SCALE, ITEM_TEX_SCALE);
+    quadshader.uniform_vec3f("campos", campos.x, campos.y, campos.z);
+    set_fog(gamestate, &quadshader, get_skycolor(gamestate.world.time));
 
     unsafe {
         gl::Disable(gl::CULL_FACE);
@@ -177,14 +180,13 @@ pub fn display_dropped_items(gamestate: &Game) {
     }
 
     //Display 3D blocks
-    let chunk_shader = gamestate.shaders.use_program("droppedblock");
-    chunk_shader.uniform_matrix4f("persp", &gamestate.persp);
-    chunk_shader.uniform_matrix4f("view", &gamestate.cam.get_view());
-    chunk_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
-    let campos = gamestate.cam.position;
-    chunk_shader.uniform_vec3f("campos", campos.x, campos.y, campos.z);
-    set_dyn_light(gamestate, &chunk_shader);
-    set_fog(gamestate, &chunk_shader, get_skycolor(gamestate.world.time));
+    let chunkshader = gamestate.shaders.use_program("droppedblock");
+    chunkshader.uniform_matrix4f("persp", &gamestate.persp);
+    chunkshader.uniform_matrix4f("view", &gamestate.cam.get_view());
+    chunkshader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
+    chunkshader.uniform_vec3f("campos", campos.x, campos.y, campos.z);
+    set_dyn_light(gamestate, &chunkshader);
+    set_fog(gamestate, &chunkshader, get_skycolor(gamestate.world.time));
     for (pos, list) in gamestate.entities.dropped_items.items() {
         if !in_sim_range(center, *pos, sim_dist) {
             continue;
@@ -209,7 +211,7 @@ pub fn display_dropped_items(gamestate: &Game) {
 
             //Get lighting for item
             let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
-            chunk_shader.uniform_vec3f("chunkpos", pos.x, pos.y, pos.z);
+            chunkshader.uniform_vec3f("chunkpos", pos.x, pos.y, pos.z);
             let light = gamestate.world.get_light(
                 pos.x.floor() as i32,
                 pos.y.floor() as i32,
@@ -245,7 +247,7 @@ pub fn display_dropped_items(gamestate: &Game) {
             let scale = dropped_item.scale();
             let transform = get_block_dropped_transform(scale, dropped_item.entity.yaw);
 
-            chunk_shader.uniform_matrix4f("transform", &transform);
+            chunkshader.uniform_matrix4f("transform", &transform);
             let face_count = vert_data.len() / (7 * 4);
             let vao = ChunkVao::generate_new(&vert_data, &get_indices(face_count), 7);
             vao.draw();
@@ -253,7 +255,7 @@ pub fn display_dropped_items(gamestate: &Game) {
             //of multiple items
             if amt > 1 {
                 let transform2 = transform * Matrix4::from_translation(BLOCK_ITEM_OFFSET);
-                chunk_shader.uniform_matrix4f("transform", &transform2);
+                chunkshader.uniform_matrix4f("transform", &transform2);
                 vao.draw();
             }
             vao.delete();
