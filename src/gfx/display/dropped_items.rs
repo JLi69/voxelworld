@@ -26,6 +26,9 @@ use crate::{
 };
 use cgmath::{vec3, Deg, Matrix4, SquareMatrix};
 
+const FLAT_ITEM_OFFSET: Vec3 = vec3(0.1, 0.1, 0.1);
+const BLOCK_ITEM_OFFSET: Vec3 = vec3(0.4, 0.4, 0.4);
+
 fn get_flat_dropped_transform(pos: Vec3, scale: Vec3, yaw: f32, pitch: f32) -> Matrix4<f32> {
     let mut transform = Matrix4::<f32>::identity();
     transform = transform * Matrix4::from_translation(pos);
@@ -83,10 +86,11 @@ pub fn display_dropped_items(gamestate: &Game) {
             }
 
             //Filter out all non sprite items
-            match dropped_item.item {
+            let amt = match dropped_item.item {
                 Item::Block(..) | Item::Empty => continue,
-                _ => {}
-            }
+                Item::Sprite(_, amt) => amt,
+                _ => 1,
+            };
 
             let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
             let (r, g, b) = gamestate.world.get_client_light(
@@ -110,6 +114,13 @@ pub fn display_dropped_items(gamestate: &Game) {
                 get_flat_dropped_transform(pos, scale, gamestate.cam.yaw, gamestate.cam.pitch);
             quadshader.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
+            //Draw another item to indicate that this dropped item consists
+            //of multiple items
+            if amt > 1 { 
+                let transform2 = Matrix4::from_translation(FLAT_ITEM_OFFSET) * transform;
+                quadshader.uniform_matrix4f("transform", &transform2);
+                draw_elements(quad.clone());
+            }
         }
     }
 
@@ -128,12 +139,12 @@ pub fn display_dropped_items(gamestate: &Game) {
             }
 
             //Filter all non-flat blocks
-            let id = match dropped_item.item {
-                Item::Block(block, _) => {
+            let (id, amt) = match dropped_item.item {
+                Item::Block(block, amt) => {
                     if !block.is_flat_item() {
                         continue;
                     }
-                    block.id as u16
+                    (block.id as u16, amt)
                 }
                 _ => continue,
             };
@@ -159,6 +170,13 @@ pub fn display_dropped_items(gamestate: &Game) {
                 get_flat_dropped_transform(pos, scale, gamestate.cam.yaw, gamestate.cam.pitch);
             quadshader.uniform_matrix4f("transform", &transform);
             draw_elements(quad.clone());
+            //Draw another item to indicate that this dropped item consists
+            //of multiple items
+            if amt > 1 { 
+                let transform2 = Matrix4::from_translation(FLAT_ITEM_OFFSET) * transform;
+                quadshader.uniform_matrix4f("transform", &transform2);
+                draw_elements(quad.clone());
+            }
         }
     }
 
@@ -185,12 +203,12 @@ pub fn display_dropped_items(gamestate: &Game) {
             }
 
             //Filter out all flat blocks/flat items
-            let block = match dropped_item.item {
-                Item::Block(block, _) => {
+            let (block, amt) = match dropped_item.item {
+                Item::Block(block, amt) => {
                     if block.is_flat_item() {
                         continue;
                     }
-                    block
+                    (block, amt)
                 }
                 _ => continue,
             };
@@ -236,6 +254,13 @@ pub fn display_dropped_items(gamestate: &Game) {
             let face_count = vert_data.len() / (7 * 4);
             let vao = ChunkVao::generate_new(&vert_data, &get_indices(face_count), 7);
             vao.draw();
+            //Draw another item to indicate that this dropped item consists
+            //of multiple items
+            if amt > 1 { 
+                let transform2 = transform * Matrix4::from_translation(BLOCK_ITEM_OFFSET);
+                chunk_shader.uniform_matrix4f("view", &(camview * transform2));
+                vao.draw();
+            }
             vao.delete();
         }
     }
