@@ -102,7 +102,6 @@ impl Player {
             velocity_y: 0.0,
             speed: DEFAULT_PLAYER_SPEED,
             rotation: 0.0,
-            //TODO: make player lose all items upon death
             hotbar: self.hotbar.clone(),
             inventory: self.inventory.clone(),
             crafting_grid: self.crafting_grid.clone(),

@@ -78,8 +78,10 @@ impl DroppedItem {
         if self.ignore_pickup_timer > 0.0 {
             self.ignore_pickup_timer -= dt;
         } else if self.ignore_pickup_timer <= 0.0 {
-            let hitbox = self.entity.get_hitbox();
-            if player.get_hitbox().intersects(&hitbox) {
+            let mut hitbox = self.entity.get_hitbox();
+            //Increase the size of the hitbox to make picking up the item easier
+            hitbox.dimensions *= 5.0;
+            if player.get_hitbox().intersects(&hitbox) && !player.is_dead() {
                 let leftover = if !self.destroyed() {
                     player.add_item(self.item)
                 } else {

@@ -4,7 +4,13 @@
  * */
 
 use super::{Player, DAMAGE_COOLDOWN, DEFAULT_MAX_HEALTH, DROWN_TIME};
-use crate::{game::inventory::food::FoodInfo, voxel::World};
+use crate::{
+    game::{
+        entities::dropped_item::{DroppedItem, DroppedItemTable},
+        inventory::{food::FoodInfo, Item},
+    },
+    voxel::World,
+};
 
 pub const DAMAGE_TIME: f32 = 1.5; //In seconds
 
@@ -115,5 +121,42 @@ impl Player {
 
     pub fn is_dead(&self) -> bool {
         self.health <= 0
+    }
+
+    pub fn drop_inventory(&mut self, dropped_items: &mut DroppedItemTable) {
+        let x = self.position.x;
+        let y = self.position.y;
+        let z = self.position.z;
+
+        //Drop all items in the inventory
+        for ix in 0..self.inventory.w() {
+            for iy in 0..self.inventory.h() {
+                let item = self.inventory.get_item(ix, iy);
+                let dropped = DroppedItem::new(item, x, y, z);
+                dropped_items.add_item(dropped);
+            }
+        }
+
+        //Drop crafting grid
+        for ix in 0..self.crafting_grid.w() {
+            for iy in 0..self.crafting_grid.h() {
+                let item = self.crafting_grid.get_item(ix, iy);
+                let dropped = DroppedItem::new(item, x, y, z);
+                dropped_items.add_item(dropped);
+            }
+        }
+
+        //Drop hotbar
+        for item in self.hotbar.items {
+            let dropped = DroppedItem::new(item, x, y, z);
+            dropped_items.add_item(dropped);
+        }
+
+        //Clear inventory
+        self.inventory.clear();
+        for item in &mut self.hotbar.items {
+            *item = Item::Empty;
+        }
+        self.crafting_grid.clear();
     }
 }

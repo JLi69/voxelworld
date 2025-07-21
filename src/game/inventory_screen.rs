@@ -97,8 +97,9 @@ fn shift_craft(gamestate: &mut Game) {
         let leftover = player.add_item(output);
         //Inventory is full
         if !leftover.is_empty() {
-            //TODO: drop items on the ground
-            return; //Stop
+            //Drop items on the ground
+            let thrown_item = player.throw_item(leftover, gamestate.cam.forward());
+            gamestate.entities.dropped_items.add_item(thrown_item);
         }
     }
 }

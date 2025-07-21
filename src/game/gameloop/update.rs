@@ -52,7 +52,14 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     gamestate.world.force_load();
 
     //Update gameobjects
+    let is_dead = gamestate.player.is_dead();
     gamestate.update_player(dt);
+    //Just died
+    if !is_dead && gamestate.player.is_dead() {
+        gamestate
+            .player
+            .drop_inventory(&mut gamestate.entities.dropped_items);
+    }
     gamestate
         .entities
         .update(dt, &gamestate.world, &mut gamestate.player);

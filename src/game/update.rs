@@ -1,3 +1,4 @@
+use super::entities::dropped_item::DroppedItem;
 use super::inventory::tools::ToolType;
 use super::inventory::{item_to_string, remove_amt_item, Item};
 use super::player::{DEFAULT_MAX_HEALTH, PLAYER_HEIGHT};
@@ -283,10 +284,9 @@ impl Game {
         if self.player.break_timer > break_time && block.id != EMPTY_BLOCK {
             if self.destroy_block(chunktables) {
                 let drop = get_drop(&self.block_info, held, block);
-                //TODO: implement dropped items
-                //If the player does not have enough space in their inventory,
-                //just drop the items on the ground
-                self.player.add_item(drop);
+                let dropped_item =
+                    DroppedItem::new(drop, x as f32 + 0.5, y as f32 + 0.5, z as f32 + 0.5);
+                self.entities.dropped_items.add_item(dropped_item);
                 self.update_tool_durability(block);
             }
             self.player.break_timer = 0.0;
@@ -763,6 +763,9 @@ impl Game {
         }
 
         //If that is not possible, drop it on the ground
-        //TODO: implement dropped items
+        for item in to_drop {
+            let thrown_item = self.player.throw_item(item, self.cam.forward());
+            self.entities.dropped_items.add_item(thrown_item);
+        }
     }
 }
