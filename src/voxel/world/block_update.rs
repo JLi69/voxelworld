@@ -344,10 +344,17 @@ impl World {
         }
     }
 
-    pub fn update_blocks(&mut self, dt: f32, chunktables: &mut ChunkTables, chunk_sim_dist: i32) {
+    //Returns a vec of destroyed blocks
+    //Vec<(block, x, y, z)>
+    pub fn update_blocks(
+        &mut self,
+        dt: f32,
+        chunktables: &mut ChunkTables,
+        chunk_sim_dist: i32,
+    ) -> Vec<((i32, i32, i32), Block)> {
         self.block_update_timer += dt;
         if self.block_update_timer <= BLOCK_UPDATE_INTERVAL {
-            return;
+            return vec![];
         }
 
         self.ticks += 1;
@@ -370,6 +377,7 @@ impl World {
         self.updating.clear();
 
         let mut light_updates = vec![];
+        let mut destroyed = vec![];
         for ((x, y, z), block) in to_update {
             if self.get_block(x, y, z) == block {
                 continue;
@@ -382,6 +390,11 @@ impl World {
                 continue;
             }
 
+            let prev_block = self.get_block(x, y, z);
+            if block.is_fluid() || block.id == EMPTY_BLOCK {
+                destroyed.push(((x, y, z), prev_block))
+            }
+
             get_chunktable_updates(x, y, z, &mut update_mesh);
             self.set_block(x, y, z, block);
             light_updates.push((x, y, z));
@@ -392,6 +405,8 @@ impl World {
         for (x, y, z) in update_mesh {
             chunktables.update_table(self, x, y, z);
         }
+
+        destroyed
     }
 
     //Add all chunks to the updating list

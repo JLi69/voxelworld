@@ -13,6 +13,7 @@ pub const GRAVITY: f32 = 24.0;
 const BLOCK_OFFSET: f32 = 0.01;
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct Entity {
     pub position: Vec3,
     pub dimensions: Vec3,

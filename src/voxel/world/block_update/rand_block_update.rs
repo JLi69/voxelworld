@@ -331,15 +331,17 @@ impl World {
     }
 
     //If chunktables is None, we do not update any chunktable
+    //Returns a vec of destroyed blocks
+    //Vec<(block, x, y, z)>
     pub fn rand_block_update(
         &mut self,
         dt: f32,
         chunktables: Option<&mut ChunkTables>,
         chunk_sim_dist: i32,
-    ) {
+    ) -> Vec<((i32, i32, i32), Block)> {
         self.random_update_timer -= dt;
         if self.random_update_timer > 0.0 {
-            return;
+            return vec![];
         }
         self.random_update_timer = RANDOM_UPDATE_INTERVAL;
 
@@ -354,9 +356,15 @@ impl World {
 
         let mut update_mesh = HashSet::<(i32, i32, i32)>::new();
         let mut light_updates = vec![];
+        let mut destroyed = vec![];
         for ((x, y, z), block) in to_update {
             if self.get_block(x, y, z) == block {
                 continue;
+            }
+
+            let prev_block = self.get_block(x, y, z);
+            if block.is_fluid() || block.id == EMPTY_BLOCK {
+                destroyed.push(((x, y, z), prev_block))
             }
 
             self.set_block(x, y, z, block);
@@ -373,5 +381,7 @@ impl World {
                 chunktables.update_table(self, x, y, z);
             }
         }
+
+        destroyed
     }
 }

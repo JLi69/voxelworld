@@ -1,4 +1,8 @@
-use crate::{game::Game, gfx::ChunkTables, voxel::world::get_simulation_dist};
+use crate::{
+    game::{entities::dropped_item::DroppedItem, inventory::Item, Game},
+    gfx::ChunkTables,
+    voxel::{block_info::get_drop, world::get_simulation_dist, EMPTY_BLOCK},
+};
 use glfw::{CursorMode, PWindow};
 
 fn handle_hotbar_scroll(gamestate: &mut Game) {
@@ -71,10 +75,26 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     //Update blocks
     let sim_range = get_simulation_dist(&gamestate.world);
     gamestate.world.update_sim_range(sim_range);
-    gamestate.world.update_blocks(dt, chunktables, sim_range);
-    gamestate
-        .world
-        .rand_block_update(dt, Some(chunktables), sim_range);
+    let mut destroyed = vec![];
+    destroyed.extend(gamestate.world.update_blocks(dt, chunktables, sim_range));
+    destroyed.extend(
+        gamestate
+            .world
+            .rand_block_update(dt, Some(chunktables), sim_range),
+    );
+    //Add block drops for blocks broken by block updates
+    for ((x, y, z), block) in destroyed {
+        if block.is_fluid() || block.id == EMPTY_BLOCK {
+            continue;
+        }
+
+        let item = get_drop(&gamestate.block_info, Item::Empty, block);
+        if item.is_empty() {
+            continue;
+        }
+        let dropped_item = DroppedItem::new(item, x as f32 + 0.5, y as f32 + 0.5, z as f32 + 0.5);
+        gamestate.entities.dropped_items.add_item(dropped_item);
+    }
     //Update day night cycle
     gamestate.world.update_daynight(dt);
 
