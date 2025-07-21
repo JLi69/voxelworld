@@ -72,3 +72,8 @@
 	"vert" = "assets/shaders/quadvert3d.glsl";
 	"frag" = "assets/shaders/tintedspritefrag.glsl";
 }
+
+"droppedblock" {
+	"vert" = "assets/shaders/droppedblockvert.glsl";
+	"frag" = "assets/shaders/chunkfrag.glsl";
+}

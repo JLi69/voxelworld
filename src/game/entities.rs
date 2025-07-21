@@ -5,7 +5,11 @@ use super::{
     physics::{get_block_collision, scan_block_hitbox, Hitbox},
     player::Player,
 };
-use crate::voxel::{World, CHUNK_SIZE_F32};
+use crate::{
+    gfx::chunktable::get_hand_light,
+    voxel::{World, CHUNK_SIZE_F32},
+};
+use cgmath::InnerSpace;
 
 pub type Vec3 = cgmath::Vector3<f32>;
 
@@ -282,4 +286,29 @@ impl EntitiesTable {
     pub fn update(&mut self, dt: f32, world: &World, player: &mut Player) {
         self.dropped_items.simulate(dt, world, player);
     }
+}
+
+const QUADRATIC: f32 = 1.0 / 12.0;
+const LINEAR: f32 = 1.0 / 16.0;
+const CONSTANT: f32 = 1.0;
+
+//Calculates what the color the entity should be tinted as, based on
+//sky light, block light, and player light
+//Returns (r, g, b)
+pub fn get_entity_tint(pos: Vec3, world: &World, player: &Player) -> (f32, f32, f32) {
+    //Block/sky light
+    let (lightr, lightg, lightb) = world.get_client_light(
+        pos.x.floor() as i32,
+        pos.y.floor() as i32,
+        pos.z.floor() as i32,
+    );
+    //Light from whatever the player is holding
+    let dist = (player.position - pos).magnitude();
+    let attenuation = 1.0 / (QUADRATIC * dist.powi(2) + LINEAR * dist + CONSTANT);
+    let (itemr, itemg, itemb) = get_hand_light(player.hotbar.get_selected());
+    (
+        lightr.max(itemr * attenuation),
+        lightg.max(itemg * attenuation),
+        lightb.max(itemb * attenuation),
+    )
 }

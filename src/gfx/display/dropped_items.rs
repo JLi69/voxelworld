@@ -1,11 +1,11 @@
 use super::{
-    get_sky_brightness,
+    get_sky_brightness, get_skycolor,
     inventory::{ITEM_TEX_SCALE, ITEM_TEX_SIZE},
 };
 use crate::{
     game::{
         assets::models::draw_elements,
-        entities::{dropped_item::DroppedItem, Vec3},
+        entities::{dropped_item::DroppedItem, get_entity_tint, Vec3},
         inventory::{get_item_atlas_id, Item},
         physics::Hitbox,
         Game,
@@ -15,7 +15,7 @@ use crate::{
             add_block_vertices, add_block_vertices_fluid, add_block_vertices_transparent,
             get_indices,
         },
-        chunktable::ChunkVao,
+        chunktable::{set_dyn_light, set_fog, ChunkVao},
         frustum::Frustum,
     },
     voxel::{
@@ -26,7 +26,7 @@ use crate::{
 };
 use cgmath::{vec3, Deg, Matrix4, SquareMatrix};
 
-const FLAT_ITEM_OFFSET: Vec3 = vec3(0.1, 0.1, 0.1);
+const FLAT_ITEM_OFFSET: Vec3 = vec3(0.5, 0.5, 0.5);
 const BLOCK_ITEM_OFFSET: Vec3 = vec3(0.4, 0.4, 0.4);
 
 fn get_flat_dropped_transform(pos: Vec3, scale: Vec3, yaw: f32, pitch: f32) -> Matrix4<f32> {
@@ -40,11 +40,11 @@ fn get_flat_dropped_transform(pos: Vec3, scale: Vec3, yaw: f32, pitch: f32) -> M
     transform
 }
 
-fn get_block_dropped_transform(pos: Vec3, scale: Vec3, yaw: f32) -> Matrix4<f32> {
+fn get_block_dropped_transform(scale: Vec3, yaw: f32) -> Matrix4<f32> {
     let mut transform = Matrix4::identity();
-    transform = transform * Matrix4::from_translation(pos);
     transform = transform * Matrix4::from_nonuniform_scale(scale.x, scale.y, scale.z);
     transform = transform * Matrix4::from_angle_y(Deg(yaw));
+    transform = transform * Matrix4::from_translation(vec3(-1.5, -1.5, -1.5));
     transform
 }
 
@@ -93,11 +93,7 @@ pub fn display_dropped_items(gamestate: &Game) {
             };
 
             let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
-            let (r, g, b) = gamestate.world.get_client_light(
-                pos.x.floor() as i32,
-                pos.y.floor() as i32,
-                pos.z.floor() as i32,
-            );
+            let (r, g, b) = get_entity_tint(pos, &gamestate.world, &gamestate.player);
             quadshader.uniform_vec4f("tint", r, g, b, 1.0);
 
             let id = get_item_atlas_id(dropped_item.item);
@@ -116,8 +112,8 @@ pub fn display_dropped_items(gamestate: &Game) {
             draw_elements(quad.clone());
             //Draw another item to indicate that this dropped item consists
             //of multiple items
-            if amt > 1 { 
-                let transform2 = Matrix4::from_translation(FLAT_ITEM_OFFSET) * transform;
+            if amt > 1 {
+                let transform2 = transform * Matrix4::from_translation(FLAT_ITEM_OFFSET);
                 quadshader.uniform_matrix4f("transform", &transform2);
                 draw_elements(quad.clone());
             }
@@ -150,11 +146,7 @@ pub fn display_dropped_items(gamestate: &Game) {
             };
 
             let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
-            let (r, g, b) = gamestate.world.get_client_light(
-                pos.x.floor() as i32,
-                pos.y.floor() as i32,
-                pos.z.floor() as i32,
-            );
+            let (r, g, b) = get_entity_tint(pos, &gamestate.world, &gamestate.player);
             quadshader.uniform_vec4f("tint", r, g, b, 1.0);
 
             let tx = id % ITEM_TEX_SIZE;
@@ -172,8 +164,8 @@ pub fn display_dropped_items(gamestate: &Game) {
             draw_elements(quad.clone());
             //Draw another item to indicate that this dropped item consists
             //of multiple items
-            if amt > 1 { 
-                let transform2 = Matrix4::from_translation(FLAT_ITEM_OFFSET) * transform;
+            if amt > 1 {
+                let transform2 = transform * Matrix4::from_translation(FLAT_ITEM_OFFSET);
                 quadshader.uniform_matrix4f("transform", &transform2);
                 draw_elements(quad.clone());
             }
@@ -185,12 +177,14 @@ pub fn display_dropped_items(gamestate: &Game) {
     }
 
     //Display 3D blocks
-    let chunk_shader = gamestate.shaders.use_program("chunk");
+    let chunk_shader = gamestate.shaders.use_program("droppedblock");
     chunk_shader.uniform_matrix4f("persp", &gamestate.persp);
-    let camview = gamestate.cam.get_view();
+    chunk_shader.uniform_matrix4f("view", &gamestate.cam.get_view());
     chunk_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
-    chunk_shader.uniform_vec3f("chunkpos", -1.5, -1.5, -1.5);
-    chunk_shader.uniform_vec3f("campos", 0.0, 0.0, 0.0);
+    let campos = gamestate.cam.position;
+    chunk_shader.uniform_vec3f("campos", campos.x, campos.y, campos.z);
+    set_dyn_light(gamestate, &chunk_shader);
+    set_fog(gamestate, &chunk_shader, get_skycolor(gamestate.world.time));
     for (pos, list) in gamestate.entities.dropped_items.items() {
         if !in_sim_range(center, *pos, sim_dist) {
             continue;
@@ -215,6 +209,7 @@ pub fn display_dropped_items(gamestate: &Game) {
 
             //Get lighting for item
             let pos = dropped_item.pos() + vec3(0.0, 0.2, 0.0);
+            chunk_shader.uniform_vec3f("chunkpos", pos.x, pos.y, pos.z);
             let light = gamestate.world.get_light(
                 pos.x.floor() as i32,
                 pos.y.floor() as i32,
@@ -248,17 +243,17 @@ pub fn display_dropped_items(gamestate: &Game) {
             }
 
             let scale = dropped_item.scale();
-            let transform = get_block_dropped_transform(pos, scale, dropped_item.entity.yaw);
+            let transform = get_block_dropped_transform(scale, dropped_item.entity.yaw);
 
-            chunk_shader.uniform_matrix4f("view", &(camview * transform));
+            chunk_shader.uniform_matrix4f("transform", &transform);
             let face_count = vert_data.len() / (7 * 4);
             let vao = ChunkVao::generate_new(&vert_data, &get_indices(face_count), 7);
             vao.draw();
             //Draw another item to indicate that this dropped item consists
             //of multiple items
-            if amt > 1 { 
+            if amt > 1 {
                 let transform2 = transform * Matrix4::from_translation(BLOCK_ITEM_OFFSET);
-                chunk_shader.uniform_matrix4f("view", &(camview * transform2));
+                chunk_shader.uniform_matrix4f("transform", &transform2);
                 vao.draw();
             }
             vao.delete();
