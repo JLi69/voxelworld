@@ -1,13 +1,17 @@
 use super::{Entity, Vec3, GRAVITY};
 use crate::{
-    game::{inventory::Item, player::Player},
+    game::{
+        inventory::{merge_stacks, Item, MAX_STACK_SIZE},
+        physics::Hitbox,
+        player::Player,
+    },
     voxel::{
         world::{get_simulation_dist, in_sim_range},
         World,
     },
 };
 use cgmath::vec3;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub const DROPPED_ITEM_SIZE: f32 = 0.25;
 //In seconds
@@ -17,6 +21,17 @@ const ITEM_IGNORE_PICKUP: f32 = 1.0;
 const MAX_Y_OFFSET: f32 = 0.2;
 const YSPEED: f32 = 0.1;
 const LAVA_DESTRUCTION_TIME: f32 = 0.15;
+
+const ADJ: [(i32, i32, i32); 8] = [
+    (1, 1, 1),
+    (-1, 1, 1),
+    (1, -1, 1),
+    (1, 1, -1),
+    (1, -1, -1),
+    (-1, 1, -1),
+    (-1, -1, 1),
+    (-1, -1, -1),
+];
 
 #[derive(Clone)]
 pub struct DroppedItem {
@@ -72,15 +87,30 @@ impl DroppedItem {
         }
     }
 
+    //Entity's hitbox but 5 times larger
+    pub fn get_large_hitbox(&self) -> Hitbox {
+        let mut hitbox = self.entity.get_hitbox();
+        //Increase the size of the hitbox to make picking up the item easier
+        hitbox.dimensions *= 5.0;
+        hitbox
+    }
+
+    pub fn get_merge_hitbox(&self) -> Hitbox {
+        let mut hitbox = self.entity.get_hitbox();
+        //Triple the size of the hitbox in the x and z dimensions to make
+        //it easier for it to merge with other items
+        hitbox.dimensions.x *= 3.0;
+        hitbox.dimensions.z *= 3.0;
+        hitbox
+    }
+
     pub fn update(&mut self, dt: f32, world: &World, player: &mut Player) {
         self.entity.yaw += 90.0 * dt;
 
         if self.ignore_pickup_timer > 0.0 {
             self.ignore_pickup_timer -= dt;
         } else if self.ignore_pickup_timer <= 0.0 {
-            let mut hitbox = self.entity.get_hitbox();
-            //Increase the size of the hitbox to make picking up the item easier
-            hitbox.dimensions *= 5.0;
+            let hitbox = self.get_large_hitbox();
             if player.get_hitbox().intersects(&hitbox) && !player.is_dead() {
                 let leftover = if !self.destroyed() {
                     player.add_item(self.item)
@@ -190,6 +220,65 @@ impl DroppedItemTable {
             }
         }
 
+        //Merge items
+        let mut new_merged_items = vec![];
+        let mut to_delete = HashSet::new();
+        for ((chunkx, chunky, chunkz), list) in &self.item_list {
+            for (i, dropped) in list.iter().enumerate() {
+                if dropped.ignore_pickup_timer > 0.0 {
+                    continue;
+                }
+
+                if to_delete.contains(&((*chunkx, *chunky, *chunkz), i)) {
+                    continue;
+                }
+
+                if dropped.destroyed() {
+                    continue;
+                }
+
+                let item_merge = search_for_item_merge(
+                    dropped,
+                    list,
+                    &to_delete,
+                    (*chunkx, *chunky, *chunkz),
+                    Some(i),
+                );
+
+                if let Some((item1, item2, index)) = item_merge {
+                    new_merged_items.push(item1);
+                    new_merged_items.push(item2);
+                    to_delete.insert(((*chunkx, *chunky, *chunkz), i));
+                    to_delete.insert(((*chunkx, *chunky, *chunkz), index));
+                    continue;
+                }
+
+                //Check for items in adjacent chunks that should be merged together
+                for (dx, dy, dz) in ADJ {
+                    let x = chunkx + dx;
+                    let y = chunky + dy;
+                    let z = chunkz + dz;
+                    if let Some(adj_list) = self.item_list.get(&(x, y, z)) {
+                        let item_merge =
+                            search_for_item_merge(dropped, adj_list, &to_delete, (x, y, z), None);
+                        if let Some((item1, item2, index)) = item_merge {
+                            new_merged_items.push(item1);
+                            new_merged_items.push(item2);
+                            to_delete.insert(((*chunkx, *chunky, *chunkz), i));
+                            to_delete.insert(((x, y, z), index));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (chunkpos, index) in to_delete {
+            if let Some(list) = self.item_list.get_mut(&chunkpos) {
+                list[index].entity.destroy();
+            }
+        }
+
         //List of dropped items that should be moved to a different chunk
         let mut updated = vec![];
         //Check for any dropped items that are not in the correct chunk
@@ -234,5 +323,92 @@ impl DroppedItemTable {
         for pos in to_delete {
             self.item_list.remove(&pos);
         }
+
+        for new_item in new_merged_items {
+            if new_item.item.is_empty() {
+                continue;
+            }
+
+            self.add_item(new_item);
+        }
     }
+}
+
+fn search_for_item_merge(
+    dropped: &DroppedItem,
+    list: &[DroppedItem],
+    to_delete: &HashSet<((i32, i32, i32), usize)>,
+    chunkpos: (i32, i32, i32),
+    index: Option<usize>,
+) -> Option<(DroppedItem, DroppedItem, usize)> {
+    //Ignore if it is a full stack or unstackable
+    match dropped.item {
+        Item::Block(_, amt) | Item::Sprite(_, amt) => {
+            if amt == MAX_STACK_SIZE {
+                return None;
+            }
+        }
+        _ => return None,
+    }
+
+    let hitbox = dropped.get_merge_hitbox();
+
+    for (i, dropped2) in list.iter().enumerate() {
+        if dropped2.ignore_pickup_timer > 0.0 {
+            continue;
+        }
+
+        if let Some(index) = index {
+            if index == i {
+                continue;
+            }
+        }
+
+        if to_delete.contains(&(chunkpos, i)) {
+            continue;
+        }
+
+        //Ignore if it is a full stack or unstackable
+        match dropped2.item {
+            Item::Block(_, amt) | Item::Sprite(_, amt) => {
+                if amt == MAX_STACK_SIZE {
+                    continue;
+                }
+            }
+            _ => continue,
+        }
+
+        if dropped2.destroyed() {
+            continue;
+        }
+
+        let hitbox2 = dropped2.get_merge_hitbox();
+
+        if !hitbox.intersects(&hitbox2) {
+            continue;
+        }
+
+        let (merged, leftover, can_merge) = merge_stacks(dropped.item, dropped2.item);
+        if !can_merge {
+            continue;
+        }
+
+        //Merged goes to the item with more stuff, leftover goes to the item with less stuff
+        let (mut merged1, mut merged2) = if dropped.item.amt() < dropped2.item.amt() {
+            //Dropped has less stuff, dropped2 has more stuff
+            (dropped2.clone(), dropped.clone())
+        } else {
+            //Dropped has more stuff, dropped2 has less stuff
+            (dropped.clone(), dropped2.clone())
+        };
+
+        merged1.item = merged;
+        merged1.lifetime_timer = ITEM_LIFETIME;
+        merged2.item = leftover;
+        merged2.lifetime_timer = ITEM_LIFETIME;
+
+        return Some((merged1, merged2, i));
+    }
+
+    None
 }

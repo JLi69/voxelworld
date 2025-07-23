@@ -94,6 +94,13 @@ impl Item {
     pub fn is_empty(&self) -> bool {
         matches!(self, Item::Empty)
     }
+
+    pub fn amt(&self) -> u8 {
+        match self {
+            Item::Block(_, amt) | Item::Sprite(_, amt) => *amt,
+            _ => 1,
+        }
+    }
 }
 
 pub fn item_to_string(item: Item) -> String {
