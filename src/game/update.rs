@@ -201,6 +201,13 @@ impl Game {
 
     //Returns true if a block has been destroyed
     fn destroy_block(&mut self, chunktables: &mut ChunkTables) -> bool {
+        //Do not break blocks in creative mode if the player is holding a sword
+        if let Item::Tool(_, toolinfo) = self.player.hotbar.get_selected() {
+            if toolinfo.tool_type == ToolType::Sword && self.game_mode() == GameMode::Creative {
+                return false;
+            }
+        }
+
         let pos = self.cam.position;
         let dir = self.cam.forward();
 
