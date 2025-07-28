@@ -231,12 +231,24 @@ impl DroppedItemTable {
         &self.item_list
     }
 
+    pub fn remove(&mut self, pos: (i32, i32, i32)) {
+        self.item_list.remove(&pos);
+    }
+
+    pub fn add_empty(&mut self, x: i32, y: i32, z: i32) {
+        if self.item_list.contains_key(&(x, y, z)) {
+            return;
+        }
+
+        self.item_list.insert((x, y, z), vec![]);
+    }
+
     pub fn simulate(&mut self, dt: f32, world: &World, player: &mut Player) {
         let sim_dist = get_simulation_dist(world);
         let center = world.get_center();
         //Update all dropped items
         for ((x, y, z), list) in &mut self.item_list {
-            if !world.chunk_in_world(*x, *y, *z) {
+            if !world.chunks.contains_key(&(*x, *y, *z)) {
                 continue;
             }
 
@@ -342,16 +354,6 @@ impl DroppedItemTable {
 
         for dropped_item in updated {
             self.add_item(dropped_item);
-        }
-
-        let to_delete: Vec<(i32, i32, i32)> = self
-            .item_list
-            .iter()
-            .filter(|(_, list)| list.is_empty())
-            .map(|(pos, _)| *pos)
-            .collect();
-        for pos in to_delete {
-            self.item_list.remove(&pos);
         }
 
         for new_item in new_merged_items {

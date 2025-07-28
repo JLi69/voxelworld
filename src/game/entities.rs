@@ -291,9 +291,7 @@ impl Entity {
         Some(Self {
             position,
             dimensions,
-            velocity: data_table
-                .get_vec3("vel")
-                .unwrap_or(vec3(0.0, 0.0, 0.0)),
+            velocity: data_table.get_vec3("vel").unwrap_or(vec3(0.0, 0.0, 0.0)),
             falling: false,
             pitch: data_table.get_float("pitch").unwrap_or(0.0),
             yaw: data_table.get_float("yaw").unwrap_or(0.0),
@@ -316,6 +314,37 @@ impl EntitiesTable {
 
     pub fn update(&mut self, dt: f32, world: &World, player: &mut Player) {
         self.dropped_items.simulate(dt, world, player);
+    }
+
+    pub fn init_empty(&mut self, world: &World) {
+        for (x, y, z) in world.chunks.keys().copied() {
+            self.dropped_items.add_empty(x, y, z)
+        }
+
+        for (x, y, z) in world.chunk_cache.keys().copied() {
+            self.dropped_items.add_empty(x, y, z)
+        }
+    }
+
+    //For debug purposes
+    pub fn get_dropped_item_count(&self) -> usize {
+        let mut count = 0;
+        for list in self.dropped_items.items().values() {
+            count += list.len();
+        }
+        count
+    }
+
+    //For debug purposes
+    pub fn get_dropped_item_count_in_world(&self, world: &World) -> usize {
+        let mut count = 0;
+        for (pos, list) in self.dropped_items.items() {
+            if !world.chunks.contains_key(pos) {
+                continue;
+            }
+            count += list.len();
+        }
+        count
     }
 }
 

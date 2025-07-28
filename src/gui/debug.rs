@@ -34,6 +34,13 @@ fn debug_info(
     let seed_text = format!("seed: {}", gamestate.world.get_seed());
     let days_passed = format!("days passed: {}", gamestate.world.days_passed);
     let time_text = format!("current time: {:.2}", gamestate.world.time);
+    let dropped_item_text = format!(
+        "dropped items | total: {} | in world: {}",
+        gamestate.entities.get_dropped_item_count(),
+        gamestate
+            .entities
+            .get_dropped_item_count_in_world(&gamestate.world),
+    );
 
     egui::TopBottomPanel::top("debug")
         .frame(transparent_frame())
@@ -49,6 +56,7 @@ fn debug_info(
             ui.heading(debug_text(&seed_text));
             ui.heading(debug_text(&days_passed));
             ui.heading(debug_text(&time_text));
+            ui.heading(debug_text(&dropped_item_text));
         });
 }
 

@@ -197,6 +197,16 @@ impl LoadChunkQueue {
         Some((x, z, yset))
     }
 
+    pub fn front(&self) -> Option<Column> {
+        let (x, z) = self.queue.front().copied()?;
+        let yvals = self.coords_xz.get(&(x, z))?.to_vec();
+        let mut yset = HashSet::new();
+        for y in yvals {
+            yset.insert(y);
+        }
+        Some((x, z, yset))
+    }
+
     pub fn is_empty(&self) -> bool {
         self.coords_xz.is_empty()
     }
@@ -306,9 +316,22 @@ impl World {
         false
     }
 
-    pub fn load_from_queue(&mut self, max_time: f32) {
+    pub fn load_from_queue(&mut self, max_time: f32) -> HashSet<(i32, i32, i32)> {
         let start = std::time::Instant::now();
-        while self.pop_load() && start.elapsed().as_secs_f32() < max_time {}
+        let mut loaded = HashSet::new();
+        if let Some((x, z, yvals)) = self.to_load.front() {
+            for y in yvals {
+                loaded.insert((x, y, z));
+            }
+        }
+        while self.pop_load() && start.elapsed().as_secs_f32() < max_time {
+            if let Some((x, z, yvals)) = self.to_load.front() {
+                for y in yvals {
+                    loaded.insert((x, y, z));
+                }
+            }
+        }
+        loaded
     }
 
     pub fn update_chunktables(&mut self, chunktables: &mut ChunkTables) {

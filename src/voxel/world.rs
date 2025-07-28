@@ -431,10 +431,6 @@ impl World {
         !self.chunks.contains_key(&pos)
     }
 
-    pub fn chunk_in_world(&self, x: i32, y: i32, z: i32) -> bool {
-        self.chunks.contains_key(&(x, y, z))
-    }
-
     //Returns the chunk coordinates of the center of the world
     pub fn get_center(&self) -> (i32, i32, i32) {
         (self.centerx, self.centery, self.centerz)

@@ -1,9 +1,9 @@
 use super::{dropped_item::DroppedItem, EntitiesTable, ENTITIES_PATH};
 use crate::{
     bin_data,
-    voxel::{region::{
+    voxel::region::{
         chunkpos_to_regionpos, regionpos_to_chunkpos, save::region_file_name, REGION_SIZE_I32,
-    }, World},
+    },
 };
 use std::{
     collections::HashSet,
@@ -132,11 +132,7 @@ impl EntityRegion {
     }
 }
 
-pub fn get_region_entities(
-    region: &mut EntityRegion,
-    entities_table: &EntitiesTable,
-    world: &World
-) {
+pub fn get_region_entities(region: &mut EntityRegion, entities_table: &EntitiesTable) {
     let (chunkx, chunky, chunkz) = regionpos_to_chunkpos(region.x, region.y, region.z);
     for x in chunkx..(chunkx + REGION_SIZE_I32) {
         for y in chunky..(chunky + REGION_SIZE_I32) {
@@ -145,8 +141,6 @@ pub fn get_region_entities(
                 //Add dropped items
                 if let Some(list) = entities_table.dropped_items.items().get(&pos) {
                     region.add_dropped_item_list(list);
-                }
-                if world.is_loaded(pos) {
                     region.loaded.insert(pos);
                 }
             }

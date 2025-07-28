@@ -54,6 +54,7 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
 
     //Force load any chunks that are close enough to the player
     gamestate.world.force_load();
+    gamestate.entities.force_load(&gamestate.world);
 
     //Update gameobjects
     let is_dead = gamestate.player.is_dead();
@@ -100,10 +101,12 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
 
     //Generate new chunks
     gamestate.world.clean_cache();
+    gamestate.entities.deload(&gamestate.world);
     gamestate
         .world
         .update_generation_queue(gamestate.player.position);
-    gamestate.world.load_from_queue(0.01);
+    let loaded = gamestate.world.load_from_queue(0.01);
+    gamestate.entities.load_from_list(&gamestate.world, loaded);
     gamestate.world.update_chunktables(chunktables);
     chunktables.update_tables(gamestate);
 }

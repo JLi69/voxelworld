@@ -17,6 +17,9 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
         return;
     }
 
+    //Init entities
+    gamestate.entities.init_empty(&gamestate.world);
+
     //Generate chunk vaos
     let mut chunktables = gfx::ChunkTables::new();
     chunktables.init_tables(&gamestate.world);
