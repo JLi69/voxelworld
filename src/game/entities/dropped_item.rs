@@ -166,7 +166,10 @@ impl DroppedItem {
     }
 
     pub fn destroyed(&self) -> bool {
-        self.entity.destroyed || self.lifetime_timer <= 0.0 || self.lava_destruction_timer < 0.0
+        self.entity.destroyed
+            || self.lifetime_timer <= 0.0
+            || self.lava_destruction_timer < 0.0
+            || self.item.is_empty()
     }
 
     pub fn pos(&self) -> Vec3 {
@@ -353,6 +356,10 @@ impl DroppedItemTable {
         }
 
         for dropped_item in updated {
+            if dropped_item.item.is_empty() {
+                continue;
+            }
+
             self.add_item(dropped_item);
         }
 
