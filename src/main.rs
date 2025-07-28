@@ -1,6 +1,7 @@
 #![windows_subsystem = "windows"]
 
 mod assets;
+mod bin_data;
 mod game;
 mod gfx;
 mod gui;

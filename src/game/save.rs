@@ -106,6 +106,7 @@ impl Game {
         self.save_camera();
         self.save_player();
         self.save_inventory();
+        self.entities.save(&self.world);
         self.world.save();
     }
 
@@ -113,6 +114,7 @@ impl Game {
         self.save_camera();
         self.save_player();
         self.save_inventory();
+        self.entities.save_all(&self.world);
         self.world.save_all();
     }
 }

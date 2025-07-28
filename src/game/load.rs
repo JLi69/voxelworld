@@ -56,5 +56,6 @@ impl Game {
         self.world.load_chunks();
         self.world.init_block_light();
         self.world.init_sky_light();
+        self.entities.load(&self.world);
     }
 }

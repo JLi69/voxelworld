@@ -111,7 +111,7 @@ pub struct World {
     centery: i32,
     centerz: i32,
     //cache of chunks that have been unloaded
-    chunk_cache: HashMap<(i32, i32, i32), Chunk>,
+    pub chunk_cache: HashMap<(i32, i32, i32), Chunk>,
     world_generator: WorldGenerator,
     world_seed: u32,
     pub gen_type: WorldGenType,
@@ -438,6 +438,10 @@ impl World {
     //Returns the chunk coordinates of the center of the world
     pub fn get_center(&self) -> (i32, i32, i32) {
         (self.centerx, self.centery, self.centerz)
+    }
+
+    pub fn is_loaded(&self, chunkpos: (i32, i32, i32)) -> bool {
+        self.chunks.contains_key(&chunkpos) || self.chunk_cache.contains_key(&chunkpos)
     }
 }
 

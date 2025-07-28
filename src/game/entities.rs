@@ -1,4 +1,6 @@
 pub mod dropped_item;
+pub mod region;
+pub mod save;
 
 use self::dropped_item::DroppedItemTable;
 use super::{
@@ -6,15 +8,17 @@ use super::{
     player::Player,
 };
 use crate::{
+    bin_data::DataTable,
     gfx::chunktable::get_hand_light,
     voxel::{World, CHUNK_SIZE_F32},
 };
-use cgmath::InnerSpace;
+use cgmath::{vec3, InnerSpace};
 
 pub type Vec3 = cgmath::Vector3<f32>;
 
 pub const GRAVITY: f32 = 24.0;
 const BLOCK_OFFSET: f32 = 0.01;
+pub const ENTITIES_PATH: &str = "entities/";
 
 #[derive(Clone)]
 #[allow(dead_code)]
@@ -268,6 +272,33 @@ impl Entity {
 
         let hitbox = self.get_hitbox();
         scan_block_hitbox(&hitbox, world, ix, iy, iz, 2, |block| block.id != block_id).is_some()
+    }
+
+    pub fn to_data_table(&self) -> DataTable {
+        let mut data_table = DataTable::new();
+        data_table.add_vec3("pos", self.position);
+        data_table.add_vec3("dim", self.dimensions);
+        data_table.add_vec3("vel", self.velocity);
+        data_table.add_float("pitch", self.pitch);
+        data_table.add_float("yaw", self.yaw);
+        data_table
+    }
+
+    pub fn from_data_table(data_table: &DataTable) -> Option<Self> {
+        let position = data_table.get_vec3("pos")?;
+        let dimensions = data_table.get_vec3("dim")?;
+
+        Some(Self {
+            position,
+            dimensions,
+            velocity: data_table
+                .get_vec3("vel")
+                .unwrap_or(vec3(0.0, 0.0, 0.0)),
+            falling: false,
+            pitch: data_table.get_float("pitch").unwrap_or(0.0),
+            yaw: data_table.get_float("yaw").unwrap_or(0.0),
+            destroyed: false,
+        })
     }
 }
 

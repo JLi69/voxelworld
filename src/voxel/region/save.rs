@@ -2,13 +2,8 @@ use super::{Region, REGION_SIZE};
 use crate::game::save::CHUNK_PATH;
 use std::{fs::File, io::Write, path::Path};
 
-fn region_file_name(x: i32, y: i32, z: i32) -> String {
-    "region_".to_string()
-        + x.to_string().as_str()
-        + "_"
-        + y.to_string().as_str()
-        + "_"
-        + z.to_string().as_str()
+pub fn region_file_name(x: i32, y: i32, z: i32) -> String {
+    format!("region_{x}_{y}_{z}")
 }
 
 impl Region {

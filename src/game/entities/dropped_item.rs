@@ -1,7 +1,8 @@
 use super::{Entity, Vec3, GRAVITY};
 use crate::{
+    bin_data::DataTable,
     game::{
-        inventory::{merge_stacks, Item, MAX_STACK_SIZE},
+        inventory::{item_to_string, merge_stacks, string_to_item_err, Item, MAX_STACK_SIZE},
         physics::Hitbox,
         player::Player,
     },
@@ -174,6 +175,35 @@ impl DroppedItem {
 
     pub fn scale(&self) -> Vec3 {
         self.entity.dimensions
+    }
+
+    pub fn to_data_table(&self) -> DataTable {
+        let mut data_table = self.entity.to_data_table();
+        data_table.add_str("item", &item_to_string(self.item));
+        data_table.add_float("lifetime_timer", self.lifetime_timer);
+        data_table.add_float("ignore_pickup_timer", self.ignore_pickup_timer);
+        data_table.add_float("lava_destruction_timer", self.lava_destruction_timer);
+        data_table
+    }
+
+    pub fn from_data_table(data_table: &DataTable) -> Option<Self> {
+        let entity = Entity::from_data_table(data_table)?;
+        let item_str = data_table.get_str("item")?;
+        let item = string_to_item_err(&item_str).ok()?;
+
+        Some(Self {
+            item,
+            entity,
+            yoffset: fastrand::f32() * MAX_Y_OFFSET,
+            dy: YSPEED,
+            ignore_pickup_timer: data_table.get_float("ignore_pickup_timer").unwrap_or(0.0),
+            lifetime_timer: data_table
+                .get_float("lifetime_timer")
+                .unwrap_or(ITEM_LIFETIME),
+            lava_destruction_timer: data_table
+                .get_float("lava_destruction_timer")
+                .unwrap_or(LAVA_DESTRUCTION_TIME),
+        })
     }
 }
 
