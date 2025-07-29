@@ -3,7 +3,7 @@ use crate::{
         assets::models::draw_elements,
         inventory::{get_item_atlas_id, Inventory, Item},
         inventory_screen::mouse_selecting_slot,
-        Game,
+        Game, GameMode,
     },
     gfx::{
         buildchunk::{
@@ -563,6 +563,7 @@ pub const MAIN_INVENTORY_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 
 pub const HOTBAR_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y);
 pub const CRAFTING_GRID_POS: (f32, f32) = (-2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 6.0 + 30.0);
 pub const OUTPUT_POS: (f32, f32) = (2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0);
+pub const DESTROY_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0);
 
 pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32, f32)) {
     unsafe {
@@ -630,6 +631,20 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
         "icon2d",
     );
 
+    //Display destroy item slot
+    let mut destroy_slot = Inventory::empty_with_sz(1, 1);
+    destroy_slot.set_item(0, 0, Item::Sprite(255, 1));
+    if gamestate.game_mode() == GameMode::Creative {
+        display_inventory_slots(
+            gamestate,
+            &destroy_slot,
+            DESTROY_POS,
+            30.0,
+            mousepos,
+            "icon2d",
+        );
+    }
+
     shader2d.uniform_vec2f("texoffset", 0.75, 0.5);
     let mut transform = Matrix4::identity();
     transform = Matrix4::from_scale(30.0) * transform;
@@ -658,6 +673,10 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
         w,
         h,
     );
+    if gamestate.game_mode() == GameMode::Creative {
+        let (x, y) = DESTROY_POS;
+        display_inventory_items(gamestate, &destroy_slot, (x, y + 3.0), 30.0, w, h);
+    }
 
     unsafe {
         gl::Enable(gl::CULL_FACE);

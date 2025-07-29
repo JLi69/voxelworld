@@ -1,8 +1,10 @@
 use super::inventory::{items_match, MAX_STACK_SIZE};
+use super::GameMode;
 use super::{
     inventory::{merge_stacks, remove_amt_item, Inventory, Item},
     Game, KeyState,
 };
+use crate::gfx::display::inventory::DESTROY_POS;
 use crate::{
     gfx::display::inventory::{CRAFTING_GRID_POS, HOTBAR_POS, MAIN_INVENTORY_POS, OUTPUT_POS},
     voxel::Block,
@@ -126,6 +128,8 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         .unwrap_or(Item::Empty);
     output_slot.set_item(0, 0, output_item);
     let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, 30.0, mousepos);
+    let destroy_slot = Inventory::empty_with_sz(1, 1);
+    let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, 30.0, mousepos);
 
     //Handle shift clicking (transfer items from hotbar to inventory and vice versa)
     if gamestate.get_key_state(Key::LeftShift).is_held()
@@ -195,6 +199,8 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 } else {
                     mouse_item
                 }
+            } else if selected_destroy.is_some() && gamestate.game_mode() == GameMode::Creative {
+                Item::Empty
             } else {
                 gamestate.player.mouse_item
             }
@@ -368,6 +374,9 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         mousepos,
     );
     set_selected_str(&mut selected, selected_crafting, "crafting");
+    let mut destroy_slot = Inventory::empty_with_sz(1, 1);
+    let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, 30.0, mousepos);
+    set_selected_str(&mut selected, selected_destroy, "destroy");
 
     if selected == gamestate.prev_selected_slot {
         return;
@@ -394,6 +403,12 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 right_click_block(&mut hotbar, block, amt, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
                 right_click_block(&mut gamestate.player.crafting_grid, block, amt, ix, iy)
+            } else if let Some((ix, iy)) = selected_destroy {
+                if gamestate.game_mode() == GameMode::Creative {
+                    right_click_block(&mut destroy_slot, block, amt, ix, iy)
+                } else {
+                    gamestate.player.mouse_item
+                }
             } else {
                 gamestate.player.mouse_item
             }
@@ -405,6 +420,12 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 right_click_sprite(&mut hotbar, id, amt, ix, iy)
             } else if let Some((ix, iy)) = selected_crafting {
                 right_click_sprite(&mut gamestate.player.crafting_grid, id, amt, ix, iy)
+            } else if let Some((ix, iy)) = selected_destroy {
+                if gamestate.game_mode() == GameMode::Creative {
+                    right_click_sprite(&mut destroy_slot, id, amt, ix, iy)
+                } else {
+                    gamestate.player.mouse_item
+                }
             } else {
                 gamestate.player.mouse_item
             }
@@ -426,6 +447,8 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                     ix,
                     iy,
                 )
+            } else if selected_destroy.is_some() && gamestate.game_mode() == GameMode::Creative {
+                Item::Empty
             } else {
                 gamestate.player.mouse_item
             }

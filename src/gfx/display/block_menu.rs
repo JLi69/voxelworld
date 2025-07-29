@@ -1,7 +1,10 @@
 use crate::{
     game::{
         assets::models::draw_elements,
-        block_menu::{get_positions, get_selected, get_shape_icon_positions, ICON_SIZE},
+        block_menu::{
+            get_action_icon_positions, get_positions, get_selected, get_shape_icon_positions,
+            BlockMenuActions, ICON_SIZE,
+        },
         input::convert_mouse_pos,
         set_block_shape, BlockMenuShape, Game,
     },
@@ -45,6 +48,33 @@ fn display_shape_icons(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey: i3
     }
 }
 
+//Assumes that `display_shape_icons` has just been called so the appropriate
+//shader and uniforms have been set already
+fn display_action_icons(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey: i32) {
+    let action_icons = get_action_icon_positions(BLOCK_MENU_WIDTH, -BLOCK_MENU_HEIGHT);
+    let (mousex_f32, mousey_f32) = convert_mouse_pos(mousex, mousey, w, h);
+    let selected =
+        get_selected(&action_icons, mousex_f32, mousey_f32).unwrap_or(action_icons.len());
+
+    let shader2d = gamestate.shaders.get("2d");
+    let quad = gamestate.models.bind("quad2d");
+    for (i, (shape, pos)) in action_icons.iter().enumerate() {
+        match shape {
+            BlockMenuActions::Destroy => gamestate.textures.bind("destroy_icon"),
+        }
+
+        let sz = if selected == i {
+            ICON_SIZE
+        } else {
+            ICON_SIZE * 0.8
+        };
+        let transform = Matrix4::from_translation(Vector3::new(pos.x, pos.y, 0.0))
+            * Matrix4::from_nonuniform_scale(sz, sz, 0.0);
+        shader2d.uniform_matrix4f("transform", &transform);
+        draw_elements(quad.clone());
+    }
+}
+
 pub fn display_block_menu(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey: i32) {
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
@@ -65,6 +95,7 @@ pub fn display_block_menu(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey:
     draw_elements(quad);
 
     display_shape_icons(gamestate, w, h, mousex, mousey);
+    display_action_icons(gamestate, w, h, mousex, mousey);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
