@@ -599,7 +599,7 @@ impl Game {
 
         if self.get_key_state(Key::E) == KeyState::JustPressed
             && !self.display_debug
-            && !self.paused
+            && (!self.paused || self.display_block_menu)
         {
             self.display_inventory = !self.display_inventory;
             self.display_block_menu = false;
