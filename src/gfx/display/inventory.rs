@@ -674,8 +674,7 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
         h,
     );
     if gamestate.game_mode() == GameMode::Creative {
-        let (x, y) = DESTROY_POS;
-        display_inventory_items(gamestate, &destroy_slot, (x, y + 3.0), 30.0, w, h);
+        display_inventory_items(gamestate, &destroy_slot, DESTROY_POS, 30.0, w, h);
     }
 
     unsafe {
