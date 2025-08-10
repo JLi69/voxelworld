@@ -4,7 +4,7 @@ use super::{
     inventory::{merge_stacks, remove_amt_item, Inventory, Item},
     Game, KeyState,
 };
-use crate::gfx::display::inventory::DESTROY_POS;
+use crate::gfx::display::inventory::{BUFFER, DESTROY_POS, SLOT_SZ};
 use crate::{
     gfx::display::inventory::{CRAFTING_GRID_POS, HOTBAR_POS, MAIN_INVENTORY_POS, OUTPUT_POS},
     voxel::Block,
@@ -24,7 +24,7 @@ fn get_selected_slot(
 ) -> Option<(usize, usize)> {
     let (leftx, topy) = topleft;
     let (mousex, mousey) = mousepos;
-    let step = (sz / 2.0 + 2.0) * 4.0;
+    let step = (sz / 2.0 + BUFFER / 2.0) * 4.0;
     for iy in 0..inventory.h() {
         for ix in 0..inventory.w() {
             let x = leftx + ix as f32 * step;
@@ -106,19 +106,80 @@ fn shift_craft(gamestate: &mut Game) {
     }
 }
 
-fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
+fn left_click_output(
+    crafting_grid: &mut Inventory,
+    output_slot: &mut Inventory,
+    selected_output: Option<(usize, usize)>,
+    mouse_item: Item,
+) -> Option<Item> {
+    let (ix, iy) = selected_output?;
+    let output_item = output_slot.get_item(ix, iy);
+    Some(match mouse_item {
+        Item::Empty => {
+            if !output_item.is_empty() {
+                remove_inventory_items(crafting_grid);
+            }
+            left_click_empty(output_slot, ix, iy)
+        }
+        _ => {
+            let (merged, leftover, _) = merge_stacks(mouse_item, output_item);
+            if leftover.is_empty() {
+                if !output_item.is_empty() {
+                    remove_inventory_items(crafting_grid);
+                }
+                merged
+            } else {
+                mouse_item
+            }
+        }
+    })
+}
+
+fn left_click(
+    inventory: &mut Inventory,
+    selected_pos: Option<(usize, usize)>,
+    mouse_item: Item,
+) -> Option<Item> {
+    let (ix, iy) = selected_pos?;
+
+    Some(match mouse_item {
+        Item::Empty => left_click_empty(inventory, ix, iy),
+        _ => left_click_item(inventory, mouse_item, ix, iy),
+    })
+}
+
+fn shift_left_click(
+    inventory: &mut Inventory,
+    destination: &mut Inventory,
+    selected_pos: Option<(usize, usize)>,
+) {
+    if let Some((ix, iy)) = selected_pos {
+        let item = inventory.get_item(ix, iy);
+        let leftover = destination.add_item(item);
+        inventory.set_item(ix, iy, leftover);
+    }
+}
+
+//Returns true if shift is being held, false otherwise
+fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
+    let lshift = gamestate.get_key_state(Key::LeftShift).is_held();
+    let rshift = gamestate.get_key_state(Key::RightShift).is_held();
+    if !lshift && !rshift {
+        return false;
+    }
+
     let selected_inventory = get_selected_slot(
         &gamestate.player.inventory,
         MAIN_INVENTORY_POS,
-        30.0,
+        SLOT_SZ,
         mousepos,
     );
     let mut hotbar = Inventory::from_hotbar(&gamestate.player.hotbar);
-    let selected_hotbar = get_selected_slot(&hotbar, HOTBAR_POS, 30.0, mousepos);
+    let selected_hotbar = get_selected_slot(&hotbar, HOTBAR_POS, SLOT_SZ, mousepos);
     let selected_crafting = get_selected_slot(
         &gamestate.player.crafting_grid,
         CRAFTING_GRID_POS,
-        30.0,
+        SLOT_SZ,
         mousepos,
     );
     let mut output_slot = Inventory::empty_with_sz(1, 1);
@@ -127,86 +188,96 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         .get_output(&gamestate.player.crafting_grid)
         .unwrap_or(Item::Empty);
     output_slot.set_item(0, 0, output_item);
-    let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, 30.0, mousepos);
-    let destroy_slot = Inventory::empty_with_sz(1, 1);
-    let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, 30.0, mousepos);
+    let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, SLOT_SZ, mousepos);
 
-    //Handle shift clicking (transfer items from hotbar to inventory and vice versa)
-    if gamestate.get_key_state(Key::LeftShift).is_held()
-        || gamestate.get_key_state(Key::RightShift).is_held()
-    {
-        if let Some((ix, iy)) = selected_inventory {
-            let item = gamestate.player.inventory.get_item(ix, iy);
-            let leftover = hotbar.add_item(item);
-            gamestate.player.inventory.set_item(ix, iy, leftover);
-        } else if let Some((ix, iy)) = selected_hotbar {
-            let item = hotbar.get_item(ix, iy);
-            let leftover = gamestate.player.inventory.add_item(item);
-            hotbar.set_item(ix, iy, leftover);
-        } else if let Some((ix, iy)) = selected_crafting {
-            let item = gamestate.player.crafting_grid.get_item(ix, iy);
-            let leftover = gamestate.player.add_item(item);
-            gamestate.player.crafting_grid.set_item(ix, iy, leftover);
-            //Update hotbar
-            for i in 0..9 {
-                hotbar.set_item(i, 0, gamestate.player.hotbar.items[i]);
-            }
-        } else if selected_output.is_some() {
-            //Shift craft output
-            shift_craft(gamestate);
-            return;
-        }
+    shift_left_click(
+        &mut gamestate.player.inventory,
+        &mut hotbar,
+        selected_inventory,
+    );
+    shift_left_click(
+        &mut hotbar,
+        &mut gamestate.player.inventory,
+        selected_hotbar,
+    );
 
+    //Handle crafting
+    if let Some((ix, iy)) = selected_crafting {
+        let item = gamestate.player.crafting_grid.get_item(ix, iy);
+        let leftover = gamestate.player.add_item(item);
+        gamestate.player.crafting_grid.set_item(ix, iy, leftover);
         //Update hotbar
         for i in 0..9 {
-            gamestate.player.hotbar.items[i] = hotbar.get_item(i, 0);
+            hotbar.set_item(i, 0, gamestate.player.hotbar.items[i]);
         }
+    } else if selected_output.is_some() {
+        //Shift craft output
+        shift_craft(gamestate);
+        return true;
+    }
+
+    //Update hotbar
+    for i in 0..9 {
+        gamestate.player.hotbar.items[i] = hotbar.get_item(i, 0);
+    }
+
+    true
+}
+
+fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
+    let selected_inventory = get_selected_slot(
+        &gamestate.player.inventory,
+        MAIN_INVENTORY_POS,
+        SLOT_SZ,
+        mousepos,
+    );
+    let mut hotbar = Inventory::from_hotbar(&gamestate.player.hotbar);
+    let selected_hotbar = get_selected_slot(&hotbar, HOTBAR_POS, SLOT_SZ, mousepos);
+    let selected_crafting = get_selected_slot(
+        &gamestate.player.crafting_grid,
+        CRAFTING_GRID_POS,
+        SLOT_SZ,
+        mousepos,
+    );
+    let mut output_slot = Inventory::empty_with_sz(1, 1);
+    let output_item = gamestate
+        .recipe_table
+        .get_output(&gamestate.player.crafting_grid)
+        .unwrap_or(Item::Empty);
+    output_slot.set_item(0, 0, output_item);
+    let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, SLOT_SZ, mousepos);
+    let mut destroy_slot = Inventory::empty_with_sz(1, 1);
+    let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, SLOT_SZ, mousepos);
+
+    //Handle shift clicking (transfer items from hotbar to inventory and vice versa)
+    if handle_shift_left_click(gamestate, mousepos) {
         return;
     }
 
     let mouse_item = gamestate.player.mouse_item;
-    let item = match mouse_item {
-        Item::Empty => {
-            if let Some((ix, iy)) = selected_inventory {
-                left_click_empty(&mut gamestate.player.inventory, ix, iy)
-            } else if let Some((ix, iy)) = selected_hotbar {
-                left_click_empty(&mut hotbar, ix, iy)
-            } else if let Some((ix, iy)) = selected_crafting {
-                left_click_empty(&mut gamestate.player.crafting_grid, ix, iy)
-            } else if let Some((ix, iy)) = selected_output {
-                if !output_item.is_empty() {
-                    remove_inventory_items(&mut gamestate.player.crafting_grid);
-                }
-                left_click_empty(&mut output_slot, ix, iy)
-            } else {
-                gamestate.player.mouse_item
-            }
-        }
-        _ => {
-            if let Some((ix, iy)) = selected_inventory {
-                left_click_item(&mut gamestate.player.inventory, mouse_item, ix, iy)
-            } else if let Some((ix, iy)) = selected_hotbar {
-                left_click_item(&mut hotbar, mouse_item, ix, iy)
-            } else if let Some((ix, iy)) = selected_crafting {
-                left_click_item(&mut gamestate.player.crafting_grid, mouse_item, ix, iy)
-            } else if selected_output.is_some() {
-                let (merged, leftover, _) = merge_stacks(mouse_item, output_item);
-                if leftover.is_empty() {
-                    if !output_item.is_empty() {
-                        remove_inventory_items(&mut gamestate.player.crafting_grid);
-                    }
-                    merged
-                } else {
-                    mouse_item
-                }
-            } else if selected_destroy.is_some() && gamestate.game_mode() == GameMode::Creative {
-                Item::Empty
-            } else {
-                gamestate.player.mouse_item
-            }
-        }
-    };
-    gamestate.player.mouse_item = item;
+    let mut item_op = left_click(
+        &mut gamestate.player.inventory,
+        selected_inventory,
+        mouse_item,
+    )
+    .or(left_click(&mut hotbar, selected_hotbar, mouse_item));
+    //Crafting
+    item_op = item_op.or(left_click(
+        &mut gamestate.player.crafting_grid,
+        selected_crafting,
+        mouse_item,
+    ));
+    item_op = item_op.or(left_click_output(
+        &mut gamestate.player.crafting_grid,
+        &mut output_slot,
+        selected_output,
+        mouse_item,
+    ));
+    //Destroy item
+    if gamestate.game_mode() == GameMode::Creative {
+        item_op = item_op.or(left_click(&mut destroy_slot, selected_destroy, mouse_item));
+    }
+    gamestate.player.mouse_item = item_op.unwrap_or(mouse_item);
 
     //Update hotbar
     for i in 0..9 {
@@ -354,28 +425,45 @@ fn set_selected_str(selected_str: &mut String, selected: Option<(usize, usize)>,
     }
 }
 
+//Returns the mouse item
+fn right_click(
+    inventory: &mut Inventory,
+    selected_pos: Option<(usize, usize)>,
+    mouse_item: Item,
+) -> Option<Item> {
+    let (ix, iy) = selected_pos?;
+    Some(match mouse_item {
+        Item::Empty => right_click_empty(inventory, ix, iy),
+        Item::Block(block, amt) => right_click_block(inventory, block, amt, ix, iy),
+        Item::Sprite(id, amt) => right_click_sprite(inventory, id, amt, ix, iy),
+        Item::Tool(..) | Item::Food(..) | Item::Bucket(..) => {
+            right_click_unstackable(inventory, mouse_item, ix, iy)
+        }
+    })
+}
+
 fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     let mut selected = "".to_string();
 
     let selected_inventory = get_selected_slot(
         &gamestate.player.inventory,
         MAIN_INVENTORY_POS,
-        30.0,
+        SLOT_SZ,
         mousepos,
     );
     set_selected_str(&mut selected, selected_inventory, "inventory");
     let mut hotbar = Inventory::from_hotbar(&gamestate.player.hotbar);
-    let selected_hotbar = get_selected_slot(&hotbar, HOTBAR_POS, 30.0, mousepos);
+    let selected_hotbar = get_selected_slot(&hotbar, HOTBAR_POS, SLOT_SZ, mousepos);
     set_selected_str(&mut selected, selected_hotbar, "hotbar");
     let selected_crafting = get_selected_slot(
         &gamestate.player.crafting_grid,
         CRAFTING_GRID_POS,
-        30.0,
+        SLOT_SZ,
         mousepos,
     );
     set_selected_str(&mut selected, selected_crafting, "crafting");
     let mut destroy_slot = Inventory::empty_with_sz(1, 1);
-    let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, 30.0, mousepos);
+    let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, SLOT_SZ, mousepos);
     set_selected_str(&mut selected, selected_destroy, "destroy");
 
     if selected == gamestate.prev_selected_slot {
@@ -384,77 +472,25 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
 
     gamestate.prev_selected_slot = selected;
 
-    let item = match gamestate.player.mouse_item {
-        Item::Empty => {
-            if let Some((ix, iy)) = selected_inventory {
-                right_click_empty(&mut gamestate.player.inventory, ix, iy)
-            } else if let Some((ix, iy)) = selected_hotbar {
-                right_click_empty(&mut hotbar, ix, iy)
-            } else if let Some((ix, iy)) = selected_crafting {
-                right_click_empty(&mut gamestate.player.crafting_grid, ix, iy)
-            } else {
-                gamestate.player.mouse_item
-            }
-        }
-        Item::Block(block, amt) => {
-            if let Some((ix, iy)) = selected_inventory {
-                right_click_block(&mut gamestate.player.inventory, block, amt, ix, iy)
-            } else if let Some((ix, iy)) = selected_hotbar {
-                right_click_block(&mut hotbar, block, amt, ix, iy)
-            } else if let Some((ix, iy)) = selected_crafting {
-                right_click_block(&mut gamestate.player.crafting_grid, block, amt, ix, iy)
-            } else if let Some((ix, iy)) = selected_destroy {
-                if gamestate.game_mode() == GameMode::Creative {
-                    right_click_block(&mut destroy_slot, block, amt, ix, iy)
-                } else {
-                    gamestate.player.mouse_item
-                }
-            } else {
-                gamestate.player.mouse_item
-            }
-        }
-        Item::Sprite(id, amt) => {
-            if let Some((ix, iy)) = selected_inventory {
-                right_click_sprite(&mut gamestate.player.inventory, id, amt, ix, iy)
-            } else if let Some((ix, iy)) = selected_hotbar {
-                right_click_sprite(&mut hotbar, id, amt, ix, iy)
-            } else if let Some((ix, iy)) = selected_crafting {
-                right_click_sprite(&mut gamestate.player.crafting_grid, id, amt, ix, iy)
-            } else if let Some((ix, iy)) = selected_destroy {
-                if gamestate.game_mode() == GameMode::Creative {
-                    right_click_sprite(&mut destroy_slot, id, amt, ix, iy)
-                } else {
-                    gamestate.player.mouse_item
-                }
-            } else {
-                gamestate.player.mouse_item
-            }
-        }
-        Item::Tool(..) | Item::Food(..) | Item::Bucket(..) => {
-            if let Some((ix, iy)) = selected_inventory {
-                right_click_unstackable(
-                    &mut gamestate.player.inventory,
-                    gamestate.player.mouse_item,
-                    ix,
-                    iy,
-                )
-            } else if let Some((ix, iy)) = selected_hotbar {
-                right_click_unstackable(&mut hotbar, gamestate.player.mouse_item, ix, iy)
-            } else if let Some((ix, iy)) = selected_crafting {
-                right_click_unstackable(
-                    &mut gamestate.player.crafting_grid,
-                    gamestate.player.mouse_item,
-                    ix,
-                    iy,
-                )
-            } else if selected_destroy.is_some() && gamestate.game_mode() == GameMode::Creative {
-                Item::Empty
-            } else {
-                gamestate.player.mouse_item
-            }
-        }
-    };
-    gamestate.player.mouse_item = item;
+    let mouse_item = gamestate.player.mouse_item;
+    let mut item_op = right_click(
+        &mut gamestate.player.inventory,
+        selected_inventory,
+        mouse_item,
+    )
+    .or(right_click(&mut hotbar, selected_hotbar, mouse_item));
+    //Crafting
+    item_op = item_op.or(right_click(
+        &mut gamestate.player.crafting_grid,
+        selected_crafting,
+        mouse_item,
+    ));
+    //Destroy item
+    if gamestate.game_mode() == GameMode::Creative {
+        item_op = item_op.or(right_click(&mut destroy_slot, selected_destroy, mouse_item));
+    }
+
+    gamestate.player.mouse_item = item_op.unwrap_or(mouse_item);
 
     //Update hotbar
     for i in 0..9 {

@@ -321,12 +321,14 @@ fn display_inventory_slots(
     topleft: (f32, f32),
     sz: f32,
     mousepos: (f32, f32),
-    shaderid: &str,
 ) {
+    gamestate.textures.bind("hud_icons");
     let (leftx, topy) = topleft;
     let (mousex, mousey) = mousepos;
     let quad = gamestate.models.bind("quad2d");
-    let shader = gamestate.shaders.get(shaderid);
+    let shader = gamestate.shaders.get("icon2d");
+    shader.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
+    shader.uniform_vec2f("texoffset", 0.25, 0.5);
     let step = (sz / 2.0 + 2.0) * 4.0;
     for iy in 0..inventory.h() {
         for ix in 0..inventory.w() {
@@ -558,12 +560,46 @@ fn display_inventory_items(
     display_inventory_numbers(gamestate, inventory, topleft, sz, (w, h));
 }
 
+//Assumes that the screen matrix has already been set
+fn display_arrow(gamestate: &Game) {
+    let quad = gamestate.models.bind("quad2d");
+    let shader2d = gamestate.shaders.use_program("icon2d");
+    gamestate.textures.bind("hud_icons");
+    shader2d.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
+    shader2d.uniform_vec2f("texoffset", 0.75, 0.5);
+    let mut transform = Matrix4::identity();
+    transform = Matrix4::from_scale(30.0) * transform;
+    let x = 68.0;
+    let y = BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0;
+    transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
+    shader2d.uniform_matrix4f("transform", &transform);
+    draw_elements(quad);
+}
+
+pub const SLOT_SZ: f32 = 30.0;
+pub const BUFFER: f32 = 4.0;
+const STEP: f32 = (SLOT_SZ + BUFFER) * 2.0;
+
+fn display_inventory(
+    gamestate: &Game,
+    inventory: &Inventory,
+    pos: (f32, f32),
+    mousepos: (f32, f32),
+    w: i32,
+    h: i32,
+) {
+    //Display main inventory
+    display_inventory_slots(gamestate, inventory, pos, SLOT_SZ, mousepos);
+    display_inventory_items(gamestate, inventory, pos, SLOT_SZ, w, h);
+}
+
 const BOTTOM_Y: f32 = -230.0;
-pub const MAIN_INVENTORY_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 3.0);
-pub const HOTBAR_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y);
-pub const CRAFTING_GRID_POS: (f32, f32) = (-2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 6.0 + 30.0);
-pub const OUTPUT_POS: (f32, f32) = (2.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0);
-pub const DESTROY_POS: (f32, f32) = (-4.0 * 68.0, BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0);
+pub const MAIN_INVENTORY_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y + 15.0 + STEP * 3.0);
+pub const HOTBAR_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y);
+pub const CRAFTING_GRID_POS: (f32, f32) =
+    (-2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
+pub const OUTPUT_POS: (f32, f32) = (2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
+pub const DESTROY_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
 
 pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32, f32)) {
     unsafe {
@@ -588,94 +624,44 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
     shader2d.uniform_matrix4f("transform", &transform);
     draw_elements(quad.clone());
 
-    //Display item slots
-    shader2d.uniform_vec2f("texoffset", 0.25, 0.5);
-
-    //Display main inventory
-    display_inventory_slots(
-        gamestate,
-        &gamestate.player.inventory,
-        MAIN_INVENTORY_POS,
-        30.0,
-        mousepos,
-        "icon2d",
-    );
-
-    //Hotbar
+    let main_inventory = &gamestate.player.inventory;
     let hotbar = Inventory::from_hotbar(&gamestate.player.hotbar);
-    display_inventory_slots(gamestate, &hotbar, HOTBAR_POS, 30.0, mousepos, "icon2d");
+    let crafting_grid = &gamestate.player.crafting_grid;
 
-    //Draw crafting grid
-    display_inventory_slots(
-        gamestate,
-        &gamestate.player.crafting_grid,
-        CRAFTING_GRID_POS,
-        30.0,
-        mousepos,
-        "icon2d",
-    );
-
-    //Display output slot
     let mut output_slot = Inventory::empty_with_sz(1, 1);
+    //Set output item for the output slot
     let output = gamestate
         .recipe_table
         .get_output(&gamestate.player.crafting_grid)
         .unwrap_or(Item::Empty);
     output_slot.set_item(0, 0, output);
-    display_inventory_slots(
-        gamestate,
-        &output_slot,
-        OUTPUT_POS,
-        30.0,
-        mousepos,
-        "icon2d",
-    );
 
-    //Display destroy item slot
     let mut destroy_slot = Inventory::empty_with_sz(1, 1);
+    //Trash can icon
     destroy_slot.set_item(0, 0, Item::Sprite(255, 1));
-    if gamestate.game_mode() == GameMode::Creative {
-        display_inventory_slots(
-            gamestate,
-            &destroy_slot,
-            DESTROY_POS,
-            30.0,
-            mousepos,
-            "icon2d",
-        );
-    }
 
-    shader2d.uniform_vec2f("texoffset", 0.75, 0.5);
-    let mut transform = Matrix4::identity();
-    transform = Matrix4::from_scale(30.0) * transform;
-    let x = 68.0;
-    let y = BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0;
-    transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
-    shader2d.uniform_matrix4f("transform", &transform);
-    draw_elements(quad.clone());
-
-    //Display items
-    display_inventory_items(gamestate, &hotbar, HOTBAR_POS, 30.0, w, h);
-    display_inventory_items(gamestate, &output_slot, OUTPUT_POS, 30.0, w, h);
-    display_inventory_items(
+    //Main inventory
+    display_inventory(
         gamestate,
-        &gamestate.player.inventory,
+        main_inventory,
         MAIN_INVENTORY_POS,
-        30.0,
+        mousepos,
         w,
         h,
     );
-    display_inventory_items(
-        gamestate,
-        &gamestate.player.crafting_grid,
-        CRAFTING_GRID_POS,
-        30.0,
-        w,
-        h,
-    );
+    //Hotbar
+    display_inventory(gamestate, &hotbar, HOTBAR_POS, mousepos, w, h);
+    //Crafting grid
+    display_inventory(gamestate, crafting_grid, CRAFTING_GRID_POS, mousepos, w, h);
+    //Output slot
+    display_inventory(gamestate, &output_slot, OUTPUT_POS, mousepos, w, h);
+    //Destroy item slot
     if gamestate.game_mode() == GameMode::Creative {
-        display_inventory_items(gamestate, &destroy_slot, DESTROY_POS, 30.0, w, h);
+        display_inventory(gamestate, &destroy_slot, DESTROY_POS, mousepos, w, h);
     }
+
+    //Display 'output' arrow
+    display_arrow(gamestate);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
