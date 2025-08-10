@@ -542,6 +542,8 @@ pub fn interact_with_block(
 
     if raycast_block.can_use() && !player.is_crouching() {
         block = match raycast_block.id {
+            //Chest/Furnace
+            37 | 40 => raycast_block,
             //Open gates/door
             78 | 79 | 81 => {
                 let mut b = raycast_block;
@@ -557,6 +559,8 @@ pub fn interact_with_block(
         };
 
         match block.id {
+            //Chest/Furnace
+            37 | 40 => return Some((ix, iy, iz)),
             //Open door
             79 => {
                 let prev_block = world.get_block(ix, iy, iz);

@@ -6,13 +6,14 @@ pub mod flags;
 pub mod is_valid;
 pub mod light;
 pub mod region;
+pub mod tile_data;
 pub mod world;
 
 pub use self::build::{destroy_block, place_block};
 pub use self::coordinates::{out_of_bounds, world_to_chunk_position, wrap_coord, ChunkPos};
 use self::flags::{
     get_flag, CAN_ROTATE_FLAG, CAN_USE, CONNECT_FLAG, FLAT_ITEM, FLUID, FLUID_DESTRUCTIBLE,
-    NON_VOXEL, NO_HITBOX, REPLACEABLE, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
+    NON_VOXEL, NO_HITBOX, OPEN_INVENTORY, REPLACEABLE, ROTATE_Y_ONLY, TRANSPARENT_FLAG,
 };
 use self::light::LightSrc;
 use cgmath::Vector3;
@@ -189,6 +190,10 @@ impl Block {
     //Returns if the voxel can be used (right clicked on)
     pub fn can_use(&self) -> bool {
         get_flag(self.id) & CAN_USE != 0
+    }
+
+    pub fn open_inventory(&self) -> bool {
+        get_flag(self.id) & OPEN_INVENTORY != 0
     }
 
     //Returns Some(light_level) if the block emits light

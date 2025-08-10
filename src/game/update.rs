@@ -11,6 +11,7 @@ use crate::voxel::{self, destroy_block, place_block, Block, World, EMPTY_BLOCK, 
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
+const INVENTORY_DELAY: f32 = 0.5;
 
 const HOTBAR_KEYS: [Key; 9] = [
     Key::Num1,
@@ -300,6 +301,29 @@ impl Game {
         }
     }
 
+    fn handle_block_interaction(&mut self, chunktables: &mut ChunkTables) -> bool {
+        let pos = self.cam.position;
+        let dir = self.cam.forward();
+        //Attempt to interact with a block
+        let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
+        if let Some((ix, iy, iz)) = interacted {
+            let interacted_block = self.world.get_block(ix, iy, iz);
+            if interacted_block.open_inventory() && !self.display_debug {
+                self.display_inventory = true;
+                self.player.inventory_delay_timer = INVENTORY_DELAY;
+            }
+
+            let update_mesh = self.world.update_single_block_light(interacted);
+            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
+            for (x, y, z) in update_mesh {
+                chunktables.update_table(&self.world, x, y, z);
+            }
+            self.hand_animation = 0.1;
+            self.build_cooldown = BUILD_COOLDOWN;
+        }
+        interacted.is_some()
+    }
+
     //Returns true if a block was placed, false otherwise
     fn place_block(&mut self, chunktables: &mut ChunkTables) -> bool {
         //Place blocks
@@ -316,15 +340,7 @@ impl Game {
             && stuck.is_none()
         {
             //Attempt to interact with a block
-            let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
-            if interacted.is_some() {
-                let update_mesh = self.world.update_single_block_light(interacted);
-                gfx::update_chunk_vaos(chunktables, interacted, &self.world);
-                for (x, y, z) in update_mesh {
-                    chunktables.update_table(&self.world, x, y, z);
-                }
-                self.hand_animation = 0.1;
-                self.build_cooldown = BUILD_COOLDOWN;
+            if self.handle_block_interaction(chunktables) {
                 //No block placed
                 return false;
             }
@@ -358,19 +374,7 @@ impl Game {
             return false;
         }
 
-        let pos = self.cam.position;
-        let dir = self.cam.forward();
-
-        //Attempt to interact with a block
-        let interacted = interact_with_block(pos, dir, &mut self.world, &self.player);
-        if interacted.is_some() {
-            let update_mesh = self.world.update_single_block_light(interacted);
-            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
-            for (x, y, z) in update_mesh {
-                chunktables.update_table(&self.world, x, y, z);
-            }
-            self.hand_animation = 0.1;
-            self.build_cooldown = BUILD_COOLDOWN;
+        if self.handle_block_interaction(chunktables) {
             return false;
         }
 
@@ -409,23 +413,10 @@ impl Game {
             return false;
         }
 
-        let pos = self.cam.position;
-        let dir = self.cam.forward();
-
-        //Attempt to interact with a block
-        let interacted = if self.build_cooldown <= 0.0 && self.eat_animation <= 0.0 {
-            interact_with_block(pos, dir, &mut self.world, &self.player)
-        } else {
-            None
-        };
-        if interacted.is_some() {
-            let update_mesh = self.world.update_single_block_light(interacted);
-            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
-            for (x, y, z) in update_mesh {
-                chunktables.update_table(&self.world, x, y, z);
-            }
-            self.hand_animation = 0.1;
-            self.build_cooldown = BUILD_COOLDOWN;
+        if self.build_cooldown <= 0.0
+            && self.eat_animation <= 0.0
+            && self.handle_block_interaction(chunktables)
+        {
             return false;
         }
 
@@ -442,23 +433,8 @@ impl Game {
             return;
         }
 
-        let pos = self.cam.position;
-        let dir = self.cam.forward();
-
         //Attempt to interact with a block
-        let interacted = if self.build_cooldown <= 0.0 {
-            interact_with_block(pos, dir, &mut self.world, &self.player)
-        } else {
-            None
-        };
-        if interacted.is_some() {
-            let update_mesh = self.world.update_single_block_light(interacted);
-            gfx::update_chunk_vaos(chunktables, interacted, &self.world);
-            for (x, y, z) in update_mesh {
-                chunktables.update_table(&self.world, x, y, z);
-            }
-            self.hand_animation = 0.1;
-            self.build_cooldown = BUILD_COOLDOWN;
+        if self.build_cooldown <= 0.0 && self.handle_block_interaction(chunktables) {
             return;
         }
 
@@ -671,11 +647,11 @@ impl Game {
 
     //Update hand animation
     pub fn update_hand_animation(&mut self, dt: f32) {
-        if self.player.is_dead() || self.display_inventory {
+        if self.player.is_dead() {
             return;
         }
 
-        if self.get_mouse_state(MouseButtonLeft).is_held() {
+        if self.get_mouse_state(MouseButtonLeft).is_held() && !self.display_inventory {
             self.hand_animation += dt * 3.0;
             self.hand_animation = self.hand_animation.fract();
         } else {

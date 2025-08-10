@@ -12,6 +12,7 @@ pub const FLUID_DESTRUCTIBLE: u16 = 1 << 7;
 pub const NON_VOXEL: u16 = 1 << 8;
 pub const REPLACEABLE: u16 = 1 << 9;
 pub const CAN_USE: u16 = 1 << 10;
+pub const OPEN_INVENTORY: u16 = 1 << 11;
 
 unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
@@ -52,9 +53,13 @@ pub fn init_voxel_flags() {
         //Chest
         VOXEL_FLAGS[37] |= CAN_ROTATE_FLAG;
         VOXEL_FLAGS[37] |= ROTATE_Y_ONLY;
+        VOXEL_FLAGS[37] |= CAN_USE;
+        VOXEL_FLAGS[37] |= OPEN_INVENTORY;
         //Furnace
         VOXEL_FLAGS[40] |= CAN_ROTATE_FLAG;
         VOXEL_FLAGS[40] |= ROTATE_Y_ONLY;
+        VOXEL_FLAGS[40] |= CAN_USE;
+        VOXEL_FLAGS[40] |= OPEN_INVENTORY;
         //Sapling
         set_plant_flags(47);
         //Mushroom

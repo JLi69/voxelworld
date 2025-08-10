@@ -463,6 +463,10 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
 }
 
 pub fn update_player_inventory(gamestate: &mut Game, mousepos: (f32, f32)) {
+    if gamestate.player.inventory_delay_timer > 0.0 {
+        return;
+    }
+
     if gamestate.get_mouse_state(MouseButtonLeft) == KeyState::JustPressed {
         handle_left_click(gamestate, mousepos);
     } else if gamestate.get_mouse_state(MouseButtonRight).is_held() {

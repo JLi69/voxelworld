@@ -42,6 +42,7 @@ impl ByteStream {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum DataType {
     Int(i64),
     Float(f32),

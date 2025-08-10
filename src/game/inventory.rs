@@ -12,7 +12,7 @@ use tools::ToolInfo;
 
 pub const MAX_STACK_SIZE: u8 = 64;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Item {
     //Block, amt
     Block(Block, u8),
@@ -377,7 +377,7 @@ impl Hotbar {
 pub const INVENTORY_WIDTH: usize = 9;
 pub const INVENTORY_HEIGHT: usize = 3;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Inventory {
     width: usize,
     height: usize,

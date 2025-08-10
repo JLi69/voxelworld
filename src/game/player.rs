@@ -56,6 +56,9 @@ pub struct Player {
     //Breaking blocks
     pub break_timer: f32,
     pub target_block: Option<(i32, i32, i32)>,
+    //A short delay to prevent the user from clicking on the inventory
+    //instantly when they open a chest/furance or similar
+    pub inventory_delay_timer: f32,
 }
 
 impl Player {
@@ -89,6 +92,7 @@ impl Player {
             death_msg: "".to_string(),
             break_timer: 0.0,
             target_block: None,
+            inventory_delay_timer: 0.0,
         }
     }
 
@@ -122,6 +126,7 @@ impl Player {
             death_msg: "".to_string(),
             break_timer: 0.0,
             target_block: None,
+            inventory_delay_timer: 0.0,
         }
     }
 
@@ -381,6 +386,8 @@ impl Player {
 
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
+        self.inventory_delay_timer -= dt;
+
         if self.is_dead() {
             return;
         }
@@ -587,6 +594,7 @@ impl Player {
             death_msg: player_death_msg,
             break_timer: 0.0,
             target_block: None,
+            inventory_delay_timer: 0.0,
         }
     }
 

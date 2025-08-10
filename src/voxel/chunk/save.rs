@@ -1,5 +1,6 @@
 use super::Chunk;
 use crate::voxel::{Block, CHUNK_SIZE};
+use std::collections::HashMap;
 
 impl Chunk {
     pub fn from_rle(x: i32, y: i32, z: i32, blocks: &[(u16, Block)]) -> Self {
@@ -23,6 +24,7 @@ impl Chunk {
             ix: x,
             iy: y,
             iz: z,
+            data: HashMap::new(),
         }
     }
 

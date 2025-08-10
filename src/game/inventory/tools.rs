@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ToolMaterial {
     Wood,
     Stone,
@@ -10,7 +10,7 @@ pub enum ToolMaterial {
     Rainbow,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ToolType {
     Pickaxe,
     Shovel,
@@ -110,7 +110,7 @@ pub fn string_to_tool_material(s: &str) -> Result<ToolMaterial, ()> {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ToolInfo {
     pub durability: u32,
     pub max_durability: u32,

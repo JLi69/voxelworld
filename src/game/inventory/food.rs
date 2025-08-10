@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct FoodInfo {
     //Health restored
     pub health: i32,

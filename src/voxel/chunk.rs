@@ -1,9 +1,12 @@
 mod light;
 pub mod save;
+
 use super::{
     light::{Light, LU},
+    tile_data::TileData,
     Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
+use std::collections::HashMap;
 
 fn out_of_bounds(index_x: i32, index_y: i32, index_z: i32) -> bool {
     index_x < 0
@@ -35,6 +38,7 @@ pub struct Chunk {
     ix: i32,
     iy: i32,
     iz: i32,
+    data: HashMap<(i32, i32, i32), TileData>,
 }
 
 impl Chunk {
@@ -45,6 +49,7 @@ impl Chunk {
             ix: x,
             iy: y,
             iz: z,
+            data: HashMap::new(),
         }
     }
 
