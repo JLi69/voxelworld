@@ -5,10 +5,11 @@ use super::player::{DEFAULT_MAX_HEALTH, PLAYER_HEIGHT};
 use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
-use crate::voxel::build::{destroy_block_suffocating, interact_with_block};
+use crate::voxel::build::{destroy_block_suffocating, interact_with_block, BLOCK_REACH};
 use crate::voxel::tile_data::TileData;
 use crate::voxel::world::block_update::break_ice;
 use crate::voxel::{self, destroy_block, place_block, Block, World, EMPTY_BLOCK, FULL_BLOCK};
+use cgmath::{vec3, InnerSpace};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
 
 const BUILD_COOLDOWN: f32 = 0.15;
@@ -77,7 +78,19 @@ impl Game {
     //Update player and camera
     pub fn update_player(&mut self, dt: f32) {
         if self.player.is_dead() {
+            self.close_inventory();
             return;
+        }
+
+        if let Some((x, y, z)) = self.player.opened_block {
+            let fx = x as f32 + 0.5;
+            let fy = y as f32 + 0.5;
+            let fz = z as f32 + 0.5;
+            let block_pos = vec3(fx, fy, fz);
+            let dist = (block_pos - self.player.position).magnitude();
+            if dist > BLOCK_REACH + 1.0 {
+                self.close_inventory();
+            }
         }
 
         //Set rotation of player
