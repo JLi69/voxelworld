@@ -1,7 +1,7 @@
 use super::{Region, REGION_SIZE_I32};
 use crate::{
     game::save::CHUNK_PATH,
-    voxel::{Block, Chunk},
+    voxel::{Block, Chunk, tile_data::TileData}, bin_data::{ByteStream, parse_binary_data},
 };
 use std::{fs::File, io::Read};
 
@@ -90,16 +90,36 @@ impl Region {
 
         match File::open(&path) {
             Ok(mut file) => {
+                //Block data
                 let mut sz_bytes = [0u8; size_of::<u32>()];
                 read_bytes(&mut sz_bytes, &mut file);
-                let sz = ((sz_bytes[0] as u32) << 24)
-                    | ((sz_bytes[1] as u32) << 16)
-                    | ((sz_bytes[2] as u32) << 8)
-                    | (sz_bytes[3] as u32);
+                let sz = u32::from_be_bytes(sz_bytes);
                 let mut block_bytes = vec![0u8; sz as usize];
                 read_bytes(&mut block_bytes, &mut file);
-                let chunk_data = bytes_to_u16(&block_bytes);
-                Some(region_from_bytes(&chunk_data, x, y, z))
+                let chunk_data = bytes_to_u16(&block_bytes); 
+                let mut region = region_from_bytes(&chunk_data, x, y, z);
+                
+                let mut sz_bytes = [0u8; size_of::<u32>()];
+                read_bytes(&mut sz_bytes, &mut file);
+                let sz = u32::from_be_bytes(sz_bytes);
+                //No tile data to read, return
+                if sz == 0 {
+                    return Some(region);
+                }
+
+                let mut tile_data_bytes = vec![0u8; sz as usize];
+                read_bytes(&mut tile_data_bytes, &mut file);
+                let mut byte_stream = ByteStream::new(tile_data_bytes);
+                let parsed = parse_binary_data(&mut byte_stream);
+                if let Some(tile_data_list) = parsed.get("tile_data") {
+                    tile_data_list.iter()
+                        .filter_map(TileData::from_data_table)
+                        .for_each(|((x, y, z), tile_data)| {
+                            region.set_tile_data(x, y, z, tile_data);
+                        });
+                }
+
+                Some(region)
             }
             Err(_msg) => None,
         }

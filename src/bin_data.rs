@@ -90,6 +90,10 @@ impl DataTable {
             .insert(name.to_string(), DataType::Str(val.to_string()));
     }
 
+    pub fn get_all_vals(&self) -> &HashMap<String, DataType> {
+        &self.values
+    }
+
     pub fn get_int(&self, name: &str) -> Option<i64> {
         let val = self.values.get(name)?;
         if let DataType::Int(v) = val {
@@ -213,6 +217,10 @@ impl DataTable {
         bytes.push(0);
 
         bytes
+    }
+
+    pub fn insert(&mut self, name: &str, val: DataType) {
+        self.values.insert(name.to_string(), val);
     }
 }
 

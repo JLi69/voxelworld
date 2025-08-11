@@ -1,8 +1,16 @@
 use super::Chunk;
-use crate::voxel::{Block, CHUNK_SIZE};
+use crate::{voxel::{Block, CHUNK_SIZE}, bin_data::DataTable};
 use std::collections::HashMap;
 
 impl Chunk {
+    pub fn tiles_to_data_tables(&self) -> Vec<DataTable> {
+        let mut data_tables = vec![];
+        for ((x, y, z), tile_data) in &self.data {
+            data_tables.push(tile_data.to_data_table(*x, *y, *z));
+        }
+        data_tables
+    }
+
     pub fn from_rle(x: i32, y: i32, z: i32, blocks: &[(u16, Block)]) -> Self {
         if blocks.is_empty() {
             return Self::new(x, y, z);

@@ -462,6 +462,21 @@ impl Inventory {
         }
     }
 
+    pub fn from_data(items_str: &str, w: usize, h: usize) -> Self {
+        let inventory_items = items_str
+            .split("|")
+            .map(string_to_item)
+            .chain(std::iter::repeat(Item::Empty))
+            .take(w * h)
+            .collect();
+
+        Self {
+            width: w,
+            height: h,
+            items: inventory_items,
+        }
+    }
+
     pub fn w(&self) -> usize {
         self.width
     }

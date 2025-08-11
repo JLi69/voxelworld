@@ -1,4 +1,4 @@
-use super::Chunk;
+use super::{Chunk, tile_data::TileData, world_to_chunk_position};
 use std::collections::HashMap;
 
 pub mod load;
@@ -87,6 +87,24 @@ impl Region {
             (z - chunkz) as usize,
             chunk,
         );
+    }
+
+    pub fn set_tile_data(&mut self, x: i32, y: i32, z: i32, tile_data: TileData) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let (startx, starty, startz) = regionpos_to_chunkpos(self.x, self.y, self.z);
+        let ix = chunkx - startx;
+        let iy = chunky - starty;
+        let iz = chunkz - startz;
+        if ix < 0 || iy < 0 || iz < 0 {
+            return;
+        }
+        if ix >= REGION_SIZE_I32 || iy >= REGION_SIZE_I32 || iz >= REGION_SIZE_I32 {
+            return;
+        } 
+        let index = ix * REGION_SIZE_I32 * REGION_SIZE_I32 + iy * REGION_SIZE_I32 + iz;
+        if let Some(chunk) = &mut self.chunks[index as usize] {
+            chunk.set_tile_data(x, y, z, Some(tile_data));
+        }
     }
 }
 

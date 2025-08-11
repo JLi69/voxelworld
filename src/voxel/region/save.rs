@@ -1,5 +1,5 @@
 use super::{Region, REGION_SIZE};
-use crate::game::save::CHUNK_PATH;
+use crate::{game::save::CHUNK_PATH, bin_data::get_table_list_bytes};
 use std::{fs::File, io::Write, path::Path};
 
 pub fn region_file_name(x: i32, y: i32, z: i32) -> String {
@@ -41,8 +41,15 @@ impl Region {
             }
         }
 
+        let mut tile_data = vec![];
+        for chunk in self.chunks.iter().flatten() {
+            tile_data.extend(chunk.tiles_to_data_tables());
+        }
+        let tile_data_bytes = get_table_list_bytes("tile_data", &tile_data); 
+
         match File::create(&chunk_path) {
             Ok(mut file) => {
+                //Write blocks
                 let data_sz = data_to_write.len() as u32;
                 let data_sz_bytes = data_sz.to_be_bytes();
                 if let Err(msg) = file.write_all(&data_sz_bytes) {
@@ -51,6 +58,25 @@ impl Region {
                     return Err(chunk_path);
                 }
                 if let Err(msg) = file.write_all(&data_to_write) {
+                    eprintln!("Error when saving {}, {}, {}", self.x, self.y, self.z);
+                    eprintln!("E: {msg}");
+                    return Err(chunk_path);
+                }
+
+                //No tile data to write, early return
+                if tile_data.is_empty() {
+                    return Ok(());
+                }
+
+                //Write tile data
+                let data_sz = tile_data_bytes.len() as u32;
+                let data_sz_bytes = data_sz.to_be_bytes();
+                if let Err(msg) = file.write_all(&data_sz_bytes) {
+                    eprintln!("Error when saving {}, {}, {}", self.x, self.y, self.z);
+                    eprintln!("E: {msg}");
+                    return Err(chunk_path);
+                }
+                if let Err(msg) = file.write_all(&tile_data_bytes) {
                     eprintln!("Error when saving {}, {}, {}", self.x, self.y, self.z);
                     eprintln!("E: {msg}");
                     return Err(chunk_path);
