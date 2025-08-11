@@ -89,7 +89,7 @@ impl Game {
             let fz = z as f32 + 0.5;
             let block_pos = vec3(fx, fy, fz);
             let dist = (block_pos - self.player.position).magnitude();
-            if dist > BLOCK_REACH + 1.0 {
+            if dist > BLOCK_REACH + 2.0 {
                 self.close_inventory();
             }
         }
