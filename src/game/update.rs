@@ -3,6 +3,7 @@ use super::inventory::tools::ToolType;
 use super::inventory::{item_to_string, remove_amt_item, Item};
 use super::player::{DEFAULT_MAX_HEALTH, PLAYER_HEIGHT};
 use super::{Game, GameMode, KeyState};
+use crate::game::entities::EntitiesTable;
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
 use crate::voxel::build::{destroy_block_suffocating, interact_with_block, BLOCK_REACH};
@@ -727,11 +728,13 @@ impl Game {
             }
         }
 
+        self.entities = EntitiesTable::new();
         self.world = World::load_world_metadata(&path);
         self.world.update_generation_queue(self.player.position);
         self.world.load_chunks();
         self.world.init_block_light();
         self.world.init_sky_light();
+        self.entities.load(&self.world);
 
         //Set up camera
         self.cam.position = self.player.position;
