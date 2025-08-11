@@ -4,7 +4,7 @@
  * */
 
 use crate::{
-    bin_data::{DataType, DataTable},
+    bin_data::{DataTable, DataType},
     game::inventory::{Inventory, Item},
 };
 use std::collections::HashMap;
@@ -69,12 +69,12 @@ impl TileData {
         let x = data_table.get_int("x")? as i32;
         let y = data_table.get_int("y")? as i32;
         let z = data_table.get_int("z")? as i32;
-        
+
         let w = data_table.get_int("w").unwrap_or(1) as usize;
         let h = data_table.get_int("h").unwrap_or(1) as usize;
         let items_str = data_table.get_str("items").unwrap_or("".to_string());
         let inventory = Inventory::from_data(&items_str, w, h);
-        
+
         let mut tile_data = Self::new();
         tile_data.inventory = inventory;
         for (name, val) in data_table.get_all_vals() {

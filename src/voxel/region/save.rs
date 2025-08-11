@@ -1,5 +1,5 @@
 use super::{Region, REGION_SIZE};
-use crate::{game::save::CHUNK_PATH, bin_data::get_table_list_bytes};
+use crate::{bin_data::get_table_list_bytes, game::save::CHUNK_PATH};
 use std::{fs::File, io::Write, path::Path};
 
 pub fn region_file_name(x: i32, y: i32, z: i32) -> String {
@@ -45,7 +45,7 @@ impl Region {
         for chunk in self.chunks.iter().flatten() {
             tile_data.extend(chunk.tiles_to_data_tables());
         }
-        let tile_data_bytes = get_table_list_bytes("tile_data", &tile_data); 
+        let tile_data_bytes = get_table_list_bytes("tile_data", &tile_data);
 
         match File::create(&chunk_path) {
             Ok(mut file) => {

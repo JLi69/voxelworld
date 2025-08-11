@@ -1,7 +1,8 @@
 use super::{Region, REGION_SIZE_I32};
 use crate::{
+    bin_data::{parse_binary_data, ByteStream},
     game::save::CHUNK_PATH,
-    voxel::{Block, Chunk, tile_data::TileData}, bin_data::{ByteStream, parse_binary_data},
+    voxel::{tile_data::TileData, Block, Chunk},
 };
 use std::{fs::File, io::Read};
 
@@ -96,9 +97,9 @@ impl Region {
                 let sz = u32::from_be_bytes(sz_bytes);
                 let mut block_bytes = vec![0u8; sz as usize];
                 read_bytes(&mut block_bytes, &mut file);
-                let chunk_data = bytes_to_u16(&block_bytes); 
+                let chunk_data = bytes_to_u16(&block_bytes);
                 let mut region = region_from_bytes(&chunk_data, x, y, z);
-                
+
                 let mut sz_bytes = [0u8; size_of::<u32>()];
                 read_bytes(&mut sz_bytes, &mut file);
                 let sz = u32::from_be_bytes(sz_bytes);
@@ -112,7 +113,8 @@ impl Region {
                 let mut byte_stream = ByteStream::new(tile_data_bytes);
                 let parsed = parse_binary_data(&mut byte_stream);
                 if let Some(tile_data_list) = parsed.get("tile_data") {
-                    tile_data_list.iter()
+                    tile_data_list
+                        .iter()
                         .filter_map(TileData::from_data_table)
                         .for_each(|((x, y, z), tile_data)| {
                             region.set_tile_data(x, y, z, tile_data);

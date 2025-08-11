@@ -1,5 +1,8 @@
 use super::Chunk;
-use crate::{voxel::{Block, CHUNK_SIZE}, bin_data::DataTable};
+use crate::{
+    bin_data::DataTable,
+    voxel::{Block, CHUNK_SIZE},
+};
 use std::collections::HashMap;
 
 impl Chunk {
