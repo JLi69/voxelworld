@@ -385,6 +385,14 @@ pub struct Inventory {
 }
 
 impl Inventory {
+    pub fn new() -> Self {
+        Self {
+            height: 0,
+            width: 0,
+            items: vec![],
+        }
+    }
+
     pub fn empty_inventory() -> Self {
         Self {
             height: INVENTORY_HEIGHT,

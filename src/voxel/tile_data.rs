@@ -13,6 +13,13 @@ pub struct TileData {
 }
 
 impl TileData {
+    pub fn new() -> Self {
+        Self {
+            inventory: Inventory::new(),
+            values: HashMap::new(),
+        }
+    }
+
     //New tile data for a chest
     pub fn new_chest() -> Self {
         Self {

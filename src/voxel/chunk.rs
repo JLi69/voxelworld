@@ -4,7 +4,7 @@ pub mod save;
 use super::{
     light::{Light, LU},
     tile_data::TileData,
-    Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK,
+    world_to_chunk_position, Block, ChunkPos, CHUNK_SIZE, CHUNK_SIZE_I32, EMPTY_BLOCK,
 };
 use std::collections::HashMap;
 
@@ -187,6 +187,24 @@ impl Chunk {
         }
 
         self.update_light_relative(index_x as usize, index_y as usize, index_z as usize, update);
+    }
+
+    //None = delete the data at that position
+    //If the position is not in the chunk, ignore it
+    pub fn set_tile_data(&mut self, x: i32, y: i32, z: i32, tile_data: Option<TileData>) {
+        if let Some(tile_data) = tile_data {
+            let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+            if chunkx != self.ix || chunky != self.iy || chunkz != self.iz {
+                return;
+            }
+            self.data.insert((x, y, z), tile_data);
+        } else {
+            self.data.remove(&(x, y, z));
+        }
+    }
+
+    pub fn get_tile_data(&self, x: i32, y: i32, z: i32) -> Option<TileData> {
+        self.data.get(&(x, y, z)).cloned()
     }
 
     pub fn get_chunk_pos(&self) -> ChunkPos {

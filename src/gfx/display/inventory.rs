@@ -595,6 +595,8 @@ fn display_inventory(
 
 const BOTTOM_Y: f32 = -230.0;
 pub const MAIN_INVENTORY_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y + 15.0 + STEP * 3.0);
+pub const CHEST_INVENTORY_POS: (f32, f32) =
+    (-4.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
 pub const HOTBAR_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y);
 pub const CRAFTING_GRID_POS: (f32, f32) =
     (-2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
@@ -651,17 +653,36 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
     );
     //Hotbar
     display_inventory(gamestate, &hotbar, HOTBAR_POS, mousepos, w, h);
-    //Crafting grid
-    display_inventory(gamestate, crafting_grid, CRAFTING_GRID_POS, mousepos, w, h);
-    //Output slot
-    display_inventory(gamestate, &output_slot, OUTPUT_POS, mousepos, w, h);
-    //Destroy item slot
-    if gamestate.game_mode() == GameMode::Creative {
-        display_inventory(gamestate, &destroy_slot, DESTROY_POS, mousepos, w, h);
-    }
+    if gamestate.player.opened_block.is_none() {
+        //Crafting grid
+        display_inventory(gamestate, crafting_grid, CRAFTING_GRID_POS, mousepos, w, h);
+        //Output slot
+        display_inventory(gamestate, &output_slot, OUTPUT_POS, mousepos, w, h);
 
-    //Display 'output' arrow
-    display_arrow(gamestate);
+        //Destroy item slot
+        if gamestate.game_mode() == GameMode::Creative {
+            display_inventory(gamestate, &destroy_slot, DESTROY_POS, mousepos, w, h);
+        }
+
+        display_arrow(gamestate);
+    } else {
+        match gamestate.player.opened_block_id {
+            //Chest
+            37 => {
+                display_inventory(
+                    gamestate,
+                    &gamestate.player.open_block_data.inventory,
+                    CHEST_INVENTORY_POS,
+                    mousepos,
+                    w,
+                    h,
+                );
+            }
+            //Furnace
+            40 => {}
+            _ => {}
+        }
+    }
 
     unsafe {
         gl::Enable(gl::CULL_FACE);

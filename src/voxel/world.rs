@@ -10,7 +10,8 @@ use crate::{game::GameMode, gfx::display::get_sky_brightness};
 use super::{
     light::{Light, SkyLightMap, LU},
     region::{chunkpos_to_regionpos, get_region_chunks, get_region_chunks_remove, Region},
-    world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32,
+    tile_data::TileData,
+    world_to_chunk_position, wrap_coord, Block, Chunk, CHUNK_SIZE_I32, FULL_BLOCK,
 };
 use gen_more::LoadChunkQueue;
 use noise::{Fbm, NoiseFn, Perlin, Simplex};
@@ -438,6 +439,42 @@ impl World {
 
     pub fn is_loaded(&self, chunkpos: (i32, i32, i32)) -> bool {
         self.chunks.contains_key(&chunkpos) || self.chunk_cache.contains_key(&chunkpos)
+    }
+
+    //None clears the tile data at that position
+    pub fn set_tile_data(&mut self, x: i32, y: i32, z: i32, tile_data: Option<TileData>) {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        if let Some(chunk) = self.chunks.get_mut(&(chunkx, chunky, chunkz)) {
+            chunk.set_tile_data(x, y, z, tile_data);
+        }
+    }
+
+    pub fn get_tile_data(&self, x: i32, y: i32, z: i32) -> Option<TileData> {
+        let (chunkx, chunky, chunkz) = world_to_chunk_position(x, y, z);
+        let chunk = self.chunks.get(&(chunkx, chunky, chunkz))?;
+        chunk.get_tile_data(x, y, z)
+    }
+
+    pub fn init_tile_data(&mut self, x: i32, y: i32, z: i32) {
+        let block = self.get_block(x, y, z);
+        //Non-full blocks can not have any tile data
+        if block.shape() != FULL_BLOCK {
+            return;
+        }
+        if self.get_tile_data(x, y, z).is_some() {
+            return;
+        }
+        match block.id {
+            //Chest
+            37 => {
+                self.set_tile_data(x, y, z, Some(TileData::new_chest()));
+            }
+            //Furnace
+            40 => {
+                self.set_tile_data(x, y, z, Some(TileData::new_furance()));
+            }
+            _ => {}
+        }
     }
 }
 

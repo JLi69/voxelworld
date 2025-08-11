@@ -193,6 +193,9 @@ impl Block {
     }
 
     pub fn open_inventory(&self) -> bool {
+        if self.shape() != FULL_BLOCK {
+            return false;
+        }
         get_flag(self.id) & OPEN_INVENTORY != 0
     }
 

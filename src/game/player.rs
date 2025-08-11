@@ -9,6 +9,7 @@ use super::Hitbox;
 use super::KeyState;
 use crate::game::entities::GRAVITY;
 use crate::impfile;
+use crate::voxel::tile_data::TileData;
 use crate::voxel::World;
 use cgmath::{vec3, Deg, InnerSpace, Matrix4, Vector3, Vector4};
 
@@ -59,6 +60,13 @@ pub struct Player {
     //A short delay to prevent the user from clicking on the inventory
     //instantly when they open a chest/furance or similar
     pub inventory_delay_timer: f32,
+    //If the player opens a block (like a chest) the data for that block gets
+    //copied over to here for the player to interact with
+    pub open_block_data: TileData,
+    //None if no block is open
+    //Some(position) if a block is opened
+    pub opened_block: Option<(i32, i32, i32)>,
+    pub opened_block_id: u8,
 }
 
 impl Player {
@@ -93,6 +101,9 @@ impl Player {
             break_timer: 0.0,
             target_block: None,
             inventory_delay_timer: 0.0,
+            open_block_data: TileData::new(),
+            opened_block: None,
+            opened_block_id: 0,
         }
     }
 
@@ -127,6 +138,9 @@ impl Player {
             break_timer: 0.0,
             target_block: None,
             inventory_delay_timer: 0.0,
+            open_block_data: TileData::new(),
+            opened_block: None,
+            opened_block_id: 0,
         }
     }
 
@@ -595,6 +609,9 @@ impl Player {
             break_timer: 0.0,
             target_block: None,
             inventory_delay_timer: 0.0,
+            open_block_data: TileData::new(),
+            opened_block: None,
+            opened_block_id: 0,
         }
     }
 

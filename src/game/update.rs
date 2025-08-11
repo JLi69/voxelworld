@@ -6,6 +6,7 @@ use super::{Game, GameMode, KeyState};
 use crate::gfx::{self, ChunkTables};
 use crate::voxel::block_info::get_drop;
 use crate::voxel::build::{destroy_block_suffocating, interact_with_block};
+use crate::voxel::tile_data::TileData;
 use crate::voxel::world::block_update::break_ice;
 use crate::voxel::{self, destroy_block, place_block, Block, World, EMPTY_BLOCK, FULL_BLOCK};
 use glfw::{Key, MouseButtonLeft, MouseButtonRight};
@@ -311,6 +312,14 @@ impl Game {
             if interacted_block.open_inventory() && !self.display_debug {
                 self.display_inventory = true;
                 self.player.inventory_delay_timer = INVENTORY_DELAY;
+                self.player.opened_block = interacted;
+                self.player.opened_block_id = interacted_block.id;
+                self.world.init_tile_data(ix, iy, iz);
+                if let Some(tile_data) = self.world.get_tile_data(ix, iy, iz) {
+                    self.player.open_block_data = tile_data;
+                } else {
+                    self.player.open_block_data = TileData::new();
+                }
             }
 
             let update_mesh = self.world.update_single_block_light(interacted);
@@ -721,6 +730,8 @@ impl Game {
     }
 
     pub fn close_inventory(&mut self) {
+        self.display_inventory = false;
+
         self.prev_selected_slot = "".to_string();
 
         //Items to drop
@@ -750,5 +761,15 @@ impl Game {
             let thrown_item = self.player.throw_item(item, self.cam.forward());
             self.entities.dropped_items.add_item(thrown_item);
         }
+
+        //Serialize the data from the open block to the world
+        if let Some((x, y, z)) = self.player.opened_block {
+            let tile_data = self.player.open_block_data.clone();
+            self.world.set_tile_data(x, y, z, Some(tile_data));
+        }
+        //Reset the player's open block info
+        self.player.open_block_data = TileData::new();
+        self.player.opened_block_id = 0;
+        self.player.opened_block = None;
     }
 }
