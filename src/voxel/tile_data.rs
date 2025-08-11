@@ -3,7 +3,10 @@
  * Tile data applies to a specific position (x, y, z) for a voxel instead.
  * */
 
-use crate::{bin_data::DataType, game::inventory::Inventory};
+use crate::{
+    bin_data::DataType,
+    game::inventory::{Inventory, Item},
+};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -35,5 +38,15 @@ impl TileData {
             inventory: Inventory::empty_with_sz(3, 1),
             values: HashMap::new(),
         }
+    }
+
+    pub fn get_items(&self) -> Vec<Item> {
+        let mut items = vec![];
+        for ix in 0..self.inventory.w() {
+            for iy in 0..self.inventory.h() {
+                items.push(self.inventory.get_item(ix, iy));
+            }
+        }
+        items
     }
 }

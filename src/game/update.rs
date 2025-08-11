@@ -186,6 +186,22 @@ impl Game {
             if block.id == 85 && block.shape() == FULL_BLOCK && block_drop.is_empty() {
                 break_ice(&mut self.world, x, y, z);
             }
+
+            //Drop items in the block inventory
+            let items = if let Some(tile_data) = self.world.get_tile_data(x, y, z) {
+                tile_data.get_items()
+            } else {
+                vec![]
+            };
+            for item in items {
+                let fx = x as f32 + 0.5;
+                let fy = y as f32 + 0.5;
+                let fz = z as f32 + 0.5;
+                let dropped = DroppedItem::new(item, fx, fy, fz);
+                self.entities.dropped_items.add_item(dropped);
+            }
+            //Clear tile data
+            self.world.set_tile_data(x, y, z, None);
         }
     }
 
@@ -781,7 +797,11 @@ impl Game {
         //Serialize the data from the open block to the world
         if let Some((x, y, z)) = self.player.opened_block {
             let tile_data = self.player.open_block_data.clone();
-            self.world.set_tile_data(x, y, z, Some(tile_data));
+            if tile_data.inventory.is_empty() && tile_data.values.is_empty() {
+                self.world.set_tile_data(x, y, z, None);
+            } else {
+                self.world.set_tile_data(x, y, z, Some(tile_data));
+            }
         }
         //Reset the player's open block info
         self.player.open_block_data = TileData::new();

@@ -530,6 +530,15 @@ impl Inventory {
         }
         current_item
     }
+
+    pub fn is_empty(&self) -> bool {
+        for slot in &self.items {
+            if !slot.is_empty() {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 fn parse_aliased_items(s: &str, item_aliases: &ItemAliases) -> Result<Item, ()> {
