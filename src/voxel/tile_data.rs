@@ -64,6 +64,23 @@ impl TileData {
         self.inventory.get_item(2, 0)
     }
 
+    //Returns [fuel, input, output]
+    pub fn get_furnace_slots(&self) -> (Inventory, Inventory, Inventory) {
+        let mut fuel = Inventory::empty_with_sz(1, 1);
+        let mut input = Inventory::empty_with_sz(1, 1);
+        let mut output = Inventory::empty_with_sz(1, 1);
+
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return (fuel, input, output);
+        }
+
+        fuel.set_item(0, 0, self.inventory.get_item(0, 0));
+        input.set_item(0, 0, self.inventory.get_item(1, 0));
+        output.set_item(0, 0, self.inventory.get_item(2, 0));
+
+        (fuel, input, output)
+    }
+
     pub fn get_items(&self) -> Vec<Item> {
         let mut items = vec![];
         for ix in 0..self.inventory.w() {

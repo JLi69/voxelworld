@@ -621,8 +621,9 @@ pub const CRAFTING_GRID_POS: (f32, f32) =
     (-2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
 pub const OUTPUT_POS: (f32, f32) = (2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
 pub const DESTROY_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
-pub const FURNACE_INPUT_POS: (f32, f32) = (-STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
+
 pub const FURNACE_FUEL_POS: (f32, f32) = (-STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 4.0 + SLOT_SZ);
+pub const FURNACE_INPUT_POS: (f32, f32) = (-STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
 pub const FURNACE_OUTPUT_POS: (f32, f32) = (STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
 
 pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32, f32)) {

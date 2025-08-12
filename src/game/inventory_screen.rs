@@ -4,7 +4,7 @@ use super::{
     inventory::{merge_stacks, remove_amt_item, Inventory, Item},
     Game, KeyState,
 };
-use crate::gfx::display::inventory::{BUFFER, CHEST_INVENTORY_POS, DESTROY_POS, SLOT_SZ};
+use crate::gfx::display::inventory::{BUFFER, CHEST_INVENTORY_POS, DESTROY_POS, SLOT_SZ, FURNACE_FUEL_POS, FURNACE_INPUT_POS, FURNACE_OUTPUT_POS};
 use crate::{
     gfx::display::inventory::{CRAFTING_GRID_POS, HOTBAR_POS, MAIN_INVENTORY_POS, OUTPUT_POS},
     voxel::Block,
@@ -36,6 +36,19 @@ fn get_selected_slot(
         }
     }
 
+    None
+}
+
+fn get_selected_inventory_ind(
+    inventories: Vec<((f32, f32), Inventory)>, 
+    sz: f32,
+    mousepos: (f32, f32)
+) -> Option<usize> {
+    for (i, (pos, inventory)) in inventories.iter().enumerate() {
+        if get_selected_slot(inventory, *pos, sz, mousepos).is_some() {
+            return Some(i);
+        }
+    }
     None
 }
 
@@ -190,6 +203,23 @@ fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
     output_slot.set_item(0, 0, output_item);
     let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, SLOT_SZ, mousepos);
 
+    let (furnace_fuel, furnace_input, furnace_output) = 
+        gamestate.player.open_block_data.get_furnace_slots();
+    let furnace_ind = get_selected_inventory_ind(
+        vec![
+            (FURNACE_FUEL_POS, furnace_fuel),
+            (FURNACE_INPUT_POS, furnace_input),
+            (FURNACE_OUTPUT_POS, furnace_output),
+        ], 
+        SLOT_SZ, 
+        mousepos,
+    );
+    let selected_furnace = if let Some(i) = furnace_ind {
+        Some((i, 0))
+    } else {
+        None
+    };
+
     //Handle crafting
     if gamestate.player.opened_block.is_none() {
         shift_left_click(
@@ -251,7 +281,17 @@ fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
                 }
             }
             //Furnace
-            40 => {}
+            40 => {
+                if let Some((ix, iy)) = selected_furnace {
+                    let item = gamestate.player.open_block_data.inventory.get_item(ix, iy);
+                    let leftover = gamestate.player.add_item(item);
+                    gamestate.player.open_block_data.inventory.set_item(ix, iy, leftover);
+                    //Update hotbar
+                    for i in 0..9 {
+                        hotbar.set_item(i, 0, gamestate.player.hotbar.items[i]);
+                    }
+                }       
+            }
             _ => {}
         }
     }
@@ -289,6 +329,23 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     let mut destroy_slot = Inventory::empty_with_sz(1, 1);
     let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, SLOT_SZ, mousepos);
 
+    let (furnace_fuel, furnace_input, furnace_output) = 
+        gamestate.player.open_block_data.get_furnace_slots();
+    let furnace_ind = get_selected_inventory_ind(
+        vec![
+            (FURNACE_FUEL_POS, furnace_fuel),
+            (FURNACE_INPUT_POS, furnace_input),
+            (FURNACE_OUTPUT_POS, furnace_output),
+        ], 
+        SLOT_SZ, 
+        mousepos,
+    );
+    let selected_furnace = if let Some(i) = furnace_ind {
+        Some((i, 0))
+    } else {
+        None
+    };
+
     //Handle shift clicking (transfer items from hotbar to inventory and vice versa)
     if handle_shift_left_click(gamestate, mousepos) {
         return;
@@ -323,7 +380,16 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 left_click(chest, selected_pos, mouse_item)
             }
             //Furnace
-            40 => None,
+            40 => {
+                let furnace = &mut gamestate.player.open_block_data.inventory;
+                //Output
+                if let Some((2, 0)) = selected_furnace {
+                    let mut inventory = Inventory::empty_with_sz(1, 1);
+                    left_click_output(&mut inventory, furnace, selected_furnace, mouse_item)
+                } else {
+                    left_click(furnace, selected_furnace, mouse_item)
+                }
+            },
             _ => None,
         };
         item_op = item_op.or(i);
@@ -530,6 +596,26 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     if gamestate.player.opened_block_id == 37 {
         set_selected_str(&mut selected, selected_chest, "block");
     }
+    
+    let (furnace_fuel, furnace_input, _) = 
+        gamestate.player.open_block_data.get_furnace_slots();
+    let furnace_ind = get_selected_inventory_ind(
+        vec![
+            (FURNACE_FUEL_POS, furnace_fuel),
+            (FURNACE_INPUT_POS, furnace_input),
+        ], 
+        SLOT_SZ, 
+        mousepos,
+    );
+    let selected_furnace = if let Some(i) = furnace_ind {
+        Some((i, 0))
+    } else {
+        None
+    };
+    //Furnace
+    if gamestate.player.opened_block_id == 40 {
+        set_selected_str(&mut selected, selected_furnace, "block");
+    }
 
     if selected == gamestate.prev_selected_slot && !selected.is_empty() {
         return;
@@ -560,14 +646,17 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         }
     } else {
         let i = match gamestate.player.opened_block_id {
-            //Chest
+            //Chest/Furnace
             37 => right_click(
                 &mut gamestate.player.open_block_data.inventory,
                 selected_chest,
                 mouse_item,
             ),
-            //Furnace
-            40 => None,
+            40 => right_click(
+                &mut gamestate.player.open_block_data.inventory,
+                selected_furnace,
+                mouse_item,
+            ),
             _ => None,
         };
         item_op = item_op.or(i);
@@ -612,5 +701,7 @@ pub fn update_player_inventory(gamestate: &mut Game, mousepos: (f32, f32)) {
             let tile_data = gamestate.player.open_block_data.clone();
             gamestate.world.set_tile_data(x, y, z, Some(tile_data));
         }
+    } else if let Some((x, y, z)) = gamestate.player.opened_block {
+        gamestate.world.set_tile_data(x, y, z, None);
     }
 }
