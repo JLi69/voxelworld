@@ -582,6 +582,14 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
 }
 
 pub fn update_player_inventory(gamestate: &mut Game, mousepos: (f32, f32)) {
+    //Sync tile data
+    if let Some((x, y, z)) = gamestate.player.opened_block {
+        let tile_data = gamestate.world.get_tile_data(x, y, z);
+        if let Some(tile_data) = tile_data {
+            gamestate.player.open_block_data = tile_data;
+        }
+    }
+
     if gamestate.get_mouse_state(MouseButtonRight) != KeyState::Held {
         gamestate.prev_selected_slot = "".to_string();
     }
@@ -594,5 +602,14 @@ pub fn update_player_inventory(gamestate: &mut Game, mousepos: (f32, f32)) {
         handle_left_click(gamestate, mousepos);
     } else if gamestate.get_mouse_state(MouseButtonRight).is_held() {
         handle_right_click(gamestate, mousepos);
+    }
+
+    //Sync tile data again
+    if !gamestate.player.open_block_data.inventory.is_empty()
+        || !gamestate.player.open_block_data.values.is_empty() {
+        if let Some((x, y, z)) = gamestate.player.opened_block {
+            let tile_data = gamestate.player.open_block_data.clone();
+            gamestate.world.set_tile_data(x, y, z, Some(tile_data));
+        }
     }
 }
