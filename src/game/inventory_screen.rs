@@ -4,7 +4,10 @@ use super::{
     inventory::{merge_stacks, remove_amt_item, Inventory, Item},
     Game, KeyState,
 };
-use crate::gfx::display::inventory::{BUFFER, CHEST_INVENTORY_POS, DESTROY_POS, SLOT_SZ, FURNACE_FUEL_POS, FURNACE_INPUT_POS, FURNACE_OUTPUT_POS};
+use crate::gfx::display::inventory::{
+    BUFFER, CHEST_INVENTORY_POS, DESTROY_POS, FURNACE_FUEL_POS, FURNACE_INPUT_POS,
+    FURNACE_OUTPUT_POS, SLOT_SZ,
+};
 use crate::{
     gfx::display::inventory::{CRAFTING_GRID_POS, HOTBAR_POS, MAIN_INVENTORY_POS, OUTPUT_POS},
     voxel::Block,
@@ -40,9 +43,9 @@ fn get_selected_slot(
 }
 
 fn get_selected_inventory_ind(
-    inventories: Vec<((f32, f32), Inventory)>, 
+    inventories: Vec<((f32, f32), Inventory)>,
     sz: f32,
-    mousepos: (f32, f32)
+    mousepos: (f32, f32),
 ) -> Option<usize> {
     for (i, (pos, inventory)) in inventories.iter().enumerate() {
         if get_selected_slot(inventory, *pos, sz, mousepos).is_some() {
@@ -203,15 +206,15 @@ fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
     output_slot.set_item(0, 0, output_item);
     let selected_output = get_selected_slot(&output_slot, OUTPUT_POS, SLOT_SZ, mousepos);
 
-    let (furnace_fuel, furnace_input, furnace_output) = 
+    let (furnace_fuel, furnace_input, furnace_output) =
         gamestate.player.open_block_data.get_furnace_slots();
     let furnace_ind = get_selected_inventory_ind(
         vec![
             (FURNACE_FUEL_POS, furnace_fuel),
             (FURNACE_INPUT_POS, furnace_input),
             (FURNACE_OUTPUT_POS, furnace_output),
-        ], 
-        SLOT_SZ, 
+        ],
+        SLOT_SZ,
         mousepos,
     );
     let selected_furnace = furnace_ind.map(|i| (i, 0));
@@ -281,12 +284,16 @@ fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
                 if let Some((ix, iy)) = selected_furnace {
                     let item = gamestate.player.open_block_data.inventory.get_item(ix, iy);
                     let leftover = gamestate.player.add_item(item);
-                    gamestate.player.open_block_data.inventory.set_item(ix, iy, leftover);
+                    gamestate
+                        .player
+                        .open_block_data
+                        .inventory
+                        .set_item(ix, iy, leftover);
                     //Update hotbar
                     for i in 0..9 {
                         hotbar.set_item(i, 0, gamestate.player.hotbar.items[i]);
                     }
-                }       
+                }
             }
             _ => {}
         }
@@ -325,15 +332,15 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     let mut destroy_slot = Inventory::empty_with_sz(1, 1);
     let selected_destroy = get_selected_slot(&destroy_slot, DESTROY_POS, SLOT_SZ, mousepos);
 
-    let (furnace_fuel, furnace_input, furnace_output) = 
+    let (furnace_fuel, furnace_input, furnace_output) =
         gamestate.player.open_block_data.get_furnace_slots();
     let furnace_ind = get_selected_inventory_ind(
         vec![
             (FURNACE_FUEL_POS, furnace_fuel),
             (FURNACE_INPUT_POS, furnace_input),
             (FURNACE_OUTPUT_POS, furnace_output),
-        ], 
-        SLOT_SZ, 
+        ],
+        SLOT_SZ,
         mousepos,
     );
     let selected_furnace = furnace_ind.map(|i| (i, 0));
@@ -381,7 +388,7 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 } else {
                     left_click(furnace, selected_furnace, mouse_item)
                 }
-            },
+            }
             _ => None,
         };
         item_op = item_op.or(i);
@@ -588,15 +595,14 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     if gamestate.player.opened_block_id == 37 {
         set_selected_str(&mut selected, selected_chest, "block");
     }
-    
-    let (furnace_fuel, furnace_input, _) = 
-        gamestate.player.open_block_data.get_furnace_slots();
+
+    let (furnace_fuel, furnace_input, _) = gamestate.player.open_block_data.get_furnace_slots();
     let furnace_ind = get_selected_inventory_ind(
         vec![
             (FURNACE_FUEL_POS, furnace_fuel),
             (FURNACE_INPUT_POS, furnace_input),
-        ], 
-        SLOT_SZ, 
+        ],
+        SLOT_SZ,
         mousepos,
     );
     let selected_furnace = furnace_ind.map(|i| (i, 0));
