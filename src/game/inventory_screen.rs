@@ -606,7 +606,8 @@ pub fn update_player_inventory(gamestate: &mut Game, mousepos: (f32, f32)) {
 
     //Sync tile data again
     if !gamestate.player.open_block_data.inventory.is_empty()
-        || !gamestate.player.open_block_data.values.is_empty() {
+        || !gamestate.player.open_block_data.values.is_empty()
+    {
         if let Some((x, y, z)) = gamestate.player.opened_block {
             let tile_data = gamestate.player.open_block_data.clone();
             gamestate.world.set_tile_data(x, y, z, Some(tile_data));

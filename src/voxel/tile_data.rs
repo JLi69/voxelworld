@@ -40,6 +40,30 @@ impl TileData {
         }
     }
 
+    pub fn get_furnace_fuel(&self) -> Item {
+        //Invalid inventory size
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return Item::Empty;
+        }
+        self.inventory.get_item(0, 0)
+    }
+
+    pub fn get_furnace_input(&self) -> Item {
+        //Invalid inventory size
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return Item::Empty;
+        }
+        self.inventory.get_item(1, 0)
+    }
+
+    pub fn get_furnace_output(&self) -> Item {
+        //Invalid inventory size
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return Item::Empty;
+        }
+        self.inventory.get_item(2, 0)
+    }
+
     pub fn get_items(&self) -> Vec<Item> {
         let mut items = vec![];
         for ix in 0..self.inventory.w() {

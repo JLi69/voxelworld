@@ -561,19 +561,38 @@ fn display_inventory_items(
 }
 
 //Assumes that the screen matrix has already been set
-fn display_arrow(gamestate: &Game) {
+fn display_icon(gamestate: &Game, x: f32, y: f32, tcx: f32, tcy: f32) {
     let quad = gamestate.models.bind("quad2d");
     let shader2d = gamestate.shaders.use_program("icon2d");
     gamestate.textures.bind("hud_icons");
     shader2d.uniform_vec2f("texscale", 1.0 / 4.0, 1.0 / 4.0);
-    shader2d.uniform_vec2f("texoffset", 0.75, 0.5);
+    shader2d.uniform_vec2f("texoffset", tcx, tcy);
     let mut transform = Matrix4::identity();
     transform = Matrix4::from_scale(30.0) * transform;
-    let x = 68.0;
-    let y = BOTTOM_Y + 15.0 + 68.0 * 5.0 + 30.0;
     transform = Matrix4::from_translation(Vector3::new(x, y, 0.0)) * transform;
     shader2d.uniform_matrix4f("transform", &transform);
     draw_elements(quad);
+}
+
+fn display_arrow(gamestate: &Game, x: f32, y: f32) {
+    display_icon(gamestate, x, y, 0.75, 0.5);
+}
+
+fn display_fire_outline(gamestate: &Game, x: f32, y: f32) {
+    display_icon(gamestate, x, y, 0.25, 0.75);
+}
+
+fn display_single_slot(
+    gamestate: &Game,
+    pos: (f32, f32),
+    mousepos: (f32, f32),
+    w: i32,
+    h: i32,
+    item: Item,
+) {
+    let mut inventory = Inventory::empty_with_sz(1, 1);
+    inventory.set_item(0, 0, item);
+    display_inventory(gamestate, &inventory, pos, mousepos, w, h);
 }
 
 pub const SLOT_SZ: f32 = 30.0;
@@ -602,6 +621,9 @@ pub const CRAFTING_GRID_POS: (f32, f32) =
     (-2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
 pub const OUTPUT_POS: (f32, f32) = (2.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
 pub const DESTROY_POS: (f32, f32) = (-4.0 * STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
+pub const FURNACE_INPUT_POS: (f32, f32) = (-STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 6.0 + SLOT_SZ);
+pub const FURNACE_FUEL_POS: (f32, f32) = (-STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 4.0 + SLOT_SZ);
+pub const FURNACE_OUTPUT_POS: (f32, f32) = (STEP, BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ);
 
 pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32, f32)) {
     unsafe {
@@ -664,7 +686,9 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
             display_inventory(gamestate, &destroy_slot, DESTROY_POS, mousepos, w, h);
         }
 
-        display_arrow(gamestate);
+        let arrow_x = STEP;
+        let arrow_y = BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ;
+        display_arrow(gamestate, arrow_x, arrow_y);
     } else {
         match gamestate.player.opened_block_id {
             //Chest
@@ -679,7 +703,20 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
                 );
             }
             //Furnace
-            40 => {}
+            40 => {
+                let arrow_y = BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ;
+                display_arrow(gamestate, 0.0, arrow_y);
+                display_fire_outline(gamestate, -STEP, arrow_y);
+                //Input slot
+                let input = gamestate.player.open_block_data.get_furnace_input();
+                display_single_slot(gamestate, FURNACE_INPUT_POS, mousepos, w, h, input);
+                //Fuel slot
+                let fuel = gamestate.player.open_block_data.get_furnace_fuel();
+                display_single_slot(gamestate, FURNACE_FUEL_POS, mousepos, w, h, fuel);
+                //Output slot
+                let output = gamestate.player.open_block_data.get_furnace_output();
+                display_single_slot(gamestate, FURNACE_OUTPUT_POS, mousepos, w, h, output);
+            }
             _ => {}
         }
     }
