@@ -8,7 +8,7 @@ fn test_bin_data1() {
     table.add_int("a", 1);
 
     //Convert data into bytes
-    let bytes = get_table_list_bytes("test", &vec![table]);
+    let bytes = get_table_list_bytes("test", &[table]);
     assert!(!bytes.is_empty());
 
     //Parse the data
@@ -40,7 +40,7 @@ fn test_bin_data2() {
     table.add_str("d", d);
 
     //Convert data into bytes
-    let bytes = get_table_list_bytes("test", &vec![table]);
+    let bytes = get_table_list_bytes("test", &[table]);
     assert!(!bytes.is_empty());
 
     //Parse the data

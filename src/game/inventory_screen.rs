@@ -214,11 +214,7 @@ fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
         SLOT_SZ, 
         mousepos,
     );
-    let selected_furnace = if let Some(i) = furnace_ind {
-        Some((i, 0))
-    } else {
-        None
-    };
+    let selected_furnace = furnace_ind.map(|i| (i, 0));
 
     //Handle crafting
     if gamestate.player.opened_block.is_none() {
@@ -340,11 +336,7 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         SLOT_SZ, 
         mousepos,
     );
-    let selected_furnace = if let Some(i) = furnace_ind {
-        Some((i, 0))
-    } else {
-        None
-    };
+    let selected_furnace = furnace_ind.map(|i| (i, 0));
 
     //Handle shift clicking (transfer items from hotbar to inventory and vice versa)
     if handle_shift_left_click(gamestate, mousepos) {
@@ -607,11 +599,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
         SLOT_SZ, 
         mousepos,
     );
-    let selected_furnace = if let Some(i) = furnace_ind {
-        Some((i, 0))
-    } else {
-        None
-    };
+    let selected_furnace = furnace_ind.map(|i| (i, 0));
     //Furnace
     if gamestate.player.opened_block_id == 40 {
         set_selected_str(&mut selected, selected_furnace, "block");
