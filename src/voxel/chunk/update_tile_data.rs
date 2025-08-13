@@ -118,7 +118,7 @@ impl Chunk {
             } else {
                 self.set_tile_data(x, y, z, Some(tile_data.clone()));
             }
-            
+
             match block.id {
                 //Furnace
                 40 => {

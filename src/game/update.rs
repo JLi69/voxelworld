@@ -174,16 +174,16 @@ impl Game {
 
     //Only run in survival mode
     fn handle_block_destruction(&mut self, destroyed: Option<(i32, i32, i32)>, block: Block) {
-        if self.game_mode() != GameMode::Survival {
-            return;
-        }
-
         if let Some((x, y, z)) = destroyed {
             let held_item = self.player.hotbar.get_selected();
             let block_drop = get_drop(&self.block_info, held_item, block);
             //If it's ice, then set it to be water if there is a non-empty
             //block beneath it, this only applies if nothing is dropped from the ice
-            if block.id == 85 && block.shape() == FULL_BLOCK && block_drop.is_empty() {
+            if block.id == 85
+                && block.shape() == FULL_BLOCK
+                && block_drop.is_empty()
+                && self.game_mode() == GameMode::Survival
+            {
                 break_ice(&mut self.world, x, y, z);
             }
 
@@ -269,6 +269,7 @@ impl Game {
             //If the player is trapped in a block, then they can only break
             //the block that is currently trapping them
             let destroyed = destroy_block_suffocating(stuck, &mut self.world);
+            self.handle_block_destruction(destroyed, block);
             let update_mesh = self.world.update_single_block_light(destroyed);
             gfx::update_chunk_vaos(chunktables, destroyed, &self.world);
             for (x, y, z) in update_mesh {

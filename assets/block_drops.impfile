@@ -167,6 +167,11 @@
 	"empty" = "seeds/1.0";
 }
 
+# Lit furnace
+"70" {
+	"empty" = "furnace/1.0";
+}
+
 # Top part of a door
 "81" {
 	"empty" = "door/1.0";

@@ -1,5 +1,5 @@
+use crate::{game::crafting::RecipeTable, gfx::ChunkTables, voxel::World};
 use std::collections::HashSet;
-use crate::{game::crafting::RecipeTable, voxel::World, gfx::ChunkTables};
 
 impl World {
     fn update_chunk_tile_data(
