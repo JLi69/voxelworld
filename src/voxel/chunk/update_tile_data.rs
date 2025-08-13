@@ -122,18 +122,18 @@ impl Chunk {
             match block.id {
                 //Furnace
                 40 => {
-                    block_updates.push((x, y, z));
                     let maxfuel = tile_data.get_float("maxfuel").unwrap_or(0.0);
                     if maxfuel > 0.0 {
+                        block_updates.push((x, y, z));
                         block.id = 70;
                         self.set_block(x, y, z, block);
                     }
                 }
                 //Lit furnace
                 70 => {
-                    block_updates.push((x, y, z));
                     let maxfuel = tile_data.get_float("maxfuel").unwrap_or(0.0);
                     if maxfuel == 0.0 {
+                        block_updates.push((x, y, z));
                         block.id = 40;
                         self.set_block(x, y, z, block);
                     }
