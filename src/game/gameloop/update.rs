@@ -98,7 +98,7 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
     }
     gamestate
         .world
-        .update_tile_data(dt, sim_range, &gamestate.recipe_table);
+        .update_tile_data(dt, sim_range, &gamestate.recipe_table, chunktables);
     //Update day night cycle
     gamestate.world.update_daynight(dt);
 

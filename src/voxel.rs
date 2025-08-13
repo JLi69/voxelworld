@@ -205,6 +205,8 @@ impl Block {
         match self.id {
             //Lava
             13 => Some(LightSrc::new(15, 8, 0)),
+            //Lit Furnace
+            70 => Some(LightSrc::new(15, 12, 0)),
             //Normal Torch
             71 => Some(LightSrc::new(15, 15, 15)),
             //Red torch

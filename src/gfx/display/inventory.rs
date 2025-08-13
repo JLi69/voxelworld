@@ -715,7 +715,7 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
                 );
             }
             //Furnace
-            40 => {
+            40 | 70 => {
                 let arrow_y = BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ;
                 display_arrow(gamestate, 0.0, arrow_y);
                 display_fire_outline(gamestate, -STEP, arrow_y);

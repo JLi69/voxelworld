@@ -95,13 +95,13 @@ pub fn update_furnace(tile_data: &TileData, dt: f32, recipes: &RecipeTable) -> O
 }
 
 impl Chunk {
-    pub fn update_tile_data(&mut self, dt: f32, recipes: &RecipeTable) {
+    pub fn update_tile_data(&mut self, dt: f32, recipes: &RecipeTable) -> Vec<(i32, i32, i32)> {
         let mut updated_tile_data = vec![];
         for ((x, y, z), tile_data) in &self.data {
             let block = self.get_block(*x, *y, *z);
             match block.id {
                 //Furnace
-                40 => {
+                40 | 70 => {
                     if let Some(updated) = update_furnace(tile_data, dt, recipes) {
                         updated_tile_data.push(((*x, *y, *z), updated));
                     }
@@ -110,8 +110,38 @@ impl Chunk {
             }
         }
 
+        let mut block_updates = vec![];
         for ((x, y, z), tile_data) in updated_tile_data {
-            self.set_tile_data(x, y, z, Some(tile_data));
+            let mut block = self.get_block(x, y, z);
+            if tile_data.inventory.is_empty() && tile_data.values.is_empty() {
+                self.set_tile_data(x, y, z, None);
+            } else {
+                self.set_tile_data(x, y, z, Some(tile_data.clone()));
+            }
+            
+            match block.id {
+                //Furnace
+                40 => {
+                    block_updates.push((x, y, z));
+                    let maxfuel = tile_data.get_float("maxfuel").unwrap_or(0.0);
+                    if maxfuel > 0.0 {
+                        block.id = 70;
+                        self.set_block(x, y, z, block);
+                    }
+                }
+                //Lit furnace
+                70 => {
+                    block_updates.push((x, y, z));
+                    let maxfuel = tile_data.get_float("maxfuel").unwrap_or(0.0);
+                    if maxfuel == 0.0 {
+                        block.id = 40;
+                        self.set_block(x, y, z, block);
+                    }
+                }
+                _ => {}
+            }
         }
+
+        block_updates
     }
 }

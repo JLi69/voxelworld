@@ -470,7 +470,7 @@ impl World {
                 self.set_tile_data(x, y, z, Some(TileData::new_chest()));
             }
             //Furnace
-            40 => {
+            40 | 70 => {
                 self.set_tile_data(x, y, z, Some(TileData::new_furance()));
             }
             _ => {}

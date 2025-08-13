@@ -83,6 +83,11 @@ pub fn init_voxel_flags() {
         set_plant_flags(56);
         //Sugar cane
         set_plant_flags(69);
+        //Lit furnace
+        VOXEL_FLAGS[70] |= CAN_ROTATE_FLAG;
+        VOXEL_FLAGS[70] |= ROTATE_Y_ONLY;
+        VOXEL_FLAGS[70] |= CAN_USE;
+        VOXEL_FLAGS[70] |= OPEN_INVENTORY;
         //Torches
         //They obviously aren't plants but share a lot of block properties with them
         set_plant_flags(71);

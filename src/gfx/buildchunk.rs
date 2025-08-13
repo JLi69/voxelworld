@@ -47,8 +47,8 @@ pub fn add_block_vertices(
             //Chest
             add_block_vertices_furnace_rotated(chunk, adj_chunks, xyz, vert_data, 38, 39);
         }
-        40 => {
-            //Furnace
+        40 | 70 => {
+            //Furnace/lit furnace
             add_block_vertices_furnace_rotated(chunk, adj_chunks, xyz, vert_data, 41, 42);
         }
         43 => {

@@ -280,7 +280,7 @@ fn handle_shift_left_click(gamestate: &mut Game, mousepos: (f32, f32)) -> bool {
                 }
             }
             //Furnace
-            40 => {
+            40 | 70 => {
                 if let Some((ix, iy)) = selected_furnace {
                     let item = gamestate.player.open_block_data.inventory.get_item(ix, iy);
                     let leftover = gamestate.player.add_item(item);
@@ -379,7 +379,7 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 left_click(chest, selected_pos, mouse_item)
             }
             //Furnace
-            40 => {
+            40 | 70 => {
                 let furnace = &mut gamestate.player.open_block_data.inventory;
                 //Output
                 if let Some((2, 0)) = selected_furnace {
@@ -610,7 +610,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
     );
     let selected_furnace = furnace_ind.map(|i| (i, 0));
     //Furnace
-    if gamestate.player.opened_block_id == 40 {
+    if matches!(gamestate.player.opened_block_id, 40 | 70) {
         set_selected_str(&mut selected, selected_furnace, "block");
     }
 
@@ -649,7 +649,7 @@ fn handle_right_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 selected_chest,
                 mouse_item,
             ),
-            40 => right_click(
+            40 | 70 => right_click(
                 &mut gamestate.player.open_block_data.inventory,
                 selected_furnace,
                 mouse_item,
