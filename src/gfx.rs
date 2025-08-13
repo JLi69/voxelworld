@@ -61,12 +61,19 @@ pub fn set_default_gl_state() {
 
 pub fn set_nondefault_background_color(gamestate: &Game) {
     if gamestate.player.head_intersection(&gamestate.world, 12) {
+        //Water
         unsafe {
             gl::ClearColor(0.16, 0.41, 0.51, 1.0);
         }
     } else if gamestate.player.head_intersection(&gamestate.world, 13) {
+        //Lava
         unsafe {
             gl::ClearColor(1.0, 0.3, 0.0, 1.0);
         }
     }
+}
+
+pub fn reset_icon2d_texperc(gamestate: &Game) {
+    let icon2d = gamestate.shaders.use_program("icon2d");
+    icon2d.uniform_vec2f("texperc", 1.0, 1.0);
 }

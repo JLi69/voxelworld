@@ -169,7 +169,7 @@ pub struct RecipeTable {
     //(fuel item, how many smelts)
     fuel: Vec<(Item, f32)>,
     //(input, output)
-    furnace_table: Vec<(Item, Item)>
+    furnace_table: Vec<(Item, Item)>,
 }
 
 fn generate_slab_recipe(block: Block) -> Recipe {
@@ -206,7 +206,8 @@ fn generate_stair_recipe(block: Block) -> Recipe {
 }
 
 fn get_fuel_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item, f32)> {
-    entry.get_all_vars()
+    entry
+        .get_all_vars()
         .iter()
         .filter_map(|(name, val)| {
             let aliased = item_aliases.get(name);
@@ -224,7 +225,8 @@ fn get_fuel_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item, f
 }
 
 fn get_furnace_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item, Item)> {
-    entry.get_all_vars()
+    entry
+        .get_all_vars()
         .iter()
         .filter_map(|(name, val)| {
             let aliased = item_aliases.get(name);
@@ -247,7 +249,7 @@ fn get_furnace_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item
 
 impl RecipeTable {
     pub fn new() -> Self {
-        Self { 
+        Self {
             recipes: vec![],
             fuel: vec![],
             furnace_table: vec![],

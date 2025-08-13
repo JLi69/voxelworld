@@ -582,6 +582,18 @@ fn display_fire_outline(gamestate: &Game, x: f32, y: f32) {
     display_icon(gamestate, x, y, 0.25, 0.75);
 }
 
+fn display_fire(gamestate: &Game, x: f32, y: f32, perc: f32) {
+    let shader2d = gamestate.shaders.use_program("icon2d");
+    shader2d.uniform_vec2f("texperc", 1.0, perc);
+    display_icon(gamestate, x, y, 0.5, 0.75);
+}
+
+fn display_progress(gamestate: &Game, x: f32, y: f32, perc: f32) {
+    let shader2d = gamestate.shaders.use_program("icon2d");
+    shader2d.uniform_vec2f("texperc", perc, 1.0);
+    display_icon(gamestate, x, y, 0.0, 0.75);
+}
+
 fn display_single_slot(
     gamestate: &Game,
     pos: (f32, f32),
@@ -633,8 +645,7 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
     }
 
     gamestate.textures.bind("hud_icons");
-    gamestate.shaders.use_program("icon2d");
-    let shader2d = gamestate.shaders.get("icon2d");
+    let shader2d = gamestate.shaders.use_program("icon2d");
     let quad = gamestate.models.bind("quad2d");
 
     //Set screen matrix
@@ -708,6 +719,7 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
                 let arrow_y = BOTTOM_Y + SLOT_SZ / 2.0 + STEP * 5.0 + SLOT_SZ;
                 display_arrow(gamestate, 0.0, arrow_y);
                 display_fire_outline(gamestate, -STEP, arrow_y);
+
                 //Input slot
                 let input = gamestate.player.open_block_data.get_furnace_input();
                 display_single_slot(gamestate, FURNACE_INPUT_POS, mousepos, w, h, input);
@@ -717,6 +729,27 @@ pub fn display_inventory_screen(gamestate: &Game, w: i32, h: i32, mousepos: (f32
                 //Output slot
                 let output = gamestate.player.open_block_data.get_furnace_output();
                 display_single_slot(gamestate, FURNACE_OUTPUT_POS, mousepos, w, h, output);
+
+                let fuel = gamestate
+                    .player
+                    .open_block_data
+                    .get_float("fuel")
+                    .unwrap_or(0.0);
+                let maxfuel = gamestate
+                    .player
+                    .open_block_data
+                    .get_float("maxfuel")
+                    .unwrap_or(0.0);
+                let fuelperc = if maxfuel > 0.0 { fuel / maxfuel } else { 0.0 };
+                let progress = gamestate
+                    .player
+                    .open_block_data
+                    .get_float("progress")
+                    .unwrap_or(0.0);
+                display_fire(gamestate, -STEP, arrow_y, fuelperc);
+                display_progress(gamestate, 0.0, arrow_y, progress);
+                //reset texperc in icon2d to be (1.0, 1.0)
+                shader2d.uniform_vec2f("texperc", 1.0, 1.0);
             }
             _ => {}
         }

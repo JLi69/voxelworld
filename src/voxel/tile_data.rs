@@ -128,4 +128,12 @@ impl TileData {
 
         Some(((x, y, z), tile_data))
     }
+
+    pub fn get_float(&self, name: &str) -> Option<f32> {
+        let value = self.values.get(name)?;
+        if let DataType::Float(v) = value {
+            return Some(*v);
+        }
+        None
+    }
 }
