@@ -98,6 +98,8 @@
 	"coal" = "item,2,1";
 	"bowl" = "item,3,1";
 	"sugar" = "item,4,1";
+	"clay_ball" = "item,5,1";
+	"brick_item" = "item,6,1";
 
 	# Food
 	# Format of food info: health restored/% stamina restored
@@ -107,6 +109,7 @@
 	"bread" = "food,67,5/20";
 	"cake" = "food,68,8/75";
 	"desert_soup" = "food,69,1/5";
+	"unbaked_cake" = "food,70,1/5";
 
 	# Tools
 	"wood_pickaxe" = "tool,32,wood/pickaxe";

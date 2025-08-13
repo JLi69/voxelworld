@@ -12,6 +12,7 @@
 	"fence" = "1.0";
 	"gate" = "1.0";
 	"door" = "1.0";
+	"chest" = "1.0";
 	"sapling" = "0.5";
 	"snowy_sapling" = "0.5";
 	"dead_bush" = "0.5";
@@ -33,4 +34,6 @@
 	"log" = "coal";
 	"cobblestone" = "stone";
 	"sand" = "glass";
+	"unbaked_cake" = "cake";
+	"clay_ball" = "brick_item";
 }

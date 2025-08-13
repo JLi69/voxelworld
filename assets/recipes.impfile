@@ -326,11 +326,11 @@
 	"amt" = "1";
 }
 
-"cake" {
+"unbaked_cake" {
 	"width" = "3";
 	"height" = "3";
 	"items" = "sugar|sugar|sugar|wheat|wheat|wheat|wheat|wheat|wheat";
-	"output" = "cake";
+	"output" = "unbaked_cake";
 	"amt" = "1";
 }
 
@@ -341,4 +341,20 @@
 	"output" = "desert_soup";
 	"amt" = "1";
 	"reflect" = "true";
+}
+
+"clay" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "clay_ball|clay_ball|clay_ball|clay_ball";
+	"output" = "clay";
+	"amt" = "1";
+}
+
+"bricks" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "brick_item|brick_item|brick_item|brick_item";
+	"output" = "bricks";
+	"amt" = "2";
 }

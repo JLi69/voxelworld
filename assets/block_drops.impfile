@@ -185,6 +185,11 @@
 	"empty" = "dirt/1.0";
 }
 
+"clay" {
+	# Drop 4 clay balls
+	"empty" = "item,5,4/1.0";
+}
+
 "snowy_leaves" {
 	"empty" = "snowy_sapling/1.0|empty/19.0";
 }
