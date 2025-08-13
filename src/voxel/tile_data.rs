@@ -64,6 +64,30 @@ impl TileData {
         self.inventory.get_item(2, 0)
     }
 
+    pub fn set_furnace_fuel(&mut self, item: Item) {
+        //Invalid inventory size
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return;
+        }
+        self.inventory.set_item(0, 0, item);
+    }
+
+    pub fn set_furnace_input(&mut self, item: Item) {
+        //Invalid inventory size
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return;
+        }
+        self.inventory.set_item(1, 0, item);
+    }
+
+    pub fn set_furnace_output(&mut self, item: Item) {
+        //Invalid inventory size
+        if self.inventory.w() != 3 || self.inventory.h() != 1 {
+            return;
+        }
+        self.inventory.set_item(2, 0, item);
+    }
+
     //Returns [fuel, input, output]
     pub fn get_furnace_slots(&self) -> (Inventory, Inventory, Inventory) {
         let mut fuel = Inventory::empty_with_sz(1, 1);
@@ -135,5 +159,13 @@ impl TileData {
             return Some(*v);
         }
         None
+    }
+
+    pub fn set_float(&mut self, name: &str, val: f32) {
+        self.values.insert(name.to_string(), DataType::Float(val));
+    }
+
+    pub fn clear_value(&mut self, name: &str) {
+        self.values.remove(name);
     }
 }

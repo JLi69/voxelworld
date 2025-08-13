@@ -1,5 +1,6 @@
 pub mod rand_block_update;
 mod simulations;
+pub mod update_tile_data;
 
 use super::World;
 use crate::{

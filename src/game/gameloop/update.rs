@@ -96,6 +96,9 @@ pub fn update_game(gamestate: &mut Game, chunktables: &mut ChunkTables, dt: f32)
         let dropped_item = DroppedItem::new(item, x as f32 + 0.5, y as f32 + 0.5, z as f32 + 0.5);
         gamestate.entities.dropped_items.add_item(dropped_item);
     }
+    gamestate
+        .world
+        .update_tile_data(dt, sim_range, &gamestate.recipe_table);
     //Update day night cycle
     gamestate.world.update_daynight(dt);
 

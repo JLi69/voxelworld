@@ -1,5 +1,6 @@
 mod light;
 pub mod save;
+mod update_tile_data;
 
 use super::{
     light::{Light, LU},

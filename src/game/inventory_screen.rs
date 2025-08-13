@@ -384,7 +384,10 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
                 //Output
                 if let Some((2, 0)) = selected_furnace {
                     let mut inventory = Inventory::empty_with_sz(1, 1);
-                    left_click_output(&mut inventory, furnace, selected_furnace, mouse_item)
+                    let output =
+                        left_click_output(&mut inventory, furnace, selected_furnace, mouse_item);
+                    furnace.set_item(2, 0, Item::Empty);
+                    output
                 } else {
                     left_click(furnace, selected_furnace, mouse_item)
                 }
