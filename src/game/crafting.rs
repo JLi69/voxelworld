@@ -31,6 +31,7 @@ fn add_block_variants(aliases: &mut ItemAliases, name: &str, item: Item) {
 
         let mut stair = block;
         stair.set_shape(STAIR);
+        stair.set_orientation(2);
         let stair_name = format!("{name}_stair");
         aliases.insert(stair_name, Item::Block(stair, 1));
     }
@@ -247,6 +248,45 @@ fn get_furnace_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item
         .collect()
 }
 
+fn add_block_fuel_variants(block: Block, fuel_amt: f32, block_variants: &mut Vec<(Item, f32)>) {
+    if block.shape() != FULL_BLOCK {
+        return;
+    }
+    if block.is_fluid() {
+        return;
+    }
+    if block.is_flat_item() {
+        return;
+    }
+    if block.non_voxel_geometry() {
+        return;
+    }
+
+    let mut slab = block;
+    slab.set_shape(SLAB);
+    block_variants.push((Item::Block(slab, 1), 0.5 * fuel_amt));
+
+    let mut vert_slab = block;
+    vert_slab.set_shape(SLAB);
+    vert_slab.set_orientation(2);
+    block_variants.push((Item::Block(vert_slab, 1), 0.5 * fuel_amt));
+
+    let mut stair = block;
+    stair.set_shape(STAIR);
+    stair.set_orientation(2);
+    block_variants.push((Item::Block(stair, 1), 0.75 * fuel_amt));
+
+    let mut stair = block;
+    stair.set_shape(3);
+    stair.set_orientation(4);
+    block_variants.push((Item::Block(stair, 1), 0.75 * fuel_amt));
+
+    let mut stair = block;
+    stair.set_shape(4);
+    stair.set_orientation(4);
+    block_variants.push((Item::Block(stair, 1), 0.75 * fuel_amt));
+}
+
 impl RecipeTable {
     pub fn new() -> Self {
         Self {
@@ -272,6 +312,14 @@ impl RecipeTable {
                 _ => {}
             }
         }
+
+        let mut block_variants = vec![];
+        for (item, fuel_amt) in self.fuel.iter().copied() {
+            if let Item::Block(block, _) = item {
+                add_block_fuel_variants(block, fuel_amt, &mut block_variants);
+            }
+        }
+        self.fuel.extend(block_variants);
 
         eprintln!("Loaded {} furnace recipes", self.furnace_table.len());
     }
