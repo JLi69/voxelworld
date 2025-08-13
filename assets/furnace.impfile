@@ -36,4 +36,6 @@
 	"sand" = "glass";
 	"unbaked_cake" = "cake";
 	"clay_ball" = "brick_item";
+	"iron_ore" = "iron_ingot";
+	"gold_ore" = "gold_ingot";
 }

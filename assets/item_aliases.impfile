@@ -100,6 +100,8 @@
 	"sugar" = "item,4,1";
 	"clay_ball" = "item,5,1";
 	"brick_item" = "item,6,1";
+	"iron_ingot" = "item,7,1";
+	"gold_ingot" = "item,8,1";
 
 	# Food
 	# Format of food info: health restored/% stamina restored
