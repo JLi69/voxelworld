@@ -102,6 +102,8 @@
 	"brick_item" = "item,6,1";
 	"iron_ingot" = "item,7,1";
 	"gold_ingot" = "item,8,1";
+	"diamond" = "item,9,1";
+	"rainbow_stone" = "item,10,1";
 
 	# Food
 	# Format of food info: health restored/% stamina restored

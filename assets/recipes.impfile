@@ -152,6 +152,70 @@
 	"amt" = "9";
 }
 
+"iron_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "iron_ingot|iron_ingot|iron_ingot|iron_ingot|iron_ingot|iron_ingot|iron_ingot|iron_ingot|iron_ingot";
+	"output" = "iron_block";
+	"amt" = "1";
+}
+
+"iron_ingot" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "iron_block";
+	"output" = "iron_ingot";
+	"amt" = "9";
+}
+
+"gold_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "gold_ingot|gold_ingot|gold_ingot|gold_ingot|gold_ingot|gold_ingot|gold_ingot|gold_ingot|gold_ingot";
+	"output" = "gold_block";
+	"amt" = "1";
+}
+
+"gold_ingot" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "gold_block";
+	"output" = "gold_ingot";
+	"amt" = "9";
+}
+
+"diamond_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "diamond|diamond|diamond|diamond|diamond|diamond|diamond|diamond|diamond";
+	"output" = "diamond_block";
+	"amt" = "1";
+}
+
+"diamond" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "diamond_block";
+	"output" = "diamond";
+	"amt" = "9";
+}
+
+"rainbow_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "rainbow_stone|rainbow_stone|rainbow_stone|rainbow_stone|rainbow_stone|rainbow_stone|rainbow_stone|rainbow_stone|rainbow_stone";
+	"output" = "rainbow_block";
+	"amt" = "1";
+}
+
+"rainbow_stone" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "rainbow_block";
+	"output" = "rainbow_stone";
+	"amt" = "9";
+}
+
 "bush_sticks" {
 	"width" = "1";
 	"height" = "1";
