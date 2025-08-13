@@ -2,7 +2,7 @@ use super::inventory::{
     items_match, multiply_items, reduce_amt, string_to_item_err, Inventory, Item,
 };
 use crate::{
-    impfile,
+    impfile::{self, Entry},
     voxel::{Block, FULL_BLOCK, SLAB, STAIR},
 };
 use std::collections::HashMap;
@@ -166,6 +166,10 @@ impl Recipe {
 //Table of crafting recipes
 pub struct RecipeTable {
     recipes: Vec<Recipe>,
+    //(fuel item, how many smelts)
+    fuel: Vec<(Item, f32)>,
+    //(input, output)
+    furnace_table: Vec<(Item, Item)>
 }
 
 fn generate_slab_recipe(block: Block) -> Recipe {
@@ -201,9 +205,73 @@ fn generate_stair_recipe(block: Block) -> Recipe {
     }
 }
 
+fn get_fuel_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item, f32)> {
+    entry.get_all_vars()
+        .iter()
+        .filter_map(|(name, val)| {
+            let aliased = item_aliases.get(name);
+            if let Some(aliased) = aliased {
+                return Some((*aliased, val));
+            }
+            let item = string_to_item_err(name).ok()?;
+            Some((item, val))
+        })
+        .filter_map(|(item, val)| {
+            let fuel_amt = val.parse::<f32>().ok()?;
+            Some((item, fuel_amt))
+        })
+        .collect()
+}
+
+fn get_furnace_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item, Item)> {
+    entry.get_all_vars()
+        .iter()
+        .filter_map(|(name, val)| {
+            let aliased = item_aliases.get(name);
+            if let Some(aliased) = aliased {
+                return Some((*aliased, val));
+            }
+            let item = string_to_item_err(name).ok()?;
+            Some((item, val))
+        })
+        .filter_map(|(item, val)| {
+            let aliased = item_aliases.get(val);
+            if let Some(aliased) = aliased {
+                return Some((item, *aliased));
+            }
+            let output = string_to_item_err(val).ok()?;
+            Some((item, output))
+        })
+        .collect()
+}
+
 impl RecipeTable {
     pub fn new() -> Self {
-        Self { recipes: vec![] }
+        Self { 
+            recipes: vec![],
+            fuel: vec![],
+            furnace_table: vec![],
+        }
+    }
+
+    pub fn load_furnace(&mut self, item_alias_path: &str, recipe_path: &str) {
+        let item_aliases = load_item_aliases(item_alias_path);
+        let entries = impfile::parse_file(recipe_path);
+        for e in entries {
+            match e.get_name().as_str() {
+                "fuel" => {
+                    let fuel = get_fuel_from_entry(e, &item_aliases);
+                    self.fuel.extend(fuel);
+                }
+                "furnace" => {
+                    let furnace = get_furnace_from_entry(e, &item_aliases);
+                    self.furnace_table.extend(furnace);
+                }
+                _ => {}
+            }
+        }
+
+        eprintln!("Loaded {} furnace recipes", self.furnace_table.len());
     }
 
     pub fn load_recipes(&mut self, item_alias_path: &str, recipe_path: &str) {
@@ -247,6 +315,24 @@ impl RecipeTable {
             }
         }
 
+        None
+    }
+
+    pub fn get_fuel(&self, item: Item) -> Option<f32> {
+        for (fuel_item, fuel_amt) in self.fuel.iter().copied() {
+            if items_match(item, fuel_item) {
+                return Some(fuel_amt);
+            }
+        }
+        None
+    }
+
+    pub fn get_furnace_product(&self, item: Item) -> Option<Item> {
+        for (input, output) in self.furnace_table.iter().copied() {
+            if items_match(item, input) {
+                return Some(output);
+            }
+        }
         None
     }
 }

@@ -50,6 +50,8 @@ impl Game {
         self.load_block_info("assets/block_info.impfile");
         self.recipe_table
             .load_recipes("assets/item_aliases.impfile", "assets/recipes.impfile");
+        self.recipe_table
+            .load_furnace("assets/item_aliases.impfile", "assets/furnace.impfile");
         self.leftover_table =
             load_leftover_table("assets/item_aliases.impfile", "assets/leftovers.impfile");
     }

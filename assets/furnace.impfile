@@ -1,0 +1,36 @@
+# Table of fuel for a furnace
+# Format: "fuel item" = "number of smelts the fuel allows for"
+# Example: "coal" = "8.0"
+"fuel" {
+	"plank" = "1.5";
+	"log" = "3.0";
+	"bark" = "3.0";
+	"coal_block" = "72.0";
+	"coal" = "8.0";
+	"stick" = "0.5";
+	"ladder" = "1.0";
+	"fence" = "1.0";
+	"gate" = "1.0";
+	"door" = "1.0";
+	"sapling" = "0.5";
+	"snowy_sapling" = "0.5";
+	"dead_bush" = "0.5";
+
+	# Wood tools
+	"wood_pickaxe" = "1.0";
+	"wood_shovel" = "1.0";
+	"wood_axe" = "1.0";
+	"wood_hoe" = "1.0";
+	"wood_sword" = "1.0";
+}
+
+
+# Table of items and what item they turn into when 
+# they are smelted/cooked in a furnace
+# Format: "input item" = "output item";
+# Example: "cobblestone" = "stone";
+"furnace" {
+	"log" = "coal";
+	"cobblestone" = "stone";
+	"sand" = "glass";
+}
