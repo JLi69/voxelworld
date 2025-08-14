@@ -115,6 +115,7 @@
 	"cake" = "food,68,8/75";
 	"desert_soup" = "food,69,1/5";
 	"unbaked_cake" = "food,70,1/5";
+	"golden_apple" = "food,71,19/100";
 
 	# Tools
 	# Wood tools

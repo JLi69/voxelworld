@@ -369,3 +369,11 @@
 	"output" = "bucket,0";
 	"amt" = "1";
 }
+
+"golden_apple" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "gold_ingot|gold_ingot|gold_ingot|gold_ingot|apple|gold_ingot|gold_ingot|gold_ingot|gold_ingot";
+	"output" = "golden_apple";
+	"amt" = "1";
+}
