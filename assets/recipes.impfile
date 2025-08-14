@@ -224,91 +224,6 @@
 	"amt" = "3";
 }
 
-# Tools
-"wood_pickaxe" {
-	"width" = "3";
-	"height" = "3";
-	"items" = "plank|plank|plank|empty|stick|empty|empty|stick|empty";
-	"output" = "wood_pickaxe";
-	"amt" = "1";
-}
-
-"wood_shovel" {
-	"width" = "1";
-	"height" = "3";
-	"items" = "plank|stick|stick";
-	"output" = "wood_shovel";
-	"amt" = "1";
-}
-
-"wood_axe" {
-	"width" = "2";
-	"height" = "3";
-	"items" = "plank|plank|plank|stick|empty|stick";
-	"output" = "wood_axe";
-	"amt" = "1";
-	"reflect" = "true";
-}
-
-"wood_hoe" {
-	"width" = "2";
-	"height" = "3";
-	"items" = "plank|plank|empty|stick|empty|stick";
-	"output" = "wood_hoe";
-	"amt" = "1";
-	"reflect" = "true";
-}
-
-"wood_sword" {
-	"width" = "1";
-	"height" = "3";
-	"items" = "plank|plank|stick";
-	"output" = "wood_sword";
-	"amt" = "1";
-}
-
-"stone_pickaxe" {
-	"width" = "3";
-	"height" = "3";
-	"items" = "cobblestone|cobblestone|cobblestone|empty|stick|empty|empty|stick|empty";
-	"output" = "stone_pickaxe";
-	"amt" = "1";
-}
-
-"stone_shovel" {
-	"width" = "1";
-	"height" = "3";
-	"items" = "cobblestone|stick|stick";
-	"output" = "stone_shovel";
-	"amt" = "1";
-}
-
-"stone_axe" {
-	"width" = "2";
-	"height" = "3";
-	"items" = "cobblestone|cobblestone|cobblestone|stick|empty|stick";
-	"output" = "stone_axe";
-	"amt" = "1";
-	"reflect" = "true";
-}
-
-"stone_hoe" {
-	"width" = "2";
-	"height" = "3";
-	"items" = "cobblestone|cobblestone|empty|stick|empty|stick";
-	"output" = "stone_hoe";
-	"amt" = "1";
-	"reflect" = "true";
-}
-
-"stone_sword" {
-	"width" = "1";
-	"height" = "3";
-	"items" = "cobblestone|cobblestone|stick";
-	"output" = "stone_sword";
-	"amt" = "1";
-}
-
 "snowy_grass" {
 	"width" = "1";
 	"height" = "2";
@@ -421,4 +336,12 @@
 	"items" = "brick_item|brick_item|brick_item|brick_item";
 	"output" = "bricks";
 	"amt" = "2";
+}
+
+"bucket" {
+	"width" = "3";
+	"height" = "2";
+	"items" = "iron_ingot|empty|iron_ingot|empty|iron_ingot|empty";
+	"output" = "bucket,0";
+	"amt" = "1";
 }

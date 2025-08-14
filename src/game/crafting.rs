@@ -1,7 +1,11 @@
+mod tool_recipes;
+
 use super::inventory::{
-    items_match, multiply_items, reduce_amt, string_to_item_err, Inventory, Item,
+    items_match, multiply_items, reduce_amt, string_to_item_err, tools::ToolMaterial, Inventory,
+    Item,
 };
 use crate::{
+    game::crafting::tool_recipes::generate_tool_recipes,
     impfile::{self, Entry},
     voxel::{Block, FULL_BLOCK, SLAB, STAIR},
 };
@@ -354,6 +358,43 @@ impl RecipeTable {
             }
         }
         self.recipes.extend(auto_generated_recipes);
+        //Generate tool recipes
+        self.recipes.extend(generate_tool_recipes(
+            "plank",
+            ToolMaterial::Wood,
+            32,
+            &item_aliases,
+        ));
+        self.recipes.extend(generate_tool_recipes(
+            "cobblestone",
+            ToolMaterial::Stone,
+            37,
+            &item_aliases,
+        ));
+        self.recipes.extend(generate_tool_recipes(
+            "iron_ingot",
+            ToolMaterial::Iron,
+            42,
+            &item_aliases,
+        ));
+        self.recipes.extend(generate_tool_recipes(
+            "gold_ingot",
+            ToolMaterial::Gold,
+            48,
+            &item_aliases,
+        ));
+        self.recipes.extend(generate_tool_recipes(
+            "diamond",
+            ToolMaterial::Diamond,
+            53,
+            &item_aliases,
+        ));
+        self.recipes.extend(generate_tool_recipes(
+            "rainbow_stone",
+            ToolMaterial::Rainbow,
+            58,
+            &item_aliases,
+        ));
         eprintln!("Loaded {} recipes.", self.recipes.len());
     }
 
