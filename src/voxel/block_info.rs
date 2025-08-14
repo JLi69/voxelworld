@@ -243,9 +243,25 @@ fn parse_drops(
     drop_list: &str,
     item_aliases: &ItemAliases,
 ) -> Result<(Vec<String>, WeightTable), ()> {
+    let pickaxes = [
+        "wood_pickaxe".to_string(),
+        "stone_pickaxe".to_string(),
+        "iron_pickaxe".to_string(),
+        "gold_pickaxe".to_string(),
+        "diamond_pickaxe".to_string(),
+        "rainbow_pickaxe".to_string(),
+    ];
     let held: Vec<String> = held_str
         .split("|")
-        .map(|s| parse_item_str_aliased(s, item_aliases))
+        .flat_map(|s| match s {
+            "wood+" => pickaxes[..].to_vec(),
+            "stone+" => pickaxes[1..].to_vec(),
+            "iron+" => pickaxes[2..].to_vec(),
+            "gold+" => pickaxes[3..].to_vec(),
+            "diamond+" => pickaxes[4..].to_vec(),
+            _ => vec![s.to_string()],
+        })
+        .map(|s| parse_item_str_aliased(&s, item_aliases))
         .filter_map(|parsed| parsed.ok())
         .map(item_to_string)
         .collect();

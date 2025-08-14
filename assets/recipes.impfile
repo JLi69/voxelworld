@@ -136,6 +136,14 @@
 	"amt" = "4";
 }
 
+"red_torch" {
+	"width" = "1";
+	"height" = "2";
+	"items" = "red_dust|stick";
+	"output" = "red_torch";
+	"amt" = "1";
+}
+
 "coal_block" {
 	"width" = "3";
 	"height" = "3";
@@ -213,6 +221,22 @@
 	"height" = "1";
 	"items" = "rainbow_block";
 	"output" = "rainbow_stone";
+	"amt" = "9";
+}
+
+"red_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "red_dust|red_dust|red_dust|red_dust|red_dust|red_dust|red_dust|red_dust|red_dust";
+	"output" = "red_block";
+	"amt" = "1";
+}
+
+"red_dust" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "red_block";
+	"output" = "red_dust";
 	"amt" = "9";
 }
 

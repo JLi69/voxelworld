@@ -104,6 +104,7 @@
 	"gold_ingot" = "item,8,1";
 	"diamond" = "item,9,1";
 	"rainbow_stone" = "item,10,1";
+	"red_dust" = "item,11,1";
 
 	# Food
 	# Format of food info: health restored/% stamina restored
@@ -116,15 +117,40 @@
 	"unbaked_cake" = "food,70,1/5";
 
 	# Tools
+	# Wood tools
 	"wood_pickaxe" = "tool,32,wood/pickaxe";
 	"wood_shovel" = "tool,33,wood/shovel";
 	"wood_axe" = "tool,34,wood/axe";
 	"wood_hoe" = "tool,35,wood/hoe";
 	"wood_sword" = "tool,36,wood/sword";
-
+	# Stone tools
 	"stone_pickaxe" = "tool,37,stone/pickaxe";
 	"stone_shovel" = "tool,38,stone/shovel";
 	"stone_axe" = "tool,39,stone/axe";
 	"stone_hoe" = "tool,40,stone/hoe";
 	"stone_sword" = "tool,41,stone/sword";
+	# Iron tools
+	"iron_pickaxe" = "tool,42,iron/pickaxe";
+	"iron_shovel" = "tool,43,iron/shovel";
+	"iron_axe" = "tool,44,iron/axe";
+	"iron_hoe" = "tool,45,iron/hoe";
+	"iron_sword" = "tool,46,iron/sword";
+	# Gold tools
+	"gold_pickaxe" = "tool,48,gold/pickaxe";
+	"gold_shovel" = "tool,49,gold/shovel";
+	"gold_axe" = "tool,50,gold/axe";
+	"gold_hoe" = "tool,51,gold/hoe";
+	"gold_sword" = "tool,52,gold/sword";
+	# Diamond tools
+	"diamond_pickaxe" = "tool,53,diamond/pickaxe";
+	"diamond_shovel" = "tool,54,diamond/shovel";
+	"diamond_axe" = "tool,55,diamond/axe";
+	"diamond_hoe" = "tool,56,diamond/hoe";
+	"diamond_sword" = "tool,57,diamond/sword";
+	# Rainbow tools
+	"rainbow_pickaxe" = "tool,58,rainbow/pickaxe";
+	"rainbow_shovel" = "tool,59,rainbow/shovel";
+	"rainbow_axe" = "tool,60,rainbow/axe";
+	"rainbow_hoe" = "tool,61,rainbow/hoe";
+	"rainbow_sword" = "tool,62,rainbow/sword";
 }
