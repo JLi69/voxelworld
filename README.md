@@ -55,6 +55,9 @@ cargo build --release
 ## Screenshots
 
 ![screenshot](screenshots/screenshot2.png)
+
 ![screenshot](screenshots/screenshot3.png)
+
 ![screenshot](screenshots/screenshot4.png)
+
 ![screenshot](screenshots/screenshot5.png)
