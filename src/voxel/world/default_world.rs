@@ -158,7 +158,7 @@ impl GenInfoTable {
         }
     }
 
-    fn get(&self, x: i32, z: i32) -> Option<GenInfo> {
+    fn get(&self, x: i32, z: i32) -> Option<GenInfo<'_>> {
         let h = self.heightmap.get(&(x, z))?;
         let mountain_h = self.mountain.get(&(x, z))?;
         let temp = self.temperature.get(&(x, z))?;

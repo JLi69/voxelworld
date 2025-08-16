@@ -10,9 +10,9 @@ pub enum PauseMenuAction {
 
 //Creates an egui frame that is grayed out
 fn pause_frame() -> egui::Frame {
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(egui::Color32::from_rgba_unmultiplied(32, 32, 32, 200))
-        .inner_margin(egui::Margin::symmetric(16.0, 16.0))
+        .inner_margin(egui::Margin::symmetric(16, 16))
 }
 
 //Title for pause menu

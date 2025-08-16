@@ -108,8 +108,10 @@ pub fn run_credits_screen(
         } = ctx.end_pass();
 
         //Handle copy pasting
-        if !platform_output.copied_text.is_empty() {
-            egui_backend::copy_to_clipboard(&mut input_state, platform_output.copied_text);
+        for command in platform_output.commands {
+            if let egui::OutputCommand::CopyText(copied_text) = command {
+                egui_backend::copy_to_clipboard(&mut input_state, copied_text);
+            }
         }
 
         //Display

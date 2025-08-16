@@ -19,7 +19,7 @@ pub fn load_font(path: &str, fonts: &mut FontDefinitions) {
             }
             fonts
                 .font_data
-                .insert("font".to_string(), FontData::from_owned(bytes));
+                .insert("font".to_string(), FontData::from_owned(bytes).into());
         }
         Err(msg) => {
             eprintln!("Failed to open: {path}");

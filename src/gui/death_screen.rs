@@ -4,9 +4,9 @@ use egui_gl_glfw as egui_backend;
 
 //Creates an egui frame that is grayed out
 fn death_frame() -> egui::Frame {
-    egui::Frame::none()
+    egui::Frame::new()
         .fill(egui::Color32::from_rgba_unmultiplied(255, 0, 0, 200))
-        .inner_margin(egui::Margin::symmetric(16.0, 16.0))
+        .inner_margin(egui::Margin::symmetric(16, 16))
 }
 
 //Title for pause menu

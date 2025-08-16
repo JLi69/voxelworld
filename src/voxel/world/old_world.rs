@@ -151,7 +151,7 @@ impl GenInfoTable {
         }
     }
 
-    fn get(&self, x: i32, z: i32) -> Option<GenInfo> {
+    fn get(&self, x: i32, z: i32) -> Option<GenInfo<'_>> {
         let h = self.heightmap.get(&(x, z))?;
         let trees = self.tree_positions.get(&(x, z))?;
         let tree_h = self.tree_heights.get(&(x, z))?;
