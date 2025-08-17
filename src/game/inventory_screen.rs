@@ -684,10 +684,10 @@ pub fn update_player_inventory(gamestate: &mut Game, mousepos: (f32, f32)) {
         return;
     }
 
-    if gamestate.get_mouse_state(MouseButtonLeft) == KeyState::JustPressed {
-        handle_left_click(gamestate, mousepos);
-    } else if gamestate.get_mouse_state(MouseButtonRight).is_held() {
+    if gamestate.get_mouse_state(MouseButtonRight).is_held() {
         handle_right_click(gamestate, mousepos);
+    } else if gamestate.get_mouse_state(MouseButtonLeft) == KeyState::JustPressed {
+        handle_left_click(gamestate, mousepos);
     }
 
     //Sync tile data again
