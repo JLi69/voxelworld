@@ -13,7 +13,7 @@ use crate::game::physics::Hitbox;
 use crate::voxel::{self, CHUNK_SIZE_F32};
 use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
-use cgmath::{Deg, Matrix4, SquareMatrix, Vector3};
+use cgmath::{vec3, Deg, Matrix4, SquareMatrix, Vector3};
 pub use dropped_items::display_dropped_items;
 pub use hand::display_hand_item;
 pub use inventory::{display_hotbar, display_inventory_screen, display_mouse_item};
@@ -467,5 +467,30 @@ pub fn get_sky_brightness(t: f32) -> f32 {
         0.0
     } else {
         1.0
+    }
+}
+
+pub fn display_title(gamestate: &Game, w: i32, h: i32) {
+    unsafe {
+        gl::Disable(gl::CULL_FACE);
+        gl::Disable(gl::DEPTH_TEST);
+    }
+
+    let quad = gamestate.models.bind("quad2d");
+    let shader2d = gamestate.shaders.use_program("2d");
+    gamestate.textures.bind("title");
+    shader2d.uniform_float("alpha", 1.0);
+    let screen_mat = Matrix4::from_nonuniform_scale(2.0 / w as f32, 2.0 / h as f32, 1.0);
+    shader2d.uniform_matrix4f("screen", &screen_mat);
+    let mut transform = Matrix4::identity();
+    transform = Matrix4::from_nonuniform_scale(600.0, 85.0, 1.0) * transform;
+    transform = Matrix4::from_scale(0.5) * transform;
+    transform = Matrix4::from_translation(vec3(0.0, h as f32 / 2.0 - 120.0, 0.0)) * transform;
+    shader2d.uniform_matrix4f("transform", &transform);
+    draw_elements(quad);
+
+    unsafe {
+        gl::Enable(gl::CULL_FACE);
+        gl::Enable(gl::DEPTH_TEST);
     }
 }

@@ -88,6 +88,8 @@ pub fn run_main_menu(
         gamestate.aspect = aspect;
         let cloud_time = (start.elapsed().as_secs_f32() + cloud_offset) * 2.0;
         gfx::display::display_clouds_menu(gamestate, cloud_time);
+        let (w, h) = window.get_size();
+        gfx::display::display_title(gamestate, w, h);
 
         gui::set_ui_gl_state();
         //Update input state
@@ -108,12 +110,7 @@ pub fn run_main_menu(
             .scroll(true)
             .frame(transparent_frame())
             .show(&ctx, |ui| {
-                //Display the main title
-                ui.vertical_centered(|ui| {
-                    ui.add_space(64.0);
-                    ui.label(menu_text("VOXELWORLD", 64.0, Color32::DARK_GRAY));
-                    ui.add_space(64.0);
-                });
+                ui.add_space(192.0);
                 selected = display_main_menu(ui);
             });
 

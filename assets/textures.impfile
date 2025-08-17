@@ -65,3 +65,7 @@
 "items" {
 	"path" = "assets/textures/items.png";
 }
+
+"title" {
+	"path" = "assets/textures/title.png";
+}
