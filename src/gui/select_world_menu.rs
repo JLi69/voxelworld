@@ -162,6 +162,7 @@ pub fn run_select_world_menu(
     let native_pixels_per_point = window.get_content_scale().0;
     let font = gamestate.get_font();
     ctx.set_fonts(font);
+    ctx.set_pixels_per_point(native_pixels_per_point);
 
     //Initialize egui input state
     let mut input_state = init_egui_input_state(window);

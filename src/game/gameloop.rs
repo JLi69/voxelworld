@@ -32,6 +32,7 @@ pub fn run(gamestate: &mut Game, window: &mut PWindow, glfw: &mut Glfw, events: 
     let ctx = egui::Context::default();
     let native_pixels_per_point = window.get_content_scale().0;
     ctx.set_fonts(font);
+    ctx.set_pixels_per_point(native_pixels_per_point);
     //Initialize egui input state
     let mut input_state = gui::init_egui_input_state(window);
 
