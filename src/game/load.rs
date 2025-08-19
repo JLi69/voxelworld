@@ -52,7 +52,8 @@ impl Game {
         self.player = load_player(&player_path);
         let inventory_path = world_path.to_string() + "inventory.impfile";
         (self.player.hotbar, self.player.inventory) = load_inventory(&inventory_path);
-        self.world = World::load_world_metadata(world_path);
+        let range = self.settings.get_range() as i32;
+        self.world = World::load_world_metadata(world_path, range);
         self.world.load_chunks();
         self.world.init_block_light();
         self.world.init_sky_light();

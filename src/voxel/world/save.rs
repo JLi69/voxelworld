@@ -60,7 +60,6 @@ pub fn save_region(region: &Region, world_path: &str) {
 impl World {
     fn save_world_metadata(&self) {
         let mut entry = Entry::new("world");
-        entry.add_integer("range", self.range as i64);
         entry.add_integer("centerx", self.centerx as i64);
         entry.add_integer("centery", self.centery as i64);
         entry.add_integer("centerz", self.centerz as i64);
@@ -133,7 +132,7 @@ impl World {
         eprintln!("Saved {count} regions.");
     }
 
-    pub fn load_world_metadata(world_dir_path: &str) -> Self {
+    pub fn load_world_metadata(world_dir_path: &str, range: i32) -> Self {
         let path = world_dir_path.to_string() + "world.impfile";
         let world_metadata_entries = impfile::parse_file(&path);
         if world_metadata_entries.is_empty() {
@@ -151,11 +150,7 @@ impl World {
         Self {
             chunks: HashMap::new(),
             skylightmap: HashMap::new(),
-            range: world_metadata_entries[0]
-                .get_var("range")
-                .parse::<i32>()
-                .unwrap_or(7)
-                .max(2),
+            range,
             centerx: world_metadata_entries[0]
                 .get_var("centerx")
                 .parse::<i32>()

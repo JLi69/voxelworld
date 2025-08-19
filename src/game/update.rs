@@ -720,7 +720,8 @@ impl Game {
         self.save_entire_world();
 
         let path = self.world.path.clone();
-        let mut temp_world = World::load_world_metadata(&path);
+        let range = self.settings.get_range() as i32;
+        let mut temp_world = World::load_world_metadata(&path, range);
         let pos = self.player.position;
         temp_world.load_for_respawn(pos.x, pos.y, pos.z);
         //Attempt to set up player y position
@@ -746,7 +747,7 @@ impl Game {
         }
 
         self.entities = EntitiesTable::new();
-        self.world = World::load_world_metadata(&path);
+        self.world = World::load_world_metadata(&path, range);
         self.world.update_generation_queue(self.player.position);
         self.world.load_chunks();
         self.world.init_block_light();

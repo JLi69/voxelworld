@@ -54,7 +54,8 @@ fn create_new_world(menu_state: &mut CreateWorldMenuState, gamestate: &mut Game)
     } else {
         fastrand::u32(..)
     };
-    gamestate.generate_world(seed, 7, menu_state.gen_type, menu_state.game_mode);
+    let range = gamestate.settings.get_range() as i32;
+    gamestate.generate_world(seed, range, menu_state.gen_type, menu_state.game_mode);
     gamestate.world.init_block_light();
     gamestate.world.init_sky_light();
 }

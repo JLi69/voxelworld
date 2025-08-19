@@ -1,15 +1,39 @@
 use super::transparent_frame;
 use super::{egui_backend, menu_text};
 use super::{init_egui_input_state, set_ui_gl_state};
-use crate::game::settings::{CloudDisplay, Settings};
+use crate::game::settings::{CloudDisplay, Settings, MAX_RENDER_DIST, MIN_RENDER_DIST};
 use crate::game::{EventHandler, Game};
 use crate::{gfx, gui};
-use egui_backend::egui::{self, vec2, Color32, Pos2, Ui};
+use egui_backend::egui::{self, vec2, Color32, Pos2, Style, Ui};
 use glfw::{Context, CursorMode, Glfw, PWindow};
 
 //Returns whether to quit to the main menu
 fn display_settings_menu(ui: &mut Ui, settings: &mut Settings) {
+    ui.set_style(Style {
+        spacing: egui::Spacing {
+            slider_width: 200.0,
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+
     ui.heading(menu_text("Settings", 48.0, Color32::WHITE));
+
+    ui.add_space(24.0);
+    ui.heading(menu_text("Render Distance", 32.0, Color32::WHITE));
+    ui.heading(menu_text(
+        r#"WARNING: setting render distance to high values
+            may result in performance issues/lag."#,
+        16.0,
+        Color32::RED,
+    ));
+    let spacing = &ui.style().spacing;
+    let render_range = MIN_RENDER_DIST..=MAX_RENDER_DIST;
+    let render_dist_slider = egui::Slider::new(&mut settings.render_distance, render_range);
+    ui.add_sized(
+        [spacing.slider_width, spacing.slider_rail_height],
+        render_dist_slider,
+    );
 
     ui.add_space(24.0);
     //Radio options for clouds
