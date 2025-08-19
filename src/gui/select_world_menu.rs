@@ -131,6 +131,8 @@ fn display_delete_world(ui: &mut egui::Ui, menu_state: &mut SelectWorldMenuState
             menu_state.to_delete = String::new();
         }
 
+        ui.add_space(24.0);
+
         //Delete world
         if ui
             .button(menu_text("Yes, delete it!", 24.0, Color32::RED))

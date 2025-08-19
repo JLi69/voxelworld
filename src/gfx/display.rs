@@ -10,6 +10,7 @@ use crate::assets::shader::ShaderProgram;
 use crate::assets::Texture;
 use crate::game::assets::models::{draw_elements, draw_elements_instanced};
 use crate::game::physics::Hitbox;
+use crate::game::settings::CloudDisplay;
 use crate::voxel::{self, CHUNK_SIZE_F32};
 use crate::{game::Game, EMPTY_BLOCK};
 pub use block_menu::display_block_menu;
@@ -179,12 +180,18 @@ pub fn display_suffocation_screen(gamestate: &Game, w: i32, h: i32) {
     }
 }
 
-const CLOUD_LAYERS: i32 = 12;
+const CLOUD_LAYERS: i32 = 8;
 
 pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
     unsafe {
         gl::Disable(gl::CULL_FACE);
     }
+
+    let cloud_thickness = match gamestate.settings.cloud_display {
+        CloudDisplay::Fancy => CLOUD_LAYERS,
+        CloudDisplay::Flat => 1,
+        CloudDisplay::Disabled => return,
+    };
 
     gamestate.textures.bind("clouds");
     gamestate.shaders.use_program("clouds");
@@ -211,7 +218,8 @@ pub fn display_clouds_menu(gamestate: &Game, time_passed: f32) {
     cloud_shader.uniform_float("fogdist", dist);
     cloud_shader.uniform_float("fogstrength", 1.0 / (range * 0.2));
     cloud_shader.uniform_vec4f("fogcolor", sr, sg, sb, 1.0);
-    draw_elements_instanced(quad, CLOUD_LAYERS * 7 * 7);
+    cloud_shader.uniform_uint("layers", cloud_thickness as u32);
+    draw_elements_instanced(quad, cloud_thickness * 7 * 7);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);
@@ -222,6 +230,12 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
     unsafe {
         gl::Disable(gl::CULL_FACE);
     }
+
+    let cloud_thickness = match gamestate.settings.cloud_display {
+        CloudDisplay::Fancy => CLOUD_LAYERS,
+        CloudDisplay::Flat => 1,
+        CloudDisplay::Disabled => return,
+    };
 
     gamestate.textures.bind("clouds");
     gamestate.shaders.use_program("clouds");
@@ -248,10 +262,11 @@ pub fn display_clouds(gamestate: &Game, time_passed: f32) {
     );
     cloud_shader.uniform_float("total_time", time_passed);
     cloud_shader.uniform_float("skybrightness", get_sky_brightness(gamestate.world.time));
+    cloud_shader.uniform_uint("layers", cloud_thickness as u32);
     let worldsz = gamestate.world.get_range() + 1;
     cloud_shader.uniform_uint("worldsz", worldsz as u32);
     set_fog(gamestate, &cloud_shader, get_skycolor(gamestate.world.time));
-    draw_elements_instanced(quad, CLOUD_LAYERS * worldsz * worldsz);
+    draw_elements_instanced(quad, cloud_thickness * worldsz * worldsz);
 
     unsafe {
         gl::Enable(gl::CULL_FACE);

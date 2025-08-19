@@ -45,6 +45,9 @@ fn main() {
             MainMenuOutput::CreateWorld => {
                 gui::run_create_world_menu(&mut gamestate, &mut window, &mut glfw, &events)
             }
+            MainMenuOutput::Settings => {
+                gui::run_settings_menu(&mut gamestate, &mut window, &mut glfw, &events)
+            }
             MainMenuOutput::Credits => {
                 gui::run_credits_screen(&mut gamestate, &mut window, &mut glfw, &events)
             }

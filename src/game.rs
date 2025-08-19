@@ -11,11 +11,13 @@ pub mod load;
 pub mod physics;
 pub mod player;
 pub mod save;
+pub mod settings;
 pub mod update;
 
 use self::crafting::RecipeTable;
 use self::entities::EntitiesTable;
 use self::inventory::Item;
+use self::settings::Settings;
 use crate::game::inventory::Hotbar;
 use crate::impfile;
 use crate::voxel::block_info::{load_block_info, BlockInfo, BlockInfoTable};
@@ -145,6 +147,8 @@ pub struct Game {
     pub leftover_table: HashMap<String, Item>,
     //Entities
     pub entities: EntitiesTable,
+    //Settings
+    pub settings: Settings,
 }
 
 impl Game {
@@ -184,6 +188,7 @@ impl Game {
             recipe_table: RecipeTable::new(),
             leftover_table: HashMap::new(),
             entities: EntitiesTable::new(),
+            settings: Settings::default(),
         }
     }
 

@@ -11,10 +11,10 @@ out vec2 tc;
 
 uniform uint worldsz;
 
-const int LAYERS = 8;
+uniform uint layers;
 
 void main() {
-	int i = int(gl_InstanceID) / LAYERS;
+	int i = int(gl_InstanceID) / int(layers);
 	int ix = i % int(worldsz);
 	int iy = i / int(worldsz);
 
@@ -26,7 +26,7 @@ void main() {
 	);
 	vec4 transformed = transform * p;
 	//For clouds, to give them a 3D effect
-	int layer = int(gl_InstanceID) % LAYERS;
+	int layer = int(gl_InstanceID) % int(layers);
 	transformed -= vec4(0.0, float(layer), 0.0, 0.0);
 	vec4 glpos = persp * view * transformed;
 	tc = pos.xy * 0.5 + vec2(0.5, 0.5);
