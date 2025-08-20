@@ -300,7 +300,7 @@ pub fn parse_file(path: &str) -> EntryList {
             }
         }
         Err(msg) => {
-            eprintln!("{msg}");
+            eprintln!("E: Failed to open {path}: {msg}");
         }
     }
 
