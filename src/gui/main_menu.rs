@@ -16,47 +16,39 @@ pub enum MainMenuOutput {
     Quit,
 }
 
+const BUTTON_SIZE: [f32; 2] = [200.0, 32.0];
+
 //Displays all the buttons on the main menu
 fn display_main_menu(ui: &mut egui::Ui) -> Option<MainMenuOutput> {
     let mut selected = None;
 
     ui.vertical_centered(|ui| {
-        if ui
-            .button(menu_text("Play World", 28.0, Color32::WHITE))
-            .clicked()
-        {
+        let play_button = egui::Button::new(menu_text("Play World", 28.0, Color32::WHITE));
+        if ui.add_sized(BUTTON_SIZE, play_button).clicked() {
             selected = Some(MainMenuOutput::SelectWorld);
         }
 
         ui.add_space(12.0);
-        if ui
-            .button(menu_text("New World", 28.0, Color32::WHITE))
-            .clicked()
-        {
+        let create_button = egui::Button::new(menu_text("New World", 28.0, Color32::WHITE));
+        if ui.add_sized(BUTTON_SIZE, create_button).clicked() {
             selected = Some(MainMenuOutput::CreateWorld);
         }
 
         ui.add_space(12.0);
-        if ui
-            .button(menu_text("Settings", 28.0, Color32::WHITE))
-            .clicked()
-        {
+        let settings_button = egui::Button::new(menu_text("Settings", 28.0, Color32::WHITE));
+        if ui.add_sized(BUTTON_SIZE, settings_button).clicked() {
             selected = Some(MainMenuOutput::Settings);
         }
 
         ui.add_space(12.0);
-        if ui
-            .button(menu_text("Credits", 28.0, Color32::WHITE))
-            .clicked()
-        {
+        let credits_button = egui::Button::new(menu_text("Credits", 28.0, Color32::WHITE));
+        if ui.add_sized(BUTTON_SIZE, credits_button).clicked() {
             selected = Some(MainMenuOutput::Credits);
         }
 
         ui.add_space(12.0);
-        if ui
-            .button(menu_text("Quit Game", 28.0, Color32::WHITE))
-            .clicked()
-        {
+        let quit_button = egui::Button::new(menu_text("Quit Game", 28.0, Color32::WHITE));
+        if ui.add_sized(BUTTON_SIZE, quit_button).clicked() {
             selected = Some(MainMenuOutput::Quit);
         }
     });
