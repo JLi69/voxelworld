@@ -3,7 +3,7 @@ use super::{egui_backend, menu_text};
 use super::{init_egui_input_state, set_ui_gl_state};
 use crate::game::settings::{CloudDisplay, Settings, MAX_RENDER_DIST, MIN_RENDER_DIST};
 use crate::game::{EventHandler, Game};
-use crate::{gfx, gui};
+use crate::{gfx, gui, SETTINGS_PATH};
 use egui_backend::egui::{self, vec2, Color32, Pos2, Style, Ui};
 use glfw::{Context, CursorMode, Glfw, PWindow};
 
@@ -154,6 +154,8 @@ pub fn run_settings_menu(
         window.swap_buffers();
         glfw.poll_events();
     }
+
+    gamestate.settings.save(SETTINGS_PATH);
 
     quit_to_menu
 }

@@ -12,6 +12,9 @@ use game::{save, Game};
 use gui::main_menu::MainMenuOutput;
 use voxel::{flags::init_voxel_flags, World, CHUNK_SIZE_F32, EMPTY_BLOCK};
 
+const CFG_PATH: &str = "cfg.impfile";
+const SETTINGS_PATH: &str = "settings.impfile";
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     //If the user provides the arguments --run-test-sims,
@@ -31,7 +34,8 @@ fn main() {
     //Initialize game state
     let mut gamestate = Game::new();
     gamestate.init();
-    gamestate.load_config("cfg.impfile");
+    gamestate.load_config(CFG_PATH);
+    gamestate.load_settings(SETTINGS_PATH);
     gamestate.load_assets();
     gamestate.init_mouse_pos(&window);
 
@@ -58,4 +62,6 @@ fn main() {
             game::run(&mut gamestate, &mut window, &mut glfw, &events);
         }
     }
+
+    gamestate.settings.save(SETTINGS_PATH);
 }

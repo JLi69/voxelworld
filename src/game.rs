@@ -253,6 +253,10 @@ impl Game {
             .collect();
     }
 
+    pub fn load_settings(&mut self, path: &str) {
+        self.settings = Settings::load(path);
+    }
+
     pub fn get_block_menu(&self) -> &[u8] {
         &self.cfg.block_menu
     }
