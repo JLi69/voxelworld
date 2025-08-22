@@ -72,23 +72,27 @@ pub fn run_credits_screen(
 
         //Display credits
         let (width, height) = window.get_size();
+        let gui_width = 800.0f32.min(width as f32 - 32.0);
         egui::Window::new("window")
             .movable(false)
             .title_bar(false)
-            .fixed_size(vec2(width as f32 - 32.0, height as f32))
-            .fixed_pos(Pos2::new(0.0, 0.0))
+            .fixed_size(vec2(gui_width, height as f32))
+            .fixed_pos(Pos2::new(width as f32 / 2.0 - gui_width / 2.0, 0.0))
             .frame(transparent_frame())
             .show(&ctx, |ui| {
                 ui.vertical(|ui| {
-                    ui.label(menu_text("Credits", 48.0, Color32::WHITE));
+                    ui.vertical_centered(|ui| {
+                        ui.label(menu_text("Credits", 48.0, Color32::WHITE));
 
-                    //Return to main menu
-                    if ui
-                        .button(menu_text("Main Menu", 24.0, Color32::WHITE))
-                        .clicked()
-                    {
-                        quit_to_menu = true;
-                    }
+                        //Return to main menu
+                        if ui
+                            .button(menu_text("Main Menu", 24.0, Color32::WHITE))
+                            .clicked()
+                        {
+                            quit_to_menu = true;
+                        }
+                    });
+ 
                     ui.add_space(24.0);
 
                     egui::ScrollArea::vertical()
