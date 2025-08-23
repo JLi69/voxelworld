@@ -9,6 +9,9 @@ const CROUCH_AMT: f32 = 0.33;
 const SPRINT_TIME: f32 = 10.0;
 const STAMINA_REGEN: f32 = 1.0 / 40.0;
 const STAMINA_REGEN_COOLDOWN: f32 = 15.0;
+const SPACEBAR_FLYING_DELAY: f32 = 0.3;
+const FLY_SPEED: f32 = 5.0;
+const FLY_AMT: f32 = 1.6;
 
 impl Player {
     pub fn can_sprint(&self) -> bool {
@@ -50,13 +53,49 @@ impl Player {
 
     //Jump up in the y direction
     pub fn jump(&mut self, jump_key: KeyState) {
-        if self.falling || self.jump_cooldown > 0.0 || self.velocity_y != 0.0 {
+        if self.falling {
+            return;
+        }
+        if self.jump_cooldown > 0.0 {
+            return;
+        }
+        if self.velocity_y != 0.0 {
+            return;
+        }
+        if self.flying {
             return;
         }
 
         if jump_key == KeyState::Held {
             self.velocity_y = JUMP_FORCE;
             self.falling = true;
+        }
+    }
+
+    //Enable flying
+    pub fn fly(&mut self, fly_key: KeyState, down_key: KeyState) {
+        if self.flying {
+            self.velocity_y = 0.0;
+            if fly_key.is_held() {
+                self.velocity_y += FLY_SPEED;
+            }
+
+            if down_key.is_held() {
+                self.velocity_y -= FLY_SPEED;
+            }
+        }
+
+        if fly_key != KeyState::JustPressed {
+            return;
+        }
+
+        if self.spacebar_timer <= 0.0 {
+            self.spacebar_timer = SPACEBAR_FLYING_DELAY;
+        } else {
+            //Toggle flying upon double tap of space bar
+            self.spacebar_timer = 0.0;
+            self.flying = !self.flying;
+            self.velocity_y = 0.0;
         }
     }
 
@@ -114,7 +153,9 @@ impl Player {
 
     //Set speed of player
     pub fn set_speed(&mut self) {
-        if self.crouching {
+        if self.flying {
+            self.speed = DEFAULT_PLAYER_SPEED * FLY_AMT;
+        } else if self.crouching {
             self.speed = DEFAULT_PLAYER_SPEED * CROUCH_AMT;
         } else if self.sprinting && self.can_sprint() {
             self.speed = DEFAULT_PLAYER_SPEED * SPRINT_AMT;

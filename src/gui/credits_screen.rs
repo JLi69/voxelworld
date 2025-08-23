@@ -92,7 +92,7 @@ pub fn run_credits_screen(
                             quit_to_menu = true;
                         }
                     });
- 
+
                     ui.add_space(24.0);
 
                     egui::ScrollArea::vertical()

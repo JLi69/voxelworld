@@ -67,6 +67,9 @@ pub struct Player {
     //Some(position) if a block is opened
     pub opened_block: Option<(i32, i32, i32)>,
     pub opened_block_id: u8,
+    //Flying
+    pub spacebar_timer: f32,
+    pub flying: bool,
 }
 
 impl Player {
@@ -104,6 +107,8 @@ impl Player {
             open_block_data: TileData::new(),
             opened_block: None,
             opened_block_id: 0,
+            spacebar_timer: 0.0,
+            flying: false,
         }
     }
 
@@ -141,6 +146,8 @@ impl Player {
             open_block_data: TileData::new(),
             opened_block: None,
             opened_block_id: 0,
+            spacebar_timer: 0.0,
+            flying: false,
         }
     }
 
@@ -401,6 +408,7 @@ impl Player {
     //Move the player and handle collision
     pub fn update(&mut self, dt: f32, world: &World) {
         self.inventory_delay_timer -= dt;
+        self.spacebar_timer -= dt;
 
         if self.is_dead() {
             return;
@@ -429,6 +437,9 @@ impl Player {
         //Move in y direction
         self.translate(dt * 0.5, world);
         if climbing {
+            self.falling = false;
+        }
+        if self.flying {
             self.falling = false;
         }
         //Apply gravity
@@ -553,6 +564,7 @@ impl Player {
         entry.add_integer("health", self.health as i64);
         entry.add_float("drowning_timer", self.drowning_timer);
         entry.add_string("death_msg", &self.death_msg);
+        entry.add_bool("flying", self.flying);
 
         entry
     }
@@ -612,6 +624,8 @@ impl Player {
             open_block_data: TileData::new(),
             opened_block: None,
             opened_block_id: 0,
+            spacebar_timer: 0.0,
+            flying: entry.get_var("flying").parse::<bool>().unwrap_or(false),
         }
     }
 

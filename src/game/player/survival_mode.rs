@@ -76,6 +76,8 @@ impl Player {
 
     //Specific things to update for survival mode
     pub fn update_survival(&mut self, dt: f32, world: &World) {
+        self.flying = false;
+
         if self.is_dead() {
             return;
         }

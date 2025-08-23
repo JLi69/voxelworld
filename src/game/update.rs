@@ -133,6 +133,9 @@ impl Game {
         } else {
             self.player.climb(space, lctrl, &self.world)
         }
+        if self.game_mode() == GameMode::Creative {
+            self.player.fly(space, lctrl);
+        }
         //Swim
         self.player.swim(space, &self.world);
         //Select items from the hotbar
