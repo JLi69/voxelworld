@@ -217,6 +217,10 @@ impl Block {
             73 => Some(LightSrc::new(0, 15, 0)),
             //Blue torch
             74 => Some(LightSrc::new(0, 3, 15)),
+            //Uranium
+            94 => Some(LightSrc::new(0, 8, 0)),
+            //Uranium block
+            95 => Some(LightSrc::new(0, 12, 0)),
             _ => None,
         }
     }
