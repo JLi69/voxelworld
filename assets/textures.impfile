@@ -34,6 +34,14 @@
 	"path" = "assets/textures/destroy_icon.png";
 }
 
+"up_icon" {
+	"path" = "assets/textures/up_icon.png";
+}
+
+"down_icon" {
+	"path" = "assets/textures/down_icon.png";
+}
+
 "clouds" {
 	"path" = "assets/textures/clouds.png";
 }

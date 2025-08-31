@@ -138,6 +138,7 @@ pub struct Game {
     //Block menu
     display_block_menu: bool,
     block_menu_shape: BlockMenuShape,
+    pub block_menu_start_row: usize,
     pub display_hud: bool,
     //Block info table
     block_info: BlockInfoTable,
@@ -183,6 +184,7 @@ impl Game {
             invert_backface_culling: false,
             block_menu_shape: BlockMenuShape::Normal,
             display_block_menu: false,
+            block_menu_start_row: 0,
             display_hud: true,
             block_info: BlockInfoTable::new(),
             recipe_table: RecipeTable::new(),

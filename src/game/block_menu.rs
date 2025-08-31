@@ -7,11 +7,14 @@ use cgmath::{vec2, Vector2};
 use glfw::{Key, MouseButton};
 
 pub const ICON_SIZE: f32 = 32.0;
-pub const ROW_LENGTH: usize = 12;
+pub const ROW_LENGTH: usize = 11;
+const NUM_OF_ROWS: usize = 7;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum BlockMenuActions {
     Destroy,
+    Up,
+    Down,
 }
 
 const SHAPES: [BlockMenuShape; 3] = [
@@ -20,16 +23,19 @@ const SHAPES: [BlockMenuShape; 3] = [
     BlockMenuShape::Stair,
 ];
 
-const ACTIONS: [BlockMenuActions; 1] = [BlockMenuActions::Destroy];
+const ACTIONS: [BlockMenuActions; 3] = [
+    BlockMenuActions::Up,
+    BlockMenuActions::Down,
+    BlockMenuActions::Destroy,
+];
 
 pub fn get_shape_icon_positions(startx: f32, starty: f32) -> Vec<(BlockMenuShape, Vector2<f32>)> {
-    let offset = 2.0 * ICON_SIZE * ACTIONS.len() as f32;
-    let start = vec2(startx - ICON_SIZE - offset, starty + ICON_SIZE);
+    let start = vec2(startx - ICON_SIZE, starty + 9.0 * ICON_SIZE);
     SHAPES
         .iter()
         .rev()
         .enumerate()
-        .map(|(i, shape)| (*shape, -(i as f32) * 2.0 * vec2(ICON_SIZE, 0.0) + start))
+        .map(|(i, shape)| (*shape, (i as f32) * 2.0 * vec2(0.0, ICON_SIZE) + start))
         .collect()
 }
 
@@ -42,7 +48,7 @@ pub fn get_action_icon_positions(
         .iter()
         .rev()
         .enumerate()
-        .map(|(i, action)| (*action, -(i as f32) * 2.0 * vec2(ICON_SIZE, 0.0) + start))
+        .map(|(i, action)| (*action, (i as f32) * 2.0 * vec2(0.0, ICON_SIZE) + start))
         .collect()
 }
 
@@ -50,8 +56,19 @@ pub fn get_positions(gamestate: &Game, startx: f32, starty: f32) -> Vec<(u8, Vec
     let mut positions = vec![];
 
     for (i, block) in gamestate.get_block_menu().iter().enumerate() {
+        let iy = i / ROW_LENGTH;
+
+        if iy < gamestate.block_menu_start_row {
+            continue;
+        }
+
+        let row = iy - gamestate.block_menu_start_row;
+        if row >= NUM_OF_ROWS {
+            continue;
+        }
+
         let x = startx + (i % ROW_LENGTH) as f32 * 2.0 * ICON_SIZE + ICON_SIZE;
-        let y = starty - (i / ROW_LENGTH) as f32 * 2.0 * ICON_SIZE - ICON_SIZE;
+        let y = starty - row as f32 * 2.0 * ICON_SIZE - ICON_SIZE;
         let position = vec2(x, y);
         positions.push((*block, position));
     }
@@ -145,6 +162,18 @@ pub fn handle_block_menu_action(
             BlockMenuActions::Destroy => {
                 //Clear the item in the player's selected slot
                 gamestate.player.hotbar.set_selected(Item::Empty);
+            }
+            BlockMenuActions::Up => {
+                if gamestate.block_menu_start_row > 0 {
+                    gamestate.block_menu_start_row -= 1;
+                }
+            }
+            BlockMenuActions::Down => {
+                let last_visible_row = gamestate.block_menu_start_row + NUM_OF_ROWS - 1;
+                let last_row = gamestate.get_block_menu().len() / ROW_LENGTH;
+                if last_visible_row < last_row {
+                    gamestate.block_menu_start_row += 1;
+                }
             }
         }
     }

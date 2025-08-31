@@ -61,6 +61,8 @@ fn display_action_icons(gamestate: &Game, w: i32, h: i32, mousex: i32, mousey: i
     for (i, (shape, pos)) in action_icons.iter().enumerate() {
         match shape {
             BlockMenuActions::Destroy => gamestate.textures.bind("destroy_icon"),
+            BlockMenuActions::Up => gamestate.textures.bind("up_icon"),
+            BlockMenuActions::Down => gamestate.textures.bind("down_icon"),
         }
 
         let sz = if selected == i {
