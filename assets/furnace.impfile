@@ -7,6 +7,8 @@
 	"bark" = "3.0";
 	"coal_block" = "72.0";
 	"coal" = "8.0";
+	"uranium_ingot" = "16.0";
+	"uranium_block" = "144.0";
 	"stick" = "0.5";
 	"ladder" = "1.0";
 	"fence" = "1.0";
@@ -38,4 +40,5 @@
 	"clay_ball" = "brick_item";
 	"iron_ore" = "iron_ingot";
 	"gold_ore" = "gold_ingot";
+	"uranium_ore" = "uranium_ingot";
 }

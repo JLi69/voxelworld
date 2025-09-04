@@ -92,6 +92,15 @@
 	"iron+" = "item,11,3/1.0|item,11,4/1.0|item,11,5/1.0";
 }
 
+"uranium_ore" {
+	"empty" = "empty/1.0";
+	"iron+" = "uranium_ore/1.0";
+}
+
+"aqua_ore" {
+	"empty" = "item,13,1/2.0|item,13,2/1.0|item,13,3/1.0";
+}
+
 "coal_block" {
 	"empty" = "empty/1.0";
 	"wood+" = "coal_block/1.0";
@@ -120,6 +129,16 @@
 "red_block" {
 	"empty" = "empty/1.0";
 	"wood+" = "red_block/1.0";
+}
+
+"uranium_block" {
+	"empty" = "empty/1.0";
+	"wood+" = "uranium_block/1.0";
+}
+
+"aqua_block" {
+	"empty" = "empty/1.0";
+	"wood+" = "aqua_block/1.0";
 }
 
 "sand_bricks" {

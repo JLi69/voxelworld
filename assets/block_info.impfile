@@ -12,14 +12,16 @@
 	"1.5"= "93";
 	# Ice
 	"2.0" = "85";
+	# Aqua ore
+	"2.5" = "96";
 	# Wood
 	"3.0" = "6,8,25,37,76,78,79,81";
 	# Furnace
 	"4.0" = "40,70";
 	# Ore blocks
-	"8.0" = "26,27,28,29,30,31";
+	"8.0" = "26,27,28,29,30,31,95,97";
 	# Stone
-	"10.0" = "2,16,18,19,20,21,22,23";
+	"10.0" = "2,16,18,19,20,21,22,23,94";
 	# Stone bricks
 	"12.0" = "5,10,15,32,33,34,35,36";
 	# Obsidian
@@ -36,11 +38,14 @@
 	
 	"stone,bricks,glass,stone_bricks,obsidian,magma_stone,cobblestone" = "pickaxe";
 	"coal_ore,iron_ore,gold_ore,diamond_ore,rainbow_ore,red_ore" = "pickaxe";
+	"uranium_ore" = "pickaxe";
 	"coal_block,iron_block,gold_block,diamond_block,rainbow_block,red_block" = "pickaxe";
+	"uranium_block,aqua_block" = "pickaxe";
 	"sand_bricks,magma_bricks,smooth_stone,smooth_magma,smooth_sand,ice" = "pickaxe";
 	"furnace,companion_cube" = "pickaxe";
 
 	"dirt,grass,sand,wet_farmland,dry_farmland,snow,snowy_grass,clay" = "shovel";
+	"aqua_ore" = "shovel";
 
 	"plank,log,bark,chest,ladder,fence,gate,door,81" = "axe";
 

@@ -28,6 +28,8 @@
 	"diamond_ore" = "block,21,0,1";
 	"rainbow_ore" = "block,22,0,1";
 	"red_ore" = "block,23,0,1";
+	"uranium_ore" = "block,94,0,1";
+	"aqua_ore" = "block,96,0,1";
 
 	"bark" = "block,25,0,1";
 	
@@ -38,6 +40,8 @@
 	"diamond_block" = "block,29,0,1";
 	"rainbow_block" = "block,30,0,1";
 	"red_block" = "block,31,0,1";
+	"uranium_block" = "block,95,0,1";
+	"aqua_block" = "block,97,0,1";
 
 	"sand_bricks" = "block,32,0,1";
 	"magma_bricks" = "block,33,0,1";
@@ -105,6 +109,8 @@
 	"diamond" = "item,9,1";
 	"rainbow_stone" = "item,10,1";
 	"red_dust" = "item,11,1";
+	"uranium_ingot" = "item,12,1";
+	"aqua_gem" = "item,13,1";
 
 	# Food
 	# Format of food info: health restored/% stamina restored

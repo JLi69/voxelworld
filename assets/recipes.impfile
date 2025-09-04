@@ -240,6 +240,38 @@
 	"amt" = "9";
 }
 
+"uranium_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "uranium_ingot|uranium_ingot|uranium_ingot|uranium_ingot|uranium_ingot|uranium_ingot|uranium_ingot|uranium_ingot|uranium_ingot";
+	"output" = "uranium_block";
+	"amt" = "1";
+}
+
+"uranium_ingot" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "uranium_block";
+	"output" = "uranium_ingot";
+	"amt" = "9";
+}
+
+"aqua_block" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "aqua_gem|aqua_gem|aqua_gem|aqua_gem|aqua_gem|aqua_gem|aqua_gem|aqua_gem|aqua_gem";
+	"output" = "aqua_block";
+	"amt" = "1";
+}
+
+"aqua_gem" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "aqua_block";
+	"output" = "aqua_gem";
+	"amt" = "9";
+}
+
 "bush_sticks" {
 	"width" = "1";
 	"height" = "1";
