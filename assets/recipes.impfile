@@ -409,3 +409,19 @@
 	"output" = "golden_apple";
 	"amt" = "1";
 }
+
+"green_torch" {
+	"width" = "1";
+	"height" = "3";
+	"items" = "uranium_ingot|coal|stick";
+	"output" = "green_torch";
+	"amt" = "4";
+}
+
+"blue_torch" {
+	"width" = "1";
+	"height" = "3";
+	"items" = "aqua_gem|coal|stick";
+	"output" = "blue_torch";
+	"amt" = "4";
+}
