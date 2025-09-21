@@ -62,8 +62,14 @@ pub fn generate_ore(chunk: &mut Chunk, x: i32, y: i32, z: i32, rng: &mut Rng) {
         gen_vein(chunk, (x, y, z), 1, 1, 23, 0.3, rng);
     }
 
+    //Generate uranium ore
+    //Generate below y = -40
+    if rng.f64() < get_probability(y, -40, BOTTOM_OF_WORLD, 1.0 / 5_500.0, 1.0 / 4_000.0) {
+        gen_vein(chunk, (x, y, z), 1, 1, 94, 0.4, rng);
+    }
+
     //Generate iron ore
-    //Generates below y = -16
+    //Generates below y = 0
     if rng.f64() < get_probability(y, 0, BOTTOM_OF_WORLD, 1.0 / 4_000.0, 1.0 / 2_000.0) {
         gen_vein(chunk, (x, y, z), 0, 1, 19, 0.5, rng);
     }
