@@ -143,9 +143,9 @@ pub fn generate_clay(chunk: &mut Chunk, x: i32, y: i32, z: i32, rng: &mut Rng) {
         return;
     }
 
-    for ix in (x - 2)..=(x + 2) {
-        for iy in (y - 2)..=(y + 2) {
-            for iz in (z - 2)..=(z + 2) {
+    for ix in (x - CLAY_RADIUS)..=(x + CLAY_RADIUS) {
+        for iy in (y - CLAY_RADIUS)..=(y + CLAY_RADIUS) {
+            for iz in (z - CLAY_RADIUS)..=(z + CLAY_RADIUS) {
                 let dist = (ix - x).pow(2) + (iy - y).pow(2) + (iz - z).pow(2);
                 if dist > CLAY_RADIUS * CLAY_RADIUS {
                     continue;
@@ -159,6 +159,56 @@ pub fn generate_clay(chunk: &mut Chunk, x: i32, y: i32, z: i32, rng: &mut Rng) {
                     continue;
                 }
                 chunk.set_block(ix, iy, iz, Block::new_id(93));
+            }
+        }
+    }
+}
+
+const AQUA_VEIN_SIZE: i32 = 1;
+
+pub fn generate_aqua_ore(chunk: &mut Chunk, x: i32, y: i32, z: i32, rng: &mut Rng) {
+    //If it is not sand, ignore it
+    if chunk.get_block(x, y, z).id != 11 {
+        return;
+    }
+
+    let pos = chunk.get_chunk_pos();
+    let minx = pos.x * CHUNK_SIZE_I32 + AQUA_VEIN_SIZE;
+    let miny = pos.y * CHUNK_SIZE_I32 + AQUA_VEIN_SIZE;
+    let minz = pos.z * CHUNK_SIZE_I32 + AQUA_VEIN_SIZE;
+    if x < minx || y < miny || z < minz {
+        return;
+    }
+
+    let maxx = pos.x * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1 - AQUA_VEIN_SIZE;
+    let maxy = pos.y * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1 - AQUA_VEIN_SIZE;
+    let maxz = pos.z * CHUNK_SIZE_I32 + CHUNK_SIZE_I32 - 1 - AQUA_VEIN_SIZE;
+    if x > maxx || y > maxy || z > maxz {
+        return;
+    }
+
+    if y >= SEA_LEVEL - 4 {
+        return;
+    }
+
+    if rng.f64() > 1.0 / 1600.0 {
+        return;
+    }
+
+    for ix in (x - AQUA_VEIN_SIZE)..=(x + AQUA_VEIN_SIZE) {
+        for iy in (y - AQUA_VEIN_SIZE)..=(y + AQUA_VEIN_SIZE) {
+            for iz in (z - AQUA_VEIN_SIZE)..=(z + AQUA_VEIN_SIZE) {
+                let block = chunk.get_block(ix, iy, iz);
+                if block.id != 11 {
+                    continue;
+                }
+                if y >= SEA_LEVEL - 1 {
+                    continue;
+                }
+                if rng.f64() > 0.66 {
+                    continue;
+                }
+                chunk.set_block(ix, iy, iz, Block::new_id(96));
             }
         }
     }
