@@ -425,3 +425,27 @@
 	"output" = "blue_torch";
 	"amt" = "4";
 }
+
+"white_wool" {
+	"width" = "2";
+	"height" = "2";
+	"items" = "cotton|cotton|cotton|cotton";
+	"output" = "white_wool";
+	"amt" = "1";
+}
+
+"cotton_seed" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "cotton";
+	"output" = "cotton_seed";
+	"amt" = "2";
+}
+
+"flowers_cotton_seed" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "cotton_flowers";
+	"output" = "cotton_seed";
+	"amt" = "1";
+}

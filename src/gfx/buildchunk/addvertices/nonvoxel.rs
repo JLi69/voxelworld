@@ -538,8 +538,8 @@ pub fn add_nonvoxel_vertices(
         75 => gen_ladder_vertices(block),
         //Fence
         76 => gen_fence_vertices(block),
-        //Seed
-        77 => gen_seed_vertices(block),
+        //Wheat/cotton seeds
+        77 | 98 => gen_seed_vertices(block),
         //Gate
         78 => gen_gate_vertices(block),
         //Bottom door

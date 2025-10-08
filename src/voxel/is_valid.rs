@@ -45,8 +45,8 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
             }
             !below.transparent() && below.id != EMPTY_BLOCK
         }),
-        //Wheat
-        50..=53 | 77 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45])),
+        //Wheat and cotton seed
+        50..=53 | 77 | 98 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45])),
         //Sugar cane
         69 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17, 69])),
         //Torches and ladders
@@ -63,6 +63,8 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
         90 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17])),
         //Snowy sapling can be placed on snowy grass and snow
         92 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17, 86, 87])),
+        //Cotton
+        99..=102 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17, 43, 45])),
         _ => None,
     }
 }

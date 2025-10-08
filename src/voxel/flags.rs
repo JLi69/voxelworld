@@ -127,6 +127,16 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[91] |= TRANSPARENT_FLAG;
         //Snowy sapling
         set_plant_flags(92);
+        //Cotton seed
+        VOXEL_FLAGS[98] |= TRANSPARENT_FLAG;
+        VOXEL_FLAGS[98] |= FLAT_ITEM;
+        VOXEL_FLAGS[98] |= NO_HITBOX;
+        VOXEL_FLAGS[98] |= NON_VOXEL;
+        //Cotton
+        set_plant_flags(99);
+        set_plant_flags(100);
+        set_plant_flags(101);
+        set_plant_flags(102);
     }
 }
 

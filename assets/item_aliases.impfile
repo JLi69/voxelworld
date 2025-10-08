@@ -94,6 +94,9 @@
 	"snowy_leaves" = "block,91,0,1";
 	"snowy_sapling" = "block,92,0,1";
 	"clay" = "block,93,0,1";
+	"cotton_seed" = "block,98,0,1";	
+	"cotton_flowers" = "block,101,0,1";
+	"cotton" = "block,102,0,1";
 
 	"companion_cube" = "block,255,0,1";
 

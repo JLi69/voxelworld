@@ -217,3 +217,12 @@
 "snowy_leaves" {
 	"empty" = "snowy_sapling/1.0|empty/19.0";
 }
+
+# Cotton plants
+"99" {
+	"empty" = "cotton_seed/1.0";
+}
+
+"100" {
+	"empty" = "cotton_seed/1.0";
+}
