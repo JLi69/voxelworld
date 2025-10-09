@@ -93,6 +93,14 @@ pub fn generate_plants(
             66..70 => chunk.set_block(*x, h + 1, *z, Block::new_id(56)),
             //Mushroom
             70..72 => chunk.set_block(*x, h + 1, *z, Block::new_id(48)),
+            //Cotton
+            72 => {
+                //Cotton should generate in warmer areas
+                if temperature < 60 {
+                    continue;
+                }
+                chunk.set_block(*x, h + 1, *z, Block::new_id(102));
+            }
             //Nothing
             _ => {}
         }
