@@ -10,78 +10,6 @@ use crate::{
  * the average amount of time it takes in minutes
  * */
 
-fn simulate_wheat_growth(iterations: i32) -> f32 {
-    eprintln!("WHEAT GROWTH SIMULATION");
-    let mut total = 0.0f32;
-    for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
-        let mut total_time = 0.0;
-        for x in 0..9 {
-            for z in 0..9 {
-                world.set_block(x, 0, z, Block::new_id(77));
-                world.set_block(x, -1, z, Block::new_id(43));
-            }
-        }
-        let mut done = false;
-        while !done {
-            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
-            total_time += RANDOM_UPDATE_INTERVAL;
-            done = true;
-            for x in 0..9 {
-                for z in 0..9 {
-                    let block = world.get_block(x, 0, z);
-                    if block.id != 53 {
-                        done = false;
-                    }
-                }
-            }
-        }
-        let minutes = total_time / 60.0;
-        total += minutes;
-        eprintln!(
-            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat",
-            i + 1
-        );
-    }
-    total / iterations as f32
-}
-
-fn simulate_slow_wheat_growth(iterations: i32) -> f32 {
-    eprintln!("SLOW WHEAT GROWTH SIMULATION");
-    let mut total = 0.0f32;
-    for i in 0..iterations {
-        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
-        let mut total_time = 0.0;
-        for x in 0..9 {
-            for z in 0..9 {
-                world.set_block(x, 0, z, Block::new_id(50));
-                world.set_block(x, -1, z, Block::new_id(45));
-            }
-        }
-        let mut done = false;
-        while !done {
-            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
-            total_time += RANDOM_UPDATE_INTERVAL;
-            done = true;
-            for x in 0..9 {
-                for z in 0..9 {
-                    let block = world.get_block(x, 0, z);
-                    if block.id != 53 {
-                        done = false;
-                    }
-                }
-            }
-        }
-        let minutes = total_time / 60.0;
-        total += minutes;
-        eprintln!(
-            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all wheat",
-            i + 1
-        );
-    }
-    total / iterations as f32
-}
-
 fn simulate_sugarcane_growth(iterations: i32) -> f32 {
     eprintln!("SUGAR CANE GROWTH SIMULATION");
     let mut total = 0.0f32;
@@ -201,6 +129,48 @@ fn simulate_snow_sapling_growth(iterations: i32) -> f32 {
     total / iterations as f32
 }
 
+fn simulate_crop_growth(
+    iterations: i32,
+    crop_name: &str,
+    seed_id: u8,
+    crop_id: u8,
+    farmland_id: u8,
+) -> f32 {
+    eprintln!("{} GROWTH SIMULATION", crop_name.to_uppercase());
+    let mut total = 0.0f32;
+    for i in 0..iterations {
+        let mut world = World::new(0, 1, WorldGenType::Flat, GameMode::Creative);
+        let mut total_time = 0.0;
+        for x in 0..4 {
+            for z in 0..4 {
+                world.set_block(x, 0, z, Block::new_id(seed_id));
+                world.set_block(x, -1, z, Block::new_id(farmland_id));
+            }
+        }
+        let mut done = false;
+        while !done {
+            world.rand_block_update(RANDOM_UPDATE_INTERVAL, None, 0);
+            total_time += RANDOM_UPDATE_INTERVAL;
+            done = true;
+            for x in 0..4 {
+                for z in 0..4 {
+                    let block = world.get_block(x, 0, z);
+                    if block.id != crop_id {
+                        done = false;
+                    }
+                }
+            }
+        }
+        let minutes = total_time / 60.0;
+        total += minutes;
+        eprintln!(
+            "({} / {iterations}) took {total_time} s ({minutes} min) to grow all {crop_name}",
+            i + 1
+        );
+    }
+    total / iterations as f32
+}
+
 pub fn run_test_simulations(args: &[String]) {
     if !args.contains(&"--run-test-sims".to_string()) {
         return;
@@ -208,10 +178,12 @@ pub fn run_test_simulations(args: &[String]) {
     //Run simulations and then quit the program
     let average_sapling_time = simulate_sapling_growth(100);
     let average_sugarcane_time = simulate_sugarcane_growth(100);
-    let average_wheat_time = simulate_wheat_growth(100);
-    let average_slow_wheat_time = simulate_slow_wheat_growth(100);
+    let average_wheat_time = simulate_crop_growth(100, "wheat", 77, 53, 43);
+    let average_slow_wheat_time = simulate_crop_growth(100, "wheat (slow)", 77, 53, 45);
     let average_cacti_time = simulate_cactus_growth(100);
     let average_snow_sapling_time = simulate_snow_sapling_growth(100);
+    let average_cotton_time = simulate_crop_growth(100, "cotton", 98, 102, 43);
+    let average_slow_cotton_time = simulate_crop_growth(100, "cotton (slow)", 98, 102, 45);
     //Output results
     eprintln!();
     eprintln!("Simulation Results");
@@ -233,6 +205,14 @@ pub fn run_test_simulations(args: &[String]) {
     eprintln!(
         "Average time to grow all snow saplings: {} min",
         average_snow_sapling_time
+    );
+    eprintln!(
+        "Average time to grow all cotton: {} min",
+        average_cotton_time
+    );
+    eprintln!(
+        "Average time to grow all cotton (slow): {} min",
+        average_slow_cotton_time
     );
     //Exit program once all simulations are completed
     std::process::exit(0);

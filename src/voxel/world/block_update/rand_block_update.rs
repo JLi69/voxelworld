@@ -14,6 +14,9 @@ fn grow_wheat(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut Upd
     if skip_wet_farmland || skip_dry_farmland {
         return;
     }
+    if !(below.id == 43 || below.id == 45) {
+        return;
+    }
     to_update.insert((x, y, z), Block::new_id(id + 1));
 }
 
@@ -315,8 +318,8 @@ impl World {
                     45 => update_dry_farmland(self, x, y, z, to_update),
                     //Sapling
                     47 => grow_sapling(self, x, y, z, to_update, 7),
-                    //Growing wheat
-                    50..=52 => grow_wheat(self, x, y, z, block.id, to_update),
+                    //Growing wheat and cotton
+                    50..=52 | 98..=101 => grow_wheat(self, x, y, z, block.id, to_update),
                     //Sugar cane
                     69 => grow_sugarcane(self, x, y, z, to_update),
                     //Grow cactus

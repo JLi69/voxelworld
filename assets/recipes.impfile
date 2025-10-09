@@ -439,7 +439,7 @@
 	"height" = "1";
 	"items" = "cotton";
 	"output" = "cotton_seed";
-	"amt" = "2";
+	"amt" = "4";
 }
 
 "flowers_cotton_seed" {
