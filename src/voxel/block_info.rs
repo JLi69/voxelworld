@@ -249,6 +249,7 @@ fn parse_drops(
         "iron_pickaxe".to_string(),
         "gold_pickaxe".to_string(),
         "diamond_pickaxe".to_string(),
+        "aqua_pickaxe".to_string(),
         "rainbow_pickaxe".to_string(),
     ];
     let held: Vec<String> = held_str

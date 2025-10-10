@@ -157,6 +157,12 @@
 	"diamond_axe" = "tool,55,diamond/axe";
 	"diamond_hoe" = "tool,56,diamond/hoe";
 	"diamond_sword" = "tool,57,diamond/sword";
+	# Aqua tools
+	"aqua_pickaxe" = "tool,80,aqua/pickaxe";
+	"aqua_shovel" = "tool,81,aqua/shovel";
+	"aqua_axe" = "tool,82,aqua/axe";
+	"aqua_hoe" = "tool,83,aqua/hoe";
+	"aqua_sword" = "tool,84,aqua/sword";
 	# Rainbow tools
 	"rainbow_pickaxe" = "tool,58,rainbow/pickaxe";
 	"rainbow_shovel" = "tool,59,rainbow/shovel";

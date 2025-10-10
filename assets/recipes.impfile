@@ -449,3 +449,44 @@
 	"output" = "cotton_seed";
 	"amt" = "1";
 }
+
+# Aqua tools recipes
+"aqua_pickaxe" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "aqua_gem|aqua_gem|aqua_gem|aqua_gem|diamond_pickaxe|aqua_gem|aqua_gem|aqua_gem|aqua_gem";
+	"output" = "aqua_pickaxe";
+	"amt" = "1";
+}
+
+"aqua_shovel" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "aqua_gem|aqua_gem|aqua_gem|aqua_gem|diamond_shovel|aqua_gem|aqua_gem|aqua_gem|aqua_gem";
+	"output" = "aqua_shovel";
+	"amt" = "1";
+}
+
+"aqua_axe" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "aqua_gem|aqua_gem|aqua_gem|aqua_gem|diamond_axe|aqua_gem|aqua_gem|aqua_gem|aqua_gem";
+	"output" = "aqua_axe";
+	"amt" = "1";
+}
+
+"aqua_hoe" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "aqua_gem|aqua_gem|aqua_gem|aqua_gem|diamond_hoe|aqua_gem|aqua_gem|aqua_gem|aqua_gem";
+	"output" = "aqua_hoe";
+	"amt" = "1";
+}
+
+"aqua_sword" {
+	"width" = "3";
+	"height" = "3";
+	"items" = "aqua_gem|aqua_gem|aqua_gem|aqua_gem|diamond_sword|aqua_gem|aqua_gem|aqua_gem|aqua_gem";
+	"output" = "aqua_sword";
+	"amt" = "1";
+}

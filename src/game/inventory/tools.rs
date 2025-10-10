@@ -7,6 +7,7 @@ pub enum ToolMaterial {
     Iron,
     Gold,
     Diamond,
+    Aqua,
     Rainbow,
 }
 
@@ -26,7 +27,7 @@ const fn get_material_speed(material: ToolMaterial) -> f32 {
         ToolMaterial::Iron => 6.0,
         ToolMaterial::Gold => 8.0,
         ToolMaterial::Diamond => 10.0,
-        ToolMaterial::Rainbow => 12.0,
+        ToolMaterial::Rainbow | ToolMaterial::Aqua => 12.0,
     }
 }
 
@@ -37,6 +38,7 @@ const fn get_material_durability(material: ToolMaterial) -> u32 {
         ToolMaterial::Iron => 256,
         ToolMaterial::Gold => 384,
         ToolMaterial::Diamond => 1680,
+        ToolMaterial::Aqua => 800,
         ToolMaterial::Rainbow => 2048,
     }
 }
@@ -48,7 +50,7 @@ const fn get_material_attack(material: ToolMaterial) -> u32 {
         ToolMaterial::Iron => 2,
         ToolMaterial::Gold => 3,
         ToolMaterial::Diamond => 4,
-        ToolMaterial::Rainbow => 5,
+        ToolMaterial::Rainbow | ToolMaterial::Aqua => 5,
     }
 }
 
@@ -105,6 +107,7 @@ pub fn string_to_tool_material(s: &str) -> Result<ToolMaterial, ()> {
         "iron" => Ok(ToolMaterial::Iron),
         "gold" => Ok(ToolMaterial::Gold),
         "diamond" => Ok(ToolMaterial::Diamond),
+        "aqua" => Ok(ToolMaterial::Aqua),
         "rainbow" => Ok(ToolMaterial::Rainbow),
         _ => Err(()),
     }
