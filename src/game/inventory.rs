@@ -554,6 +554,23 @@ impl Inventory {
         }
         true
     }
+
+    pub fn get_items_shapeless(&self) -> HashMap<String, u32> {
+        let mut items_shapeless = HashMap::new();
+        self.items
+            .iter()
+            .map(|item| reduce_amt(*item))
+            .filter(|item| !item.is_empty())
+            .map(item_to_string)
+            .for_each(|s| {
+                if let Some(count) = items_shapeless.get(&s) {
+                    items_shapeless.insert(s, count + 1);
+                } else {
+                    items_shapeless.insert(s, 1);
+                }
+            });
+        items_shapeless
+    }
 }
 
 fn parse_aliased_items(s: &str, item_aliases: &ItemAliases) -> Result<Item, ()> {

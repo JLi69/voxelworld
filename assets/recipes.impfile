@@ -342,6 +342,7 @@
 	"items" = "mushroom|mushroom|mushroom|mushroom|mushroom|mushroom|empty|bowl|empty";
 	"output" = "mushroom_soup";
 	"amt" = "1";
+	"shapeless" = "true";
 }
 
 "flower_soup" {
@@ -350,7 +351,7 @@
 	"items" = "red_flower|blue_flower|yellow_flower|red_flower|blue_flower|yellow_flower|empty|bowl|empty";
 	"output" = "flower_soup";
 	"amt" = "1";
-	"reflect" = "true";
+	"shapeless" = "true";
 }
 
 "sugar" {
@@ -375,7 +376,7 @@
 	"items" = "empty|cactus|empty|cactus|dead_bush|cactus|empty|bowl|empty";
 	"output" = "desert_soup";
 	"amt" = "1";
-	"reflect" = "true";
+	"shapeless" = "true";
 }
 
 "clay" {

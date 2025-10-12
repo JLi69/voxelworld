@@ -64,6 +64,7 @@ pub struct Recipe {
     ingredients: Inventory,
     output: Item,
     reflect: bool,
+    shapeless: bool,
 }
 
 impl Recipe {
@@ -103,6 +104,7 @@ impl Recipe {
         Ok(Self {
             ingredients: grid,
             reflect: entry.get_var("reflect").parse::<bool>().unwrap_or(false),
+            shapeless: entry.get_var("shapeless").parse::<bool>().unwrap_or(false),
             output: multiplied_output,
         })
     }
@@ -151,7 +153,28 @@ impl Recipe {
         true
     }
 
+    pub fn check_match_shapeless(&self, crafting: &Inventory) -> bool {
+        let crafting_shapeless = crafting.get_items_shapeless();
+        let recipe_shapeless = self.ingredients.get_items_shapeless();
+        if crafting_shapeless.len() != recipe_shapeless.len() {
+            return false;
+        }
+        for (item, count) in crafting_shapeless {
+            if let Some(recipe_count) = recipe_shapeless.get(&item).copied() {
+                if count != recipe_count {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        true
+    }
+
     pub fn check_match(&self, crafting: &Inventory) -> bool {
+        if self.shapeless {
+            return self.check_match_shapeless(crafting);
+        }
         let w = self.ingredients.w();
         let h = self.ingredients.h();
         for x in 0..=(crafting.w() - w) {
@@ -188,6 +211,7 @@ fn generate_slab_recipe(block: Block) -> Recipe {
         ingredients: grid,
         output: Item::Block(slab, 6),
         reflect: false,
+        shapeless: false,
     }
 }
 
@@ -207,6 +231,7 @@ fn generate_stair_recipe(block: Block) -> Recipe {
         ingredients: grid,
         output: Item::Block(stair, 8),
         reflect: true,
+        shapeless: false,
     }
 }
 

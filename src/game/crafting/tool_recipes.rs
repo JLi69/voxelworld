@@ -65,6 +65,7 @@ pub fn generate_tool_recipes(
     let pickaxe = Recipe {
         ingredients: recipe_grid_from_str(PICKAXE_GRID, 3, 3, ingredient, item_aliases),
         reflect: false,
+        shapeless: false,
         output: Item::Tool(start_id, ToolInfo::new_tool(ToolType::Pickaxe, material)),
     };
     recipes.push(pickaxe);
@@ -72,6 +73,7 @@ pub fn generate_tool_recipes(
     let shovel = Recipe {
         ingredients: recipe_grid_from_str(SHOVEL_GRID, 1, 3, ingredient, item_aliases),
         reflect: false,
+        shapeless: false,
         output: Item::Tool(start_id + 1, ToolInfo::new_tool(ToolType::Shovel, material)),
     };
     recipes.push(shovel);
@@ -79,6 +81,7 @@ pub fn generate_tool_recipes(
     let axe = Recipe {
         ingredients: recipe_grid_from_str(AXE_GRID, 2, 3, ingredient, item_aliases),
         reflect: true,
+        shapeless: false,
         output: Item::Tool(start_id + 2, ToolInfo::new_tool(ToolType::Axe, material)),
     };
     recipes.push(axe);
@@ -86,6 +89,7 @@ pub fn generate_tool_recipes(
     let hoe = Recipe {
         ingredients: recipe_grid_from_str(HOE_GRID, 2, 3, ingredient, item_aliases),
         reflect: true,
+        shapeless: false,
         output: Item::Tool(start_id + 3, ToolInfo::new_tool(ToolType::Hoe, material)),
     };
     recipes.push(hoe);
@@ -93,6 +97,7 @@ pub fn generate_tool_recipes(
     let sword = Recipe {
         ingredients: recipe_grid_from_str(SWORD_GRID, 1, 3, ingredient, item_aliases),
         reflect: true,
+        shapeless: false,
         output: Item::Tool(start_id + 4, ToolInfo::new_tool(ToolType::Sword, material)),
     };
     recipes.push(sword);
