@@ -115,6 +115,19 @@
 	"uranium_ingot" = "item,12,1";
 	"aqua_gem" = "item,13,1";
 
+	"white_dye" = "item,96,1";
+	"gray_dye" = "item,97,1";
+	"dark_gray_dye" = "item,98,1";
+	"black_dye" = "item,99,1";
+	"brown_dye" = "item,100,1";
+	"red_dye" = "item,101,1";
+	"orange_dye" = "item,102,1";
+	"yellow_dye" = "item,103,1";
+	"green_dye" = "item,104,1";
+	"blue_dye" = "item,105,1";
+	"purple_dye" = "item,106,1";
+	"pink_dye" = "item,107,1";
+
 	# Food
 	# Format of food info: health restored/% stamina restored
 	"apple" = "food,64,2/10";

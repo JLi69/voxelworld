@@ -41,4 +41,5 @@
 	"iron_ore" = "iron_ingot";
 	"gold_ore" = "gold_ingot";
 	"uranium_ore" = "uranium_ingot";
+	"cactus" = "green_dye";
 }

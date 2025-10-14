@@ -555,6 +555,11 @@ impl Inventory {
         true
     }
 
+    //Returns the 'shapeless' form of the inventory in the form of
+    //a hashmap with items parsed into strings as the keys and the number of
+    //stacks of each item (how many unique stacks are in the inventory,
+    //not necessarily the actual total quantity of the item).
+    //Used for shapeless crafting recipes.
     pub fn get_items_shapeless(&self) -> HashMap<String, u32> {
         let mut items_shapeless = HashMap::new();
         self.items

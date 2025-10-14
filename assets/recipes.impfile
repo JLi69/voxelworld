@@ -491,3 +491,53 @@
 	"output" = "aqua_sword";
 	"amt" = "1";
 }
+
+"black_dye" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "coal";
+	"output" = "black_dye";
+	"amt" = "4";
+}
+
+"red_dye" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "red_flower";
+	"output" = "red_dye";
+	"amt" = "4";
+}
+
+"yellow_dye" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "yellow_flower";
+	"output" = "yellow_dye";
+	"amt" = "4";
+}
+
+"blue_dye" {
+	"width" = "1";
+	"height" = "1";
+	"items" = "blue_flower";
+	"output" = "blue_dye";
+	"amt" = "4";
+}
+
+"orange_dye" {
+	"width" = "2";
+	"height" = "1";
+	"items" = "red_dye|yellow_dye";
+	"output" = "orange_dye";
+	"amt" = "2";
+	"shapeless" = "true";
+}
+
+"purple_dye" {
+	"width" = "2";
+	"height" = "1";
+	"items" = "red_dye|blue_dye";
+	"output" = "purple_dye";
+	"amt" = "2";
+	"shapeless" = "true";
+}

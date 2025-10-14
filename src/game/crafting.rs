@@ -235,6 +235,28 @@ fn generate_stair_recipe(block: Block) -> Recipe {
     }
 }
 
+//Generates wool recipes (for combining wool together with dye to color it)
+fn generate_wool_recipes() -> Vec<Recipe> {
+    const WHITE_WOOL_ID: u8 = 57;
+    const WHITE_DYE_ID: u8 = 96;
+    (1..=11)
+        .map(|index| {
+            let mut grid = Inventory::empty_with_sz(2, 1);
+            //Wool
+            grid.set_item(0, 0, Item::Block(Block::new_id(WHITE_WOOL_ID), 1));
+            let dye_id: u8 = WHITE_DYE_ID + index;
+            grid.set_item(1, 0, Item::Sprite(dye_id as u16, 1));
+            let dyed_wool = Item::Block(Block::new_id(WHITE_WOOL_ID + index), 1);
+            Recipe {
+                ingredients: grid,
+                output: dyed_wool,
+                reflect: false,
+                shapeless: true,
+            }
+        })
+        .collect()
+}
+
 fn get_fuel_from_entry(entry: Entry, item_aliases: &ItemAliases) -> Vec<(Item, f32)> {
     entry
         .get_all_vars()
@@ -383,6 +405,8 @@ impl RecipeTable {
             }
         }
         self.recipes.extend(auto_generated_recipes);
+        //Generate wool recipes
+        self.recipes.extend(generate_wool_recipes());
         //Generate tool recipes
         self.recipes.extend(generate_tool_recipes(
             "plank",
