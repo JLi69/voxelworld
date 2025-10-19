@@ -182,8 +182,8 @@ impl Hitbox {
         match block.id {
             //Ladder
             75 => Self::from_block_orientation(x, y, z, 0.9, block),
-            //Seeds (wheat and cotton)
-            77 | 98 => {
+            //Seeds (wheat, cotton, or flowers)
+            77 | 98 | 103 | 105 | 107 => {
                 let mut bbox = Self::from_block_orientation(x, y, z, 0.9, block);
                 bbox.dimensions.x *= 0.8;
                 bbox.dimensions.z *= 0.8;
@@ -214,7 +214,7 @@ impl Hitbox {
                 bbox
             }
             //Mushroom, flowers
-            48 | 55 => {
+            48 | 55 | 106 => {
                 let mut bbox = Self::from_block_orientation(x, y, z, 0.5, block);
                 bbox.dimensions.x *= 0.3;
                 bbox.dimensions.z *= 0.3;
@@ -222,6 +222,12 @@ impl Hitbox {
             }
             54 | 56 => {
                 let mut bbox = Self::from_block_orientation(x, y, z, 0.2, block);
+                bbox.dimensions.x *= 0.3;
+                bbox.dimensions.z *= 0.3;
+                bbox
+            }
+            104 | 108 => {
+                let mut bbox = Self::from_block_orientation(x, y, z, 0.4, block);
                 bbox.dimensions.x *= 0.3;
                 bbox.dimensions.z *= 0.3;
                 bbox

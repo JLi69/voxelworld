@@ -35,8 +35,12 @@ type ValidBlockFn = fn(&World, i32, i32, i32) -> bool;
 //If None is returned, then we assume that this block can be placed anywhere
 pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
     match block {
-        //Sapling, Grass, and Flowers
-        47 | 49 | 54..=56 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17])),
+        //Sapling and Grass
+        47 | 49 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17])),
+        //Flowers
+        54..=56 | 104 | 106 | 108 => {
+            Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 17, 43, 45]))
+        }
         //Mushroom
         48 => Some(|world, x, y, z| {
             let below = world.get_block(x, y - 1, z);
@@ -45,8 +49,10 @@ pub fn get_check_valid_fn(block: u8) -> Option<ValidBlockFn> {
             }
             !below.transparent() && below.id != EMPTY_BLOCK
         }),
-        //Wheat and cotton seed
-        50..=53 | 77 | 98 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45])),
+        //Wheat, cotton, and flower seeds
+        50..=53 | 77 | 98 | 103 | 105 | 107 => {
+            Some(|world, x, y, z| check_below_valid(world, x, y, z, &[43, 45]))
+        }
         //Sugar cane
         69 => Some(|world, x, y, z| check_below_valid(world, x, y, z, &[1, 4, 11, 17, 69])),
         //Torches and ladders

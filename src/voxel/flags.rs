@@ -21,6 +21,13 @@ unsafe fn set_plant_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= FLUID_DESTRUCTIBLE;
 }
 
+unsafe fn set_seed_flags(voxel_id: usize) {
+    VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
+    VOXEL_FLAGS[voxel_id] |= FLAT_ITEM;
+    VOXEL_FLAGS[voxel_id] |= NO_HITBOX;
+    VOXEL_FLAGS[voxel_id] |= NON_VOXEL;
+}
+
 unsafe fn set_door_flags(voxel_id: usize) {
     VOXEL_FLAGS[voxel_id] |= TRANSPARENT_FLAG;
     VOXEL_FLAGS[voxel_id] |= CAN_ROTATE_FLAG;
@@ -110,10 +117,7 @@ pub fn init_voxel_flags() {
         VOXEL_FLAGS[76] |= FLAT_ITEM;
         VOXEL_FLAGS[76] |= NON_VOXEL;
         //Seeds
-        VOXEL_FLAGS[77] |= TRANSPARENT_FLAG;
-        VOXEL_FLAGS[77] |= FLAT_ITEM;
-        VOXEL_FLAGS[77] |= NO_HITBOX;
-        VOXEL_FLAGS[77] |= NON_VOXEL;
+        set_seed_flags(77);
         //Gate
         set_door_flags(78);
         //Door
@@ -128,15 +132,24 @@ pub fn init_voxel_flags() {
         //Snowy sapling
         set_plant_flags(92);
         //Cotton seed
-        VOXEL_FLAGS[98] |= TRANSPARENT_FLAG;
-        VOXEL_FLAGS[98] |= FLAT_ITEM;
-        VOXEL_FLAGS[98] |= NO_HITBOX;
-        VOXEL_FLAGS[98] |= NON_VOXEL;
+        set_seed_flags(98);
         //Cotton
         set_plant_flags(99);
         set_plant_flags(100);
         set_plant_flags(101);
         set_plant_flags(102);
+        //Red flower seeds
+        set_seed_flags(103);
+        //Yellow flower seed
+        set_seed_flags(105);
+        //Blue flower seed
+        set_seed_flags(107);
+        //growing red flower
+        set_plant_flags(104);
+        //growing yellow flower
+        set_plant_flags(106);
+        //growing blue flower
+        set_plant_flags(108);
     }
 }
 

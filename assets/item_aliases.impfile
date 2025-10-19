@@ -97,6 +97,9 @@
 	"cotton_seed" = "block,98,0,1";	
 	"cotton_flowers" = "block,101,0,1";
 	"cotton" = "block,102,0,1";
+	"red_flower_seeds" = "block,103,0,1";
+	"yellow_flower_seeds" = "block,105,0,1";
+	"blue_flower_seeds" = "block,107,0,1";
 
 	"companion_cube" = "block,255,0,1";
 
@@ -131,7 +134,7 @@
 	# Food
 	# Format of food info: health restored/% stamina restored
 	"apple" = "food,64,2/10";
-	"flower_soup" = "food,65,3/8";
+	"flower_soup" = "food,65,2/8";
 	"mushroom_soup" = "food,66,5/15";
 	"bread" = "food,67,5/20";
 	"cake" = "food,68,8/75";
