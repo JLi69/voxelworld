@@ -10,7 +10,7 @@ use crate::{
  * the average amount of time it takes in minutes
  * */
 
-fn simulate_sugarcane_growth(iterations: i32) -> f32 {
+fn simulate_sugarcane_growth(iterations: i32) -> String {
     eprintln!("SUGAR CANE GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
@@ -41,10 +41,13 @@ fn simulate_sugarcane_growth(iterations: i32) -> f32 {
             i + 1
         );
     }
-    total / iterations as f32
+    format!(
+        "Average time to grow all sugarcane: {}",
+        total / iterations as f32
+    )
 }
 
-fn simulate_cactus_growth(iterations: i32) -> f32 {
+fn simulate_cactus_growth(iterations: i32) -> String {
     eprintln!("CACTUS GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
@@ -78,10 +81,13 @@ fn simulate_cactus_growth(iterations: i32) -> f32 {
             i + 1
         );
     }
-    total / iterations as f32
+    format!(
+        "Average time to grow all cacti: {} min",
+        total / iterations as f32
+    )
 }
 
-fn simulate_sapling_growth(iterations: i32) -> f32 {
+fn simulate_sapling_growth(iterations: i32) -> String {
     eprintln!("SAPLING GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
@@ -102,10 +108,13 @@ fn simulate_sapling_growth(iterations: i32) -> f32 {
             i + 1
         );
     }
-    total / iterations as f32
+    format!(
+        "Average time to grow all saplings: {} min",
+        total / iterations as f32
+    )
 }
 
-fn simulate_snow_sapling_growth(iterations: i32) -> f32 {
+fn simulate_snow_sapling_growth(iterations: i32) -> String {
     eprintln!("SNOW SAPLING GROWTH SIMULATION");
     let mut total = 0.0f32;
     for i in 0..iterations {
@@ -126,7 +135,10 @@ fn simulate_snow_sapling_growth(iterations: i32) -> f32 {
             i + 1
         );
     }
-    total / iterations as f32
+    format!(
+        "Average time to grow all snow saplings: {}",
+        total / iterations as f32
+    )
 }
 
 fn simulate_crop_growth(
@@ -135,7 +147,7 @@ fn simulate_crop_growth(
     seed_id: u8,
     crop_id: u8,
     farmland_id: u8,
-) -> f32 {
+) -> String {
     eprintln!("{} GROWTH SIMULATION", crop_name.to_uppercase());
     let mut total = 0.0f32;
     for i in 0..iterations {
@@ -168,7 +180,10 @@ fn simulate_crop_growth(
             i + 1
         );
     }
-    total / iterations as f32
+    format!(
+        "Average time to grow all {crop_name}: {} min",
+        total / iterations as f32
+    )
 }
 
 pub fn run_test_simulations(args: &[String]) {
@@ -176,44 +191,29 @@ pub fn run_test_simulations(args: &[String]) {
         return;
     }
     //Run simulations and then quit the program
-    let average_sapling_time = simulate_sapling_growth(100);
-    let average_sugarcane_time = simulate_sugarcane_growth(100);
-    let average_wheat_time = simulate_crop_growth(100, "wheat", 77, 53, 43);
-    let average_slow_wheat_time = simulate_crop_growth(100, "wheat (slow)", 77, 53, 45);
-    let average_cacti_time = simulate_cactus_growth(100);
-    let average_snow_sapling_time = simulate_snow_sapling_growth(100);
-    let average_cotton_time = simulate_crop_growth(100, "cotton", 98, 102, 43);
-    let average_slow_cotton_time = simulate_crop_growth(100, "cotton (slow)", 98, 102, 45);
+    let results = vec![
+        simulate_sapling_growth(100),
+        simulate_sugarcane_growth(100),
+        simulate_crop_growth(100, "wheat", 77, 53, 43),
+        simulate_crop_growth(100, "wheat (slow)", 77, 53, 45),
+        simulate_cactus_growth(100),
+        simulate_snow_sapling_growth(100),
+        simulate_crop_growth(100, "cotton", 98, 102, 43),
+        simulate_crop_growth(100, "cotton (slow)", 98, 102, 45),
+        simulate_crop_growth(100, "red flowers", 103, 54, 43),
+        simulate_crop_growth(100, "red flowers (slow)", 103, 54, 45),
+        simulate_crop_growth(100, "yellow flowers", 105, 55, 43),
+        simulate_crop_growth(100, "yellow flowers (slow)", 105, 55, 45),
+        simulate_crop_growth(100, "blue flowers", 107, 56, 43),
+        simulate_crop_growth(100, "blue flowers (slow)", 107, 56, 45),
+    ];
     //Output results
     eprintln!();
     eprintln!("Simulation Results");
     eprintln!("------------------");
-    eprintln!("Average time to grow all wheat: {} min", average_wheat_time);
-    eprintln!(
-        "Average time to grow all wheat (slow): {} min",
-        average_slow_wheat_time
-    );
-    eprintln!(
-        "Average time to grow all sugarcane: {} min",
-        average_sugarcane_time
-    );
-    eprintln!(
-        "Average time to grow all saplings: {} min",
-        average_sapling_time
-    );
-    eprintln!("Average time to grow all cacti: {} min", average_cacti_time);
-    eprintln!(
-        "Average time to grow all snow saplings: {} min",
-        average_snow_sapling_time
-    );
-    eprintln!(
-        "Average time to grow all cotton: {} min",
-        average_cotton_time
-    );
-    eprintln!(
-        "Average time to grow all cotton (slow): {} min",
-        average_slow_cotton_time
-    );
+    for line in results {
+        eprintln!("{line}");
+    }
     //Exit program once all simulations are completed
     std::process::exit(0);
 }

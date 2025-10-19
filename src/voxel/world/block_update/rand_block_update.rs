@@ -7,6 +7,8 @@ use std::collections::HashSet;
 
 pub const RANDOM_UPDATE_INTERVAL: f32 = 0.25;
 
+//This function was technically created for growing wheat but can also be used
+//for other crops as well (such as cotton/flowers)
 fn grow_wheat(world: &World, x: i32, y: i32, z: i32, id: u8, to_update: &mut UpdateList) {
     let below = world.get_block(x, y - 1, z);
     let skip_dry_farmland = below.id == 45 && fastrand::i32(0..12) < 11;
@@ -318,8 +320,16 @@ impl World {
                     45 => update_dry_farmland(self, x, y, z, to_update),
                     //Sapling
                     47 => grow_sapling(self, x, y, z, to_update, 7),
-                    //Growing wheat and cotton
-                    50..=52 | 98..=101 => grow_wheat(self, x, y, z, block.id, to_update),
+                    //Growing wheat, cotton, flowers
+                    50..=52 | 98..=101 | 103 | 105 | 107 => {
+                        grow_wheat(self, x, y, z, block.id, to_update)
+                    }
+                    //Red flower
+                    104 => grow_wheat(self, x, y, z, 54 - 1, to_update),
+                    //Yellow flower
+                    106 => grow_wheat(self, x, y, z, 55 - 1, to_update),
+                    //Blue flower
+                    108 => grow_wheat(self, x, y, z, 56 - 1, to_update),
                     //Sugar cane
                     69 => grow_sugarcane(self, x, y, z, to_update),
                     //Grow cactus
