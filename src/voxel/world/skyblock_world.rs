@@ -7,6 +7,13 @@ use crate::{
 };
 use crossbeam::{queue::ArrayQueue, thread};
 
+/*
+ * NOTE: This code is effectively just copied and pasted from `flat_world.rs`
+ * so there is a lot of repetition. I can probably improve the world generation
+ * code to be better but I don't feel like doing that right now and it works fine
+ * so copy-paste it is.
+ */
+
 fn place_leaves(chunk: &mut Chunk, x: usize, y: usize, z: usize) {
     let replace = chunk.get_block_relative(x, y, z);
     if replace.id != EMPTY_BLOCK && replace.shape() == 0 {
