@@ -35,6 +35,7 @@ fn gen_type_to_string(world_gen_type: WorldGenType) -> String {
         WorldGenType::Flat => "flat".to_string(),
         WorldGenType::OldGen => "old".to_string(),
         WorldGenType::DefaultGen => "default2".to_string(),
+        WorldGenType::Skyblock => "skyblock".to_string(),
     }
 }
 
@@ -43,6 +44,8 @@ fn string_to_gen_type(s: &str) -> WorldGenType {
         WorldGenType::Flat
     } else if s == "old" || s == "default" {
         WorldGenType::OldGen
+    } else if s == "skyblock" {
+        WorldGenType::Skyblock
     } else {
         WorldGenType::DefaultGen
     }
@@ -272,6 +275,7 @@ impl World {
             WorldGenType::Flat => self.gen_flat_on_load(),
             WorldGenType::OldGen => self.gen_old_on_load(),
             WorldGenType::DefaultGen => self.gen_default_on_load(),
+            WorldGenType::Skyblock => self.gen_skyblock_on_load(),
         }
     }
 
@@ -312,6 +316,7 @@ impl World {
                     WorldGenType::Flat => self.add_flat_chunk(chunkx, chunky, chunkz),
                     WorldGenType::OldGen => self.add_old_chunk(chunkx, chunky, chunkz),
                     WorldGenType::DefaultGen => self.add_default_chunk(chunkx, chunky, chunkz),
+                    WorldGenType::Skyblock => self.add_skyblock_chunk(chunkx, chunky, chunkz),
                 }
             }
         }

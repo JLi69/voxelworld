@@ -282,6 +282,7 @@ impl World {
             WorldGenType::Flat => self.generate_column_flat(x, z, &yvals),
             WorldGenType::OldGen => self.generate_column_old(x, z, &yvals),
             WorldGenType::DefaultGen => self.generate_column_default(x, z, &yvals),
+            WorldGenType::Skyblock => self.generate_column_skyblock(x, z, &yvals),
         }
 
         for y in yvals.iter().copied() {

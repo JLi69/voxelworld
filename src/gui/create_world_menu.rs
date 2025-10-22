@@ -60,6 +60,24 @@ fn create_new_world(menu_state: &mut CreateWorldMenuState, gamestate: &mut Game)
     gamestate.world.init_sky_light();
 }
 
+fn world_gen_option(
+    ui: &mut egui::Ui,
+    menu_state: &mut CreateWorldMenuState,
+    gen_type: WorldGenType,
+) {
+    let selected = menu_state.gen_type == gen_type;
+    let gen_type_str = match gen_type {
+        WorldGenType::Flat => "Flat",
+        WorldGenType::OldGen => "Old",
+        WorldGenType::DefaultGen => "Default",
+        WorldGenType::Skyblock => "Skyblock",
+    };
+    let text = menu_text(gen_type_str, 20.0, Color32::WHITE);
+    if ui.radio(selected, text).clicked() {
+        menu_state.gen_type = gen_type;
+    }
+}
+
 //Display the create world gui
 fn display_create_world(
     ui: &mut egui::Ui,
@@ -78,23 +96,10 @@ fn display_create_world(
         ui.label(menu_text("World Generation", 24.0, Color32::WHITE));
 
         //Radio options for world generation
-        let selected = menu_state.gen_type == WorldGenType::DefaultGen;
-        let text = menu_text("Default", 20.0, Color32::WHITE);
-        if ui.radio(selected, text).clicked() {
-            menu_state.gen_type = WorldGenType::DefaultGen;
-        }
-
-        let selected = menu_state.gen_type == WorldGenType::OldGen;
-        let text = menu_text("Old", 20.0, Color32::WHITE);
-        if ui.radio(selected, text).clicked() {
-            menu_state.gen_type = WorldGenType::OldGen;
-        }
-
-        let selected = menu_state.gen_type == WorldGenType::Flat;
-        let text = menu_text("Flat", 20.0, Color32::WHITE);
-        if ui.radio(selected, text).clicked() {
-            menu_state.gen_type = WorldGenType::Flat;
-        }
+        world_gen_option(ui, menu_state, WorldGenType::DefaultGen);
+        world_gen_option(ui, menu_state, WorldGenType::OldGen);
+        world_gen_option(ui, menu_state, WorldGenType::Skyblock);
+        world_gen_option(ui, menu_state, WorldGenType::Flat);
 
         ui.add_space(8.0);
         ui.label(menu_text("Game Mode", 24.0, Color32::WHITE));

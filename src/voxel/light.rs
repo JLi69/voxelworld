@@ -219,6 +219,10 @@ impl SkyLightMap {
             self.heights = vec![];
         }
 
+        if self.heights.is_empty() {
+            return;
+        }
+
         let index = (ix + iz * CHUNK_SIZE_I32) as usize;
         self.heights[index] = val;
     }

@@ -5,6 +5,7 @@ mod gen_more;
 pub mod light;
 mod old_world;
 mod save;
+mod skyblock_world;
 use crate::{game::GameMode, gfx::display::get_sky_brightness};
 
 use super::{
@@ -97,6 +98,7 @@ pub enum WorldGenType {
     OldGen,
     Flat,
     DefaultGen,
+    Skyblock,
 }
 
 //World struct
@@ -390,6 +392,7 @@ impl World {
             WorldGenType::OldGen => self.gen_old(),
             WorldGenType::Flat => self.gen_flat(),
             WorldGenType::DefaultGen => self.gen_default(),
+            WorldGenType::Skyblock => self.gen_skyblock(),
         }
     }
 
