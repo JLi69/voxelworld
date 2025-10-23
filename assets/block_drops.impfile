@@ -241,6 +241,7 @@
 
 "ice" {
 	"empty" = "empty/1.0";
+	"aqua_pickaxe" = "ice/1.0";
 }
 
 "snowy_grass" {

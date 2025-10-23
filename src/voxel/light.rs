@@ -160,7 +160,7 @@ pub struct SkyLightMap {
 //Returns whether sky light can pass through a block
 pub fn skylight_can_pass(block: Block) -> bool {
     //If it is a fluid or is leaves, then it blocks sky light
-    if block.is_fluid() || block.id == 7 {
+    if block.is_fluid() || block.id == 7 || block.id == 91 {
         return false;
     }
 

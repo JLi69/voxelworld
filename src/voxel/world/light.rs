@@ -736,9 +736,9 @@ impl World {
 
             for x in (map.x * CHUNK_SIZE_I32)..((map.x + 1) * CHUNK_SIZE_I32) {
                 for z in (map.z * CHUNK_SIZE_I32)..((map.z + 1) * CHUNK_SIZE_I32) {
-                    let mut h = map.get(x, z).unwrap_or(i32::MAX);
+                    let mut h = map.get(x, z).unwrap_or(i32::MIN + 1);
                     for (dx, dz) in ADJ_2D {
-                        let adj_h = self.get_skylightmap(x + dx, z + dz).unwrap_or(i32::MAX);
+                        let adj_h = self.get_skylightmap(x + dx, z + dz).unwrap_or(i32::MIN + 1);
                         h = h.min(adj_h);
                     }
                     heights.insert((x, z), h - 1);

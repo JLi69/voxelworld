@@ -147,7 +147,7 @@ impl BlockInfo {
             _ => 1.0,
         };
 
-        if can_harvest {
+        let break_time = if can_harvest {
             if can_harvest_with_hand {
                 self.break_time / multiplier
             } else {
@@ -155,6 +155,12 @@ impl BlockInfo {
             }
         } else {
             self.break_time / multiplier
+        };
+
+        if self.break_time < 0.01 {
+            break_time
+        } else {
+            break_time.max(0.1)
         }
     }
 }
