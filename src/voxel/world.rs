@@ -479,6 +479,15 @@ impl World {
             _ => {}
         }
     }
+
+    //Returns the coordinates for the bottom of the world
+    //beyond this point you can not place any blocks
+    pub fn bottom(&self) -> i32 {
+        match self.gen_type {
+            WorldGenType::Flat | WorldGenType::OldGen | WorldGenType::DefaultGen => -128,
+            WorldGenType::Skyblock => -32,
+        }
+    }
 }
 
 pub fn get_simulation_dist(world: &World) -> i32 {

@@ -154,7 +154,9 @@ impl DroppedItem {
         }
 
         //Check if the dropped item is intersecting lava
-        if self.entity.is_intersecting(world, 13) {
+        //or is in the void, if it is in the void then destroy it
+        let y = self.pos().y;
+        if self.entity.is_intersecting(world, 13) || y < world.bottom() as f32 {
             self.lava_destruction_timer -= dt;
         } else {
             self.lava_destruction_timer = LAVA_DESTRUCTION_TIME;

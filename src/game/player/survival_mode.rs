@@ -3,7 +3,7 @@
  * survival mode (such as handling health/damage)
  * */
 
-use super::{Player, DAMAGE_COOLDOWN, DEFAULT_MAX_HEALTH, DROWN_TIME};
+use super::{Player, DAMAGE_COOLDOWN, DEFAULT_MAX_HEALTH, DROWN_TIME, PLAYER_HEIGHT};
 use crate::{
     game::{
         entities::dropped_item::{DroppedItem, DroppedItemTable},
@@ -118,6 +118,11 @@ impl Player {
             player.position -= vel;
             player.position.y += 0.05;
             hit_cactus
+        });
+
+        //Void damage
+        self.apply_damage(8, "You fell out of the world!", |player| {
+            player.position.y < world.bottom() as f32 - PLAYER_HEIGHT * 4.0
         })
     }
 

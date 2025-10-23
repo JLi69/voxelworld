@@ -339,6 +339,8 @@ impl Player {
 
             //Move in the y direction
             self.position.y += vy;
+            //Void acts like a hard barrier
+            self.position.y = self.position.y.max(world.bottom() as f32 - 64.0);
             if !self.check_y_collision(world) {
                 if vy < 0.0 {
                     self.dist_fallen -= vy;
