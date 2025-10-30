@@ -187,7 +187,7 @@ fn gen_torch_vertices(block: Block) -> BlockMesh {
             5 => transformed.z += TORCH_OFFSET,
             _ => {}
         }
-        if block.orientation() % 3 != 0 {
+        if !block.orientation().is_multiple_of(3) {
             transformed.y += 0.15;
         }
         transformed.y -= 3.0 / 16.0;

@@ -31,7 +31,7 @@ pub fn get_block_item_transform(size: f32, position: Vector3<f32>, block: Block)
     transform = Matrix4::from_scale(size) * transform;
     transform = Matrix4::from_translation(position) * transform;
     //If it's a slab that is vertical, attempt to center it
-    if block.shape() == 1 && block.orientation() % 3 != 0 {
+    if block.shape() == 1 && !block.orientation().is_multiple_of(3) {
         transform = Matrix4::from_translation(Vector3::new(4.0, -4.0, 0.0)) * transform;
     }
     transform

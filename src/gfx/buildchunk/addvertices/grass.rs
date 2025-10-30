@@ -21,7 +21,7 @@ pub fn add_block_vertices_grass(
         return;
     }
 
-    let side = if block.shape() == 1 && block.orientation() % 3 == 0 {
+    let side = if block.shape() == 1 && block.orientation().is_multiple_of(3) {
         side_half
     } else {
         block.id

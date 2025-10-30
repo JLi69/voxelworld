@@ -409,7 +409,7 @@ fn handle_left_click(gamestate: &mut Game, mousepos: (f32, f32)) {
 }
 
 fn split_stack(amt: u8) -> u8 {
-    if amt % 2 == 0 {
+    if amt.is_multiple_of(2) {
         amt / 2
     } else {
         amt / 2 + 1

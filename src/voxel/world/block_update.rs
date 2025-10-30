@@ -222,7 +222,7 @@ fn update_lava(world: &World, x: i32, y: i32, z: i32, to_update: &mut UpdateList
     }
     let mut update_list = UpdateList::new();
     update_fluid(world, x, y, z, &mut update_list, 2);
-    if world.ticks % 5 == 0 {
+    if world.ticks.is_multiple_of(5) {
         for (pos, block) in update_list {
             let (px, py, pz) = pos;
             add_water_tile(px, py, pz, block.geometry, block.id, to_update);
